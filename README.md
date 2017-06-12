@@ -1,8 +1,10 @@
 # spygame
 ## 2D game engine based on Pygame and level-tmx files
 
-### 1) Getting started
+### Get the code
 * Git the [spygame](www.github.com/sven1977/spygame) code or do a `pip install spygame`
+
+### Get started
 * write a simple game against the engine:
 
 ```python
@@ -44,7 +46,13 @@ game.levels_by_name["MAZE"].play()
 ```
 
 All you need in order to run this game is the above code in a directory, and the additional subdirectories data/ and images/, which can
-be found [here](www.github.com/sven1977/spygame/tree/master/examples/maze_runner)
+be found [here](www.github.com/sven1977/spygame/tree/master/examples/maze_runner). These directories contain the necessary SpriteSheets,
+level background images and level setup (collision layers, background images, position and class of the player, etc..).
 
 This should give you a level like:
-![Vikings Sample]()
+![Vikings Sample](https://raw.githubusercontent.com/sven1977/spygame/master/examples/maze_runner/screen1.png)
+in which you can control the Agent via the four arrow keys (up, down, left, right).
+
+If you would like to create more complex levels (or entire Games with many Screens and Levels), read the spygame documentation, in which we'll
+create a full-blown 2D platformer Level.
+
