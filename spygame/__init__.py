@@ -484,6 +484,7 @@ class Sprite(GameObject, pygame.sprite.Sprite):
         # GameObject specific stuff
         self.type = Sprite.get_type("default")  # specifies the type of the GameObject (can be used e.g. for collision detection)
         self.handles_own_collisions = False  # set to True if this object takes care of its own collision handling
+        self.collision_mask = Sprite.get_type("default")
 
         self.stage = None  # the current Stage this GameObject is in
         self.sprite_groups = []  # the current Groups that this Sprite belongs to
@@ -1474,7 +1475,7 @@ class TiledObjectGroup(TmxLayer):
             # if the (Sprite) class of the object is given, construct it here using its c'tor
             # - classes are given as strings: e.g. sypg.Sprite, vikings.Viking, Agent (Agent class would be in __main__ module)
             if "sprite_class" in obj_props:
-                match_obj = re.fullmatch('^((.+)\.)?(\w+)$', obj_props["class"])
+                match_obj = re.fullmatch('^((.+)\.)?(\w+)$', obj_props["sprite_class"])
                 assert match_obj, "ERROR: class property in pytmx.pytmx.TiledObjectGroup does not match pattern!"
                 _, module_, class_ = match_obj.groups(default="__main__")  # if no module given, assume a class defined in __main__
                 spritesheet = SpriteSheet("data/" + obj_props["tsx"] + ".tsx")
@@ -1581,7 +1582,7 @@ class Brain(Component):
 
     def added(self):
         # call our own tick method when event "pre_tick" is triggered on our GameObject
-        self.game_object.on_event("pre_tick", self, "tick")
+        self.game_object.on_event("pre_tick", self, "tick", register=True)
         # search for an Animation component
         self.game_obj_cmp_anim = self.game_object.components.get("animation")
 
@@ -1937,8 +1938,9 @@ class TopDownPhysics(PhysicsComponent):
         self.x_max -= obj.rect.width
         self.y_max -= obj.rect.height
 
-        obj.on_event("pre_tick", self, "tick")  # run this component's tick function after GameObject's one (so we can react to the GameObject's move)
-        obj.on_event("collision", self, "collision")  # handle collisions
+        obj.on_event("pre_tick", self, "tick", register=True)  # run this component's tick function after GameObject's one (so we can react to the GameObject's move)
+        obj.on_event("collision", self, "collision", register=True)  # handle collisions
+        obj.register_event("bump.top", "bump.bottom", "bump.left", "bump.right")  # we will trigger these as well -> register them
 
         self.game_obj_cmp_brain = self.game_object.components.get("brain", None)
         assert not self.game_obj_cmp_brain or isinstance(self.game_obj_cmp_brain, Brain), "ERROR: GameObject's `brain` Component is not of type Brain!"
@@ -2096,7 +2098,6 @@ class PlatformerPhysics(PhysicsComponent):
         self.vy = 0
 
         # physics
-        # self.collision_mask = Q._SPRITE_DEFAULT | Q._SPRITE_LADDER | Q._SPRITE_PARTICLE
         self.run_acceleration = 300  # running acceleration
         self.vx_max = 150  # max run-speed
         self.max_fall_speed = 400  # maximum fall speed
@@ -2769,7 +2770,7 @@ class Game(object):
         for i, screen_or_level in enumerate(screens_and_levels):
             name = screen_or_level.pop("name", "screen{:02d}".format(i))
             id_ = screen_or_level.pop("id", 0)
-            keyboard_inputs = screen_or_level.pop("keyboard_inputs", None)
+            keyboard_inputs = screen_or_level.pop("keyboard_inputs", KeyboardInputs([]))
             max_fps = screen_or_level.pop("max_fps", self.max_fps)
 
             # Screen class has to be given since Screen (as a default) would be abstract

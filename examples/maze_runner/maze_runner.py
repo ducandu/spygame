@@ -15,6 +15,24 @@
 import spygame as spyg
 
 
+class MyAgent(spyg.Sprite):
+    def __init__(self, x, y, spritesheet):
+        super().__init__(x, y, spritesheet)
+
+        # some custom settings
+        self.handles_own_collisions = True  # our agent handles its own collisions (instead of letting the Stage do it for us)
+        # add a Brain for keyboard input handling
+        self.cmp_brain = self.add_component(spyg.Brain("brain", ["up", "down", "left", "right"]))
+        # add a physics component to physics handling (here we use: simple 2D top-down view and controls)
+        self.cmp_physics = self.add_component(spyg.TopDownPhysics("physics"))
+
+    # plain spyg.Sprite objects do not implement the `tick` function, so nothing ever happens with them
+    # - we need to implement it here to add the pre-tick event (this will trigger the brain and physics components to act)
+    def tick(self, game_loop):
+        # tell our subscribers (e.g. Components) that we are ticking
+        self.trigger_event("pre_tick", game_loop)
+
+
 # create a spyg.Game object
 game = spyg.Game(screens_and_levels=[
     # the only level

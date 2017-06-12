@@ -2,7 +2,7 @@
 ## 2D game engine based on Pygame and level-tmx files
 
 ### 1) Getting started
-* Git the [spygame](www.github.com/sven1977/spygame) code
+* Git the [spygame](www.github.com/sven1977/spygame) code or do a `pip install spygame`
 * write a simple game against the engine:
 
 ```python
@@ -10,49 +10,41 @@ import spygame as spyg
 
 
 class MyAgent(spyg.Sprite):
-    def __init__(self, x: int, y: int, spritesheet: spyg.SpriteSheet):
-        """
-        Args:
-            x (int): the start x position
-            y (int): the start y position
-            spritesheet (spyg.Spritesheet): the SpriteSheet object (tsx file) to use for this Viking
-        """
-        super().__init__(x, y, spritesheet, {
-            "default"          : "stand",  # the default animation to play
-            "stand"            : {"frames": [0], "loop": False, "flags": spyg.Animation.ANIM_PROHIBITS_STAND},
-            "run"              : {"frames": [5, 6, 7, 8, 9, 10, 11, 12], "rate": 1 / 8},
-        })
+    def __init__(self, x, y, spritesheet):
+        super().__init__(x, y, spritesheet)
 
-        self.handles_own_collisions = True
-        self.type = spyg.Sprite.get_type("friendly")
-
-        # add components to this Agent
-        # loop time line:
-        # - pre-tick: Brain (needs animation comp to check e.g., which commands are disabled), Physics (movement + collision resolution)
-        # - tick: chose animation to play
-        # - post-tick: Animation
-        self.register_event("pre_tick", "post_tick", "collision")
+        # some custom settings
+        self.handles_own_collisions = True  # our agent handles its own collisions (instead of letting the Stage do it for us)
+        # add a Brain for keyboard input handling
         self.cmp_brain = self.add_component(spyg.Brain("brain", ["up", "down", "left", "right"]))
+        # add a physics component to physics handling (here we use: simple 2D top-down view and controls)
         self.cmp_physics = self.add_component(spyg.TopDownPhysics("physics"))
 
-        # subscribe/register to some events
-        self.register_event("bump.bottom", "bump.top", "bump.left", "bump.right")
-
-    # - mainly determines agent's animation that gets played
+    # plain spyg.Sprite objects do not implement the `tick` function, so nothing ever happens with them
+    # - we need to implement it here to add the pre-tick event (this will trigger the brain and physics components to act)
     def tick(self, game_loop):
-        dt = game_loop.dt
-
         # tell our subscribers (e.g. Components) that we are ticking
         self.trigger_event("pre_tick", game_loop)
 
-        # moving in x/y direction?
-        if self.cmp_physics.vx != 0 or self.cmp_physics.vy != 0:
-            self.check_running()
-        # not moving in any direction
-        else:
-            # just stand
-            if self.allow_play_stand():
-                self.play_animation("stand")
 
-        self.trigger_event("post_tick", game_loop)
+# create a spyg.Game object
+game = spyg.Game(screens_and_levels=[
+    # the only level
+    {
+        "class": spyg.Level, "name": "MAZE", "id": 1,
+    },
+
+    # add more of your levels here
+    # { ... },
+
+], title="The Maze Runner - An A-maze-ing Game :)")
+
+# that's it, play one of the levels -> this will enter an endless game loop
+game.levels_by_name["MAZE"].play()
 ```
+
+All you need in order to run this game is the above code in a directory, and the additional subdirectories data/ and images/, which can
+be found [here](www.github.com/sven1977/spygame/tree/master/examples/maze_runner)
+
+This should give you a level like:
+![Vikings Sample]()
