@@ -49,12 +49,17 @@ All you need in order to run this game is the above code in a directory, and the
 be found [here](www.github.com/sven1977/spygame/tree/master/examples/maze_runner). These directories contain the necessary SpriteSheets,
 level background images and level setup (collision layers, background images, position and class of the player, etc..).
 
-This should give you a level like:
+This should give you a level like this:
+
 ![The Lost Vikings](https://raw.githubusercontent.com/sven1977/spygame/master/examples/maze_runner/screen1.png)
-in which you can control the Agent via the four arrow keys (up, down, left, right).
 
-#####NOTE: All graphics we use here are taken from the game "The Lost Vikings" (c) by Silicon and Synapse (now Blizzard Entertainment Inc.). Please only use these for demonstration purposes. 
+You can control the Agent via the four arrow keys (up, down, left, right).
 
+<b>NOTE: All graphics used here are taken from the game "The Lost Vikings" (c) 1992 by Silicon and Synapse (now Blizzard Entertainment Inc.).
+Please only use these for demonstration purposes.</b> 
+
+
+### Next steps
 If you would like to create more complex levels (or entire Games with many Screens and Levels), read the spygame documentation, in which we'll
 create a full-blown 2D platformer Level.
 
