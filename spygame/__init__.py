@@ -232,8 +232,7 @@ class KeyboardInputs(EventObject):
         self.descriptions = {}
         self.desc_to_key = {}  # for reverse mapping from description (e.g. 'up') to int (e.g. pygame.K_UP)
 
-        if not key_list:
-            # key_list = [[pygame.K_UP, "up"], [pygame.K_DOWN, "down"], [pygame.K_LEFT, "left"], [pygame.K_RIGHT, "right"]]
+        if key_list is None:
             key_list = ["up", "down", "left", "right"]
         self.update_keys(key_list)
 
@@ -458,60 +457,62 @@ class Sprite(GameObject, pygame.sprite.Sprite):
             Sprite.next_type *= 2
         return Sprite.types[type]
 
-    def __init__(self, x: int, y: int, spritesheet_or_wh: Union[SpriteSheet, Tuple[int], None] = None):
+    # TODO: make Sprite accept an image file as well (png will be loaded and simply set as image)
+    def __init__(self, x: int, y: int, sheet_or_wh_or_file: Union[SpriteSheet, str, Tuple[int], None] = None):
         pygame.sprite.Sprite.__init__(self)
         GameObject.__init__(self)
 
         # all sprites need to have a position
         # - but support Sprites without SpriteSheets:
         # -- some Rect without image
-        if isinstance(spritesheet_or_wh, tuple):
+        if isinstance(sheet_or_wh_or_file, tuple):
             self.spritesheet = None
-            self.image = None  # pygame.Surface((spritesheet_or_wh[0], spritesheet_or_wh[1]))
+            self.image = None  # pygame.Surface((sheet_or_wh_or_file[0], sheet_or_wh_or_file[1]))
             # self.image.fill(pygame.Color(0, 0, 0, 255))  # all transparent image
-            self.rect = pygame.Rect(x, y, spritesheet_or_wh[0], spritesheet_or_wh[1])
+            self.rect = pygame.Rect(x, y, sheet_or_wh_or_file[0], sheet_or_wh_or_file[1])
         # -- with SpriteSheet
-        elif isinstance(spritesheet_or_wh, SpriteSheet):
-            self.spritesheet = spritesheet_or_wh
-            self.image = spritesheet_or_wh.tiles[0]
+        elif isinstance(sheet_or_wh_or_file, SpriteSheet):
+            self.spritesheet = sheet_or_wh_or_file
+            self.image = sheet_or_wh_or_file.tiles[0]
             self.rect = pygame.Rect(x, y, self.spritesheet.tw, self.spritesheet.th)
-        # -- zero-size image
+        # an image file -> fixed image -> store as Surface in self.image
+        elif isinstance(sheet_or_wh_or_file, str):
+            self.spritesheet = None
+            self.image = pygame.image.load(sheet_or_wh_or_file)
+            self.rect = self.image.get_rect()
+        # -- tiny-size rect (no image)
         else:
             self.spritesheet = None
             self.image = None  # pygame.Surface((0, 0))
-            self.rect = pygame.Rect(x, y, 0, 0)
+            self.rect = pygame.Rect(x, y, 1, 1)
 
         # GameObject specific stuff
-        self.type = Sprite.get_type("default")  # specifies the type of the GameObject (can be used e.g. for collision detection)
+        self.type = Sprite.get_type("friendly")  # specifies the type of the GameObject (can be used e.g. for collision detection)
         self.handles_own_collisions = False  # set to True if this object takes care of its own collision handling
-        self.collision_mask = Sprite.get_type("default")
+        self.collision_mask = Sprite.get_type("default")  # set the bits here that we would like to collide with (all other types will be ignored)
 
-        self.stage = None  # the current Stage this GameObject is in
+        self.stage = None  # the current Stage this Sprite is in
         self.sprite_groups = []  # the current Groups that this Sprite belongs to
         self.flip = {"x": False, "y": False}  # 'x': flip in x direction, 'y': flip in y direction, False: don't flip
 
         self.register_event("added_to_stage")  # allow any Stage to trigger this event using this Sprite
 
-    def move(self, x: int, y: int, precheck: bool = False):
+    def move(self, x, y, precheck=False):
         """
         moves us by x/y pixels
         OBSOLETE: - if precheck is set to True: pre-checks the planned move via call to stage.locate and only moves entity as far as possible
-        Args:
-            sprite (Sprite): the Sprite to move (our GameObject)
-            x (int): amount in which to move in x direction
-            y (int): amount in which to move in y direction
-            precheck (bool): ???
 
-        Returns:
-
+        :param int x: the amount in pixels to move in x-direction
+        :param int y: the amount in pixels to move in y-direction
+        :param bool precheck: ???
         """
-        """if (precheck) {
-            var testcol = this.stage.locate(p.x+x, p.y+y, Q._SPRITE_DEFAULT, p.w, p.h);
-            if ((!testcol) || (testcol.tileprops && testcol.tileprops['liquid'])) {
-                return true;
-            }
-            return false;
-        }"""
+
+        #if precheck:
+        #    testcol = self.stage.locate(p.x+x, p.y+y, Q._SPRITE_DEFAULT, p.w, p.h);
+        #    if ((!testcol) || (testcol.tileprops && testcol.tileprops['liquid'])) {
+        #        return True
+        #
+        #    return False
 
         self.rect.x += x
         self.rect.y += y
@@ -550,6 +551,57 @@ class Sprite(GameObject, pygame.sprite.Sprite):
             display.surface.blit(self.image, (self.rect.x + display.offsets[0], self.rect.y + display.offsets[1]))
         if DEBUG_FLAGS & DEBUG_RENDER_SPRITES_RECTS:
             pygame.draw.rect(display.surface, DEBUG_RENDER_SPRITES_RECTS_COLOR, pygame.Rect((self.rect.x, self.rect.y), (self.rect.w, self.rect.h)), 1)
+
+
+class Repeater(Sprite):
+    """
+    a background 2D repeater that scrolls slower than the viewport
+    """
+    def __init__(self, x, y, image_file, **kwargs):
+        super().__init__(x, y, image_file)
+        self.vx = 1
+        self.vy = 1
+        self.repeat_x = kwargs.get("repeat_x", True)
+        self.repeat_y = kwargs.get("repeat_y", True)
+        self.repeat_w = kwargs.get("repeat_w", self.rect.width)
+        self.repeat_h = kwargs.get("repeat_h", self.rect.height)
+        self.type = 0  # ??
+
+    def render(self, display):
+        view_x = display.offsets[0]
+        view_y = display.offsets[1]
+        offset_x = self.rect.centerx + view_x * self.vx
+        offset_y = self.rect.centery + view_y * self.vy
+        cur_x = 0
+        cur_y = 0
+        start_x = 0
+
+        if self.repeat_x:
+            cur_x = math.floor(-offset_x % self.repeat_w)
+            if cur_x > 0:
+                cur_x -= self.repeat_w
+        else:
+            cur_x = self.rect.centerx - view_x
+        if self.repeat_y:
+            cur_y = math.floor(-offset_y % self.repeat_h)
+            if cur_y > 0:
+                cur_y -= self.repeat_h
+        else:
+            cur_y = self.rect.centery - view_y
+
+        start_x = cur_x
+        scale = 1.0
+        while cur_y < self.stage.screen.height / scale:
+            cur_x = start_x
+            while cur_x < self.stage.screen.width / scale:
+                display.surface.blit(self.image, dest=(math.floor(cur_x + view_x), math.floor(cur_y + view_y)))
+                cur_x += self.repeat_w
+                if not self.repeat_x:
+                    break
+
+            cur_y += self.repeat_h
+            if not self.repeat_y:
+                break
 
 
 class AnimatedSprite(Sprite):
@@ -763,57 +815,57 @@ class GameLoop(object):
         self.frame += 1
 
 
-# TODO: can we get rid of Scenes altogether? They seem to make things overly complicated.
-class Scene(object):
-    """
-    A Scene class that allows a 'scene-func' to be run when the Scene is staged (on one of the Stages of the Game)
-    """
+# OBSOLETE: got rid of Scenes altogether. They seemed to make things overly complicated.
+#class Scene(object):
+#    """
+#    A Scene class that allows a 'scene-func' to be run when the Scene is staged (on one of the Stages of the Game)
+#    """
+#
+#    # stores all scenes of the game by name
+#    scenes_registry = {}
+#
+#    @staticmethod
+#    def register_scene(name: str, scene_or_func=None, options=None):
+#        if not scene_or_func:
+#            scene_or_func = Scene.default_scene_func_from_pytmx
+#        if not options:
+#            options = {}
 
-    # stores all scenes of the game by name
-    scenes_registry = {}
+#        # we have to create the scene from the scene_func
+#        if callable(scene_or_func):
+#            scene = Scene(scene_or_func, options)
+#        # we are given the Scene
+#        else:
+#            scene = scene_or_func
+#        Scene.scenes_registry[name] = scene
+#        return scene
 
-    @staticmethod
-    def register_scene(name: str, scene_or_func=None, options=None):
-        if not scene_or_func:
-            scene_or_func = Scene.default_scene_func_from_pytmx
-        if not options:
-            options = {}
+#    @staticmethod
+#    def get_scene(name: str):
+#        if name not in Scene.scenes_registry:
+#            return None
+#        return Scene.scenes_registry[name]
 
-        # we have to create the scene from the scene_func
-        if callable(scene_or_func):
-            scene = Scene(scene_or_func, options)
-        # we are given the Scene
-        else:
-            scene = scene_or_func
-        Scene.scenes_registry[name] = scene
-        return scene
+#    # helper function for setting up a scene on a stage
+#    # reads a tmx file and creates a scene from it
+#    @staticmethod
+#    def default_scene_func_from_pytmx(stage):
+#        # mandatory options: tmx (the tmx object)
+#        if "tmx_obj" not in stage.options:
+#            return
+#        tmx_obj = stage.options["tmx_obj"]
+#        for layer in tmx_obj.layers:
+#            stage.add_tiled_layer(layer, tmx_obj)
 
-    @staticmethod
-    def get_scene(name: str):
-        if name not in Scene.scenes_registry:
-            return None
-        return Scene.scenes_registry[name]
+#    def __init__(self, scene_func, options=None):
+#        """
 
-    # helper function for setting up a scene on a stage
-    # reads a tmx file and creates a scene from it
-    @staticmethod
-    def default_scene_func_from_pytmx(stage):
-        # mandatory options: tmx (the tmx object)
-        if "tmx_obj" not in stage.options:
-            return
-        pytmx = stage.options["tmx_obj"]
-        for layer in pytmx.layers:
-            stage.add_tiled_layer(layer, pytmx)
-
-    def __init__(self, scene_func, options=None):
-        """
-
-        Args:
-            scene_func (callable): the function to be executed when the Scene is staged
-            options (None,iterable): the options to pass on to the Stage when staging this Scene
-        """
-        self.scene_func = scene_func  # will take Stage object as only(!) parameter (options can be retrieved from stage.options)
-        self.options = options or {}  # options for the Scene; will be merged with Stage's options when staging the Scene
+#        Args:
+#            scene_func (callable): the function to be executed when the Scene is staged
+#            options (None,iterable): the options to pass on to the Stage when staging this Scene
+#        """
+#        self.scene_func = scene_func  # will take Stage object as only(!) parameter (options can be retrieved from stage.options)
+#        self.options = options or {}  # options for the Scene; will be merged with Stage's options when staging the Scene
 
 
 class Stage(GameObject):
@@ -891,60 +943,52 @@ class Stage(GameObject):
         return Stage.stages[idx]
 
     @staticmethod
-    def stage_scene(scene: Scene, stage_idx=None, options=None):
+    def stage_screen(screen, screen_func=None, stage_idx=None, options=None):
         """
-        supported options are:
+        supported options are (if not given, we take some of them from given Screen object, instead):
         - stage_idx (int): sets the stage index to use (0-9)
         - stage_class (class): sets the class (must be a Stage class) to be used when creating the new Stage
         - force_loop (bool): if set to True and we currently have a GameLoop running, stop the current GameLoop and replace it with a new one, which has
                                 to be given via the "game_loop" option (as GameLoop object, or as string "new" for a default GameLoop)
         - keyboard_inputs (KeyboardInputs): the KeyboardInputs object to use for the new GameLoop
         - display (Display): the Display to use for the new GameLoop
-        - screen_obj (Screen): if no keyboard_inputs and/or display are given, we will take these information from the screen_obj
         - components (List[Component]): a list of Component objects to add to the new Stage (e.g. a Viewport)
-        - tile_layer_physics_collision_detector (callable): a function that detects tile-layer collisions (with Sprites) and returns a Collision object
-            "tile_layer_physics_collision_handler" : spyg.TopDownPhysics.tile_layer_physics_collision_handler
 
-
-
-        :param Scene scene: the Scene object to execute in order to populate the Stage
-        :param int stage_idx: the Stage index to use
+        :param Screen screen: the Screen object to set up on a certain stage
+        :param callable screen_func: the function to use to set up the Stage (before playing it)
+        :param int stage_idx: the Stage index to use (0=default Stage)
         :param dict options: options to be used when instantiating the Stage
         :return: the new Stage object
         :rtype: Stage
         """
-        # if it's a string, find a registered scene by that name
-        if isinstance(scene, str):
-            scene = Scene.get_scene(scene)
-
         if options is None:
             options = {}
 
-        defaults(options, {"stage_class": (scene.options["stage_class"] if "stage_class" in scene.options else Stage),
-                           "tile_layer_physics_collision_detector": AABBCollision.collide,
-                           "tile_layer_physics_collision_handler": PhysicsComponent.tile_layer_physics_collision_handler,
-                           })
+        defaults(options, {"stage_class": Stage})
 
         # figure out which stage to use
-        stage_idx = stage_idx if stage_idx is not None else (scene.options["stage_idx"] if "stage_idx" in scene.options else 0)
+        stage_idx = stage_idx if stage_idx is not None else (options["stage_idx"] if "stage_idx" in options else 0)
 
         # clean up an existing stage if necessary
         Stage.clear_stage(stage_idx)
 
-        # make this this the active stage and initialize the stage, calling loadScene to populate the stage if we have a scene
+        # create a new Stage and make this this the active stage
+        stage = Stage.stages[stage_idx] = options["stage_class"](screen, options)
         Stage.active_stage = stage_idx
-        stage = Stage.stages[stage_idx] = options["stage_class"](scene, options)
 
-        # setup the Stage via the Scene's scene_func
-        if scene:
-            stage.load_scene()
+        # setup the Stage via the screen_fun (passing it the newly created Stage)
+        if not screen_func:
+            screen_func = screen.screen_func
+
+        screen_func(stage)
         Stage.active_stage = 0
 
         # finally return the stage to the user for use if needed
         return stage
 
-    def __init__(self, scene: Scene = None, options=None):
+    def __init__(self, screen, options=None):
         super().__init__()
+        self.screen = screen  # the screen object associated with this Stage
         self.tiled_layers = {}  # pytmx.pytmx.TiledLayer (TiledTileLayer or TiledObjectGroup) by name
         self.tiled_layers_to_render = []  # list of all layers by name (TiledTileLayers AND TiledObjectGroups) in the order in which they have to be rendered
         self.tiled_layers_to_collide = []  # list of all layers that collide (mask is not 0) by name (TiledTileLayers)
@@ -956,10 +1000,7 @@ class Stage(GameObject):
 
         # self.index = {}  # used for search methods
         self.remove_list = []  # sprites to be removed from the Stage (only remove when Stage gets ticked)
-        self.scene = scene
         self.options = options or {}
-        if self.scene:
-            extend(self.options, self.scene.options)
 
         self.is_paused = False
         self.is_hidden = False
@@ -984,10 +1025,11 @@ class Stage(GameObject):
         self.invoke("debind_events")
         self.trigger_event("destroyed")
 
+    #OBSOLETE:
     # executes our Scene by calling the Scene's function with self as only parameter
-    def load_scene(self):
-        if self.scene:
-            self.scene.scene_func(self)
+    #def load_scene(self):
+    #    if self.scene:
+    #        self.scene.scene_func(self)
 
     # TODO: loadAssets?
 
@@ -1021,6 +1063,8 @@ class Stage(GameObject):
 
         # make a spygame.TmxLayer
         if isinstance(pytmx_layer, pytmx.pytmx.TiledObjectGroup):
+            # TODO: what if we have many objects in the layer that should have different render_order? (e.g. a Repeater)
+            # try once more with another object layer (but there was a bug in pytmx)
             l = TiledObjectGroup(pytmx_layer, pytmx_tiled_map)
         elif isinstance(pytmx_layer, pytmx.pytmx.TiledTileLayer):
             # use default collision objects if not given
@@ -1054,12 +1098,13 @@ class Stage(GameObject):
             for sprite in l.sprite_group.sprites():
                 self.add_sprite(sprite, l.name)
 
+    # TODO: Sprite or GameObject??
     def add_sprite(self, sprite: Sprite, group_name: str):
         """
         adds a new sprite to an existing or a new Group
-        Args:
-            sprite (GameObject): the GameObject to be added
-            group_name (str): the name of the group to which the GameObject should be added (group will not be created if it doesn't exist yet)
+            :param GameObject sprite: the GameObject to be added
+            :param str group_name: the name of the group to which the GameObject should be added (group will not be created if it doesn't exist yet)
+            :return: the Sprite that was added
         """
         # if the group doesn't exist yet, create it
         if group_name not in self.sprite_groups:
@@ -1478,10 +1523,16 @@ class TiledObjectGroup(TmxLayer):
                 match_obj = re.fullmatch('^((.+)\.)?(\w+)$', obj_props["sprite_class"])
                 assert match_obj, "ERROR: class property in pytmx.pytmx.TiledObjectGroup does not match pattern!"
                 _, module_, class_ = match_obj.groups(default="__main__")  # if no module given, assume a class defined in __main__
-                spritesheet = SpriteSheet("data/" + obj_props["tsx"] + ".tsx")
-                class_instance = getattr(sys.modules[module_], class_)(obj.x, obj.y, spritesheet)
 
-                self.sprite_group.add(class_instance)
+                sheet_or_image = None
+                if "tsx" in obj_props:
+                    sheet_or_image = SpriteSheet("data/" + obj_props["tsx"] + ".tsx")
+                elif "image_file" in obj_props:
+                    sheet_or_image = "images/" + obj_props["image_file"] + ".png"
+
+                # generate the Sprite
+                sprite = getattr(sys.modules[module_], class_)(obj.x, obj.y, sheet_or_image)
+                self.sprite_group.add(sprite)
 
     def render(self, display):
         # loop through each Sprite in the group and blit it to the Display's Surface
@@ -1775,7 +1826,8 @@ class Animation(Component):
 
 class Dockable(Component):
     """
-    a dockable component allows for
+    a dockable component allows for other Sprites to dock to this Component's GameObject
+    - other Sprites that are docked to us will be moved along with us
     """
 
     def __init__(self, name):
@@ -1792,28 +1844,30 @@ class Dockable(Component):
         # extend our GameObject with move
         self.extend(self.move)
 
-    def move(self, sprite, x: int, y: int, precheck: bool = False):
+    def move(self, sprite, x, y, precheck=False):
         """
-        moves our GameObject (which has to be a Sprite with a rect) by given x/y strides
+        this will 'overwrite' the normal Sprite's `move` method by Component's extend
         - if precheck is set to True: pre-checks the planned move via call to stage.locate and only moves entity as far as possible
-        Args:
-            sprite (Sprite): the Sprite to move (our GameObject)
-            x (int): amount in which to move in x direction
-            y (int): amount in which to move in y direction
-            precheck (bool): ???
 
-        Returns:
-
+        :param Sprite sprite: the GameObject that this Component belongs to (the Sprite to move around)
+        :param int x: the amount in pixels to move in x-direction
+        :param int y: the amount in pixels to move in y-direction
+        :param bool precheck: ???
         """
-        """if (precheck) {
-            var testcol = this.stage.locate(p.x+x, p.y+y, Q._SPRITE_DEFAULT, p.w, p.h);
-            if ((!testcol) || (testcol.tileprops && testcol.tileprops['liquid'])) {
-                return true;
-            }
-            return false;
-        }"""
 
+        #if precheck:
+        #    testcol = self.stage.locate(p.x+x, p.y+y, Q._SPRITE_DEFAULT, p.w, p.h);
+        #    if ((!testcol) || (testcol.tileprops && testcol.tileprops['liquid'])) {
+        #        return True
+        #
+        #    return False
+
+        # do a minimum of 1 pix (if larger 0.0)
+        if x > 0 and x < 1:
+            x = 1
         sprite.rect.x += x
+        if y > 0 and y < 1:
+            y = 1
         sprite.rect.y += y
 
         # TODO: move the obj_to_follow into collide of stage (stage knows its borders best, then we don't need to define xmax/xmin, etc.. anymore)
@@ -2281,15 +2335,26 @@ class PlatformerPhysics(PhysicsComponent):
             dockable.on_ground[1] = dockable.on_ground[0]  # store "old" value before un-docking
             dockable.undock()
 
-            # then do the normal collision layer(s)
+            # then do the 'default' collision layer(s)
             for layer in stage.tiled_layers_to_collide:
                 if layer.type & Sprite.get_type("default"):
-                    layer.collide(obj, self.vx, 0.0)
+                    layer.collide(obj, "x", self.vx)
 
-            ## check for touch collisions first (e.g. ladders)
-            # for layer in stage.tiled_layers_to_collide:
-            #    if layer.type & Sprite.get_type("touch"):
-            #        layer.collide(obj)
+            # then move in y-direction and solve y-collisions
+            obj.move(0.0, self.vy * dt)
+            if DEBUG_FLAGS & DEBUG_RENDER_SPRITES_BEFORE_COLLISION_DETECTION:
+                obj.render(game_loop.display)
+                game_loop.display.debug_refresh()
+
+            # then do the 'default' collision layer(s)
+            for layer in stage.tiled_layers_to_collide:
+                if layer.type & Sprite.get_type("default"):
+                    layer.collide(obj, "y", self.vy)
+
+            # finally: check for touch collisions first (e.g. ladders)
+            for layer in stage.tiled_layers_to_collide:
+                if layer.type & Sprite.get_type("touch"):
+                    layer.collide(obj)
             # TODO: solve collisions with other objects
 
             dt_step -= dt
@@ -2314,12 +2379,11 @@ class PlatformerPhysics(PhysicsComponent):
 
         # colliding with a ladder
         if other_obj.type & Sprite.get_type("ladder"):
-            # set whichLadder to the ladder's props
+            # set which_ladder to the ladder's props
             self.which_ladder = other_obj
             # if we are not locked into ladder AND on very top of the ladder, collide normally (don't fall through ladder's top)
             if (self.on_ladder > 0 or col.normal_x != 0  # don't x-collide with ladder
-                or col.normal_y > 0  # don't collide with bottom of ladder
-                ):
+                    or col.normal_y > 0):  # don't collide with bottom of ladder
                 return
 
         # a collision layer
@@ -2398,6 +2462,8 @@ class PlatformerPhysics(PhysicsComponent):
                 col.impact = impact_y
                 dockable.dock_to(other_obj)  # dock to bottom object (collision layer or MovableRock, etc..)
                 obj.trigger_event("bump.bottom", col)
+            #print("vy after collision handler: {}".format(self.vy))
+
 
         # top collision
         if col.normal_y > 0.3:
@@ -2677,6 +2743,47 @@ class Screen(EventObject, metaclass=ABCMeta):
         pass
 
 
+class SimpleScreen(Screen):
+    """
+    a simple Screen that has support for labels and sprites (still images) shown on the screen
+    """
+    def __init__(self, name, **kwargs):
+        super().__init__(name, **kwargs)
+        self.sprites = (kwargs["sprites"] if "sprites" in kwargs else [])
+        # labels example: {x: Q.width / 2, y: 220, w: 150, label: "NEW GAME", color: "white", align: "left", weight: "900", size: 22, family: "Fixedsys"},
+        self.labels = (kwargs["labels"] if "labels" in kwargs else [])
+        ## TODO: audio? self.audio = kwargs["audio"] if "audio" in kwargs else []
+
+    # define the screen's stage function
+    # - stage functions are used to setup a Stage (before playing it)
+    @staticmethod
+    def screen_func(stage: Stage):
+        # get the Screen object (instance) from the options
+        screen = stage.options["screen_obj"]
+
+        # insert labels to screen
+        for label_def in screen.labels:
+            # generate new Font object
+            font = pygame.font.Font(None, label_def["size"])
+            surf = font.render(label_def["text"], 1, pygame.Color(label_def["color"]))
+            sprite = Sprite(label_def["x"], label_def["y"], surf)
+            stage.add_sprite(sprite, "labels")
+
+        # insert objects to screen
+        for game_obj in screen.game_objects:
+            stage.add_sprite(game_obj, "sprites")
+
+    # plays the screen
+    def play(self):
+        # start screen (will overwrite the old 0-stage (=main-stage))
+        # - also, will give our keyboard-input setup to the new GameLoop object
+        Stage.stage_screen(self, SimpleScreen.screen_func, stage=0,
+                                options={"components": [Viewport(self.display)]})  # <-this options-object will be stored in stage.options
+
+    def done(self):
+        print("we're done!")
+
+
 class Level(Screen, metaclass=ABCMeta):
     """
     a level class
@@ -2696,24 +2803,46 @@ class Level(Screen, metaclass=ABCMeta):
         self.height = self.tmx_obj.height * self.tmx_obj.tileheight
 
         # define Level's Scene (default function that populates Stage with stuff from tmx file)
-        self.scene = Scene.register_scene(self.name, options={"tmx_obj": self.tmx_obj})
+        #OBSOLETE: self.scene = Scene.register_scene(self.name, options={"tmx_obj": self.tmx_obj})
 
         self.register_event("mastered", "aborted", "lost")
 
         # get keyboard_inputs directly from the pytmx object
         if not self.keyboard_inputs.keyboard_registry:
-            descriptions = self.tmx_obj.properties.get("keyboard_inputs", "")
-            codes_and_descriptions = []
-            for d in descriptions.split(","):
-                pygame_code = getattr(pygame, "K_" + d.upper(), None)
-                assert pygame_code, "ERROR: in tmx file ({}) no pygame code associated with K_{}".format(self.tmx_file, d.upper())
-                codes_and_descriptions.append([pygame_code, d])
-            self.keyboard_inputs.update_keys(codes_and_descriptions)
+            descriptions = self.tmx_obj.properties.get("keyboard_inputs", "").split(",")
+            #codes_and_descriptions = []
+            #for d in descriptions.split(","):
+            #    pygame_code = getattr(pygame, "K_" + d.upper(), None)
+            #    assert pygame_code, "ERROR: in tmx file ({}) no pygame code associated with K_{}".format(self.tmx_file, d.upper())
+            #    codes_and_descriptions.append([pygame_code, d])
+            self.keyboard_inputs.update_keys(descriptions)
+
+    # populates a Stage with this Level by going through the tmx file layer by layer and adding it
+    # - unlike SimpleScreen, uses only the tmx file for adding things to the Stage
+    @staticmethod
+    def screen_func(stage):
+        """
+        sets up the Stage by adding all layers (one-by-one) from the tmx file to the Stage
+
+        :param Stage stage:
+        """
+        assert isinstance(stage.screen, Level), "ERROR: screen property of a Stage that uses Level.screen_func to stage a Screen must be a Level object!"
+
+        # force add the default physics functions to the Stage's options
+        defaults(stage.options, {"components": [Viewport(stage.screen.display)],
+                                 "tile_layer_physics_collision_detector": AABBCollision.collide,
+                                 "tile_layer_physics_collision_handler": PhysicsComponent.tile_layer_physics_collision_handler
+                                 })
+        for layer in stage.screen.tmx_obj.layers:
+            stage.add_tiled_layer(layer, stage.screen.tmx_obj)
 
     def play(self):
-        # start level (stage the scene; will overwrite the old 0-stage (=main-stage))
-        # - the options-object below will be also stored in [Stage object].options
-        _ = Stage.stage_scene(self.scene, 0, {"screen_obj": self, "components": [Viewport(self.display)]})
+        """
+        start level (stage the scene; will overwrite the old 0-stage (=main-stage))
+        - the options-object below will be also stored in [Stage object].options
+        - child Level classes only need to do these three things: a) stage a screen, b) register some possible events, c) play a new game loop
+        """
+        Stage.stage_screen(self, self.screen_func, 0)
         # activate level triggers
         self.on_event("agent_reached_exit", self, "done", register=True)
         # play a new GameLoop giving it some options
@@ -2835,10 +2964,6 @@ class CollisionAlgorithm(object):
     # the default collision objects
     # - can be overridden via the collide method
     default_collision_objects = (Collision(), Collision())
-
-    # the normal given a certain axis (we have to go through all axes (all sides) of both Sprites)
-    # - keep global for performance reasons :(
-    # normal = [0.0, 0.0]
 
     @staticmethod
     @abstractmethod

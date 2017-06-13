@@ -1,4 +1,7 @@
 # spygame
+
+![screenshot](https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen1.png)
+
 ## 2D game engine based on Pygame and level-tmx files
 
 ### Get the code
