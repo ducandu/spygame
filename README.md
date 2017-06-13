@@ -1,6 +1,8 @@
 # spygame
 
-![screenshot](https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen1.png)
+![Lost Vikings - Sample spygame Level](https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen1.png)
+
+<sub>All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)</sub>
 
 ## 2D game engine based on Pygame and level-tmx files
 
@@ -54,15 +56,23 @@ level background images and level setup (collision layers, background images, po
 
 This should give you a level like this:
 
-![The Lost Vikings](https://raw.githubusercontent.com/sven1977/spygame/master/examples/maze_runner/screen1.png)
+![The Maze Runner - An A-maze-ing Game :)](https://raw.githubusercontent.com/sven1977/spygame/master/examples/maze_runner/screen1.png)
 
-You can control the Agent via the four arrow keys (up, down, left, right).
+<sub>All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)</sub>
+
+You can now control the Agent via the four arrow keys (up, down, left, right).
 
 <b>NOTE: All graphics used here are taken from the game "The Lost Vikings" (c) 1992 by Silicon and Synapse (now Blizzard Entertainment Inc.).
-Please only use these for demonstration purposes.</b> 
-
+Please only use these (in your own projects and repos) for demonstration purposes.</b>
 
 ### Next steps
 If you would like to create more complex levels (or entire Games with many Screens and Levels), read the spygame documentation, in which we'll
 create a full-blown 2D platformer Level.
 
+### Contribute to spygame
+If you would like to contribute to the spygame library, the following items are currently open:
+* add audio/sound support
+* create more example games
+* create more "Lost Vikings" levels
+* create more physics components (apart from the existing top-down and platformer)
+* create support for GUI elements (label, buttons, tick-boxes, etc..). This is an open Pygame problem and should probably be solved on the Pygame level.
