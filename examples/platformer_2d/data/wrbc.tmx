@@ -910,7 +910,7 @@
    <tile gid="0"/>
   </data>
  </layer>
- <layer name="goal_states" width="32" height="28">
+ <layer name="goal_states" width="32" height="28" visible="0">
   <properties>
    <property name="do_render" type="bool" value="false"/>
    <property name="goal_states" type="bool" value="true"/>
@@ -2719,7 +2719,7 @@
    <tile gid="1165"/>
   </data>
  </layer>
- <layer name="touch" width="32" height="28">
+ <layer name="touch" width="32" height="28" visible="0">
   <properties>
    <property name="do_render" type="bool" value="true"/>
    <property name="render_order" type="int" value="11"/>
@@ -3624,12 +3624,12 @@
    <tile gid="0"/>
   </data>
  </layer>
- <objectgroup name="objects">
+ <objectgroup name="objects" visible="0">
   <properties>
    <property name="do_render" type="bool" value="true"/>
    <property name="render_order" type="int" value="50"/>
   </properties>
-  <object id="1" name="erik" gid="3303" x="244.333" y="247" width="32" height="32">
+  <object id="1" name="erik" gid="3303" x="229.333" y="145" width="32" height="32">
    <properties>
     <property name="agent" type="bool" value="true"/>
     <property name="sprite_class" value="Erik"/>
@@ -3642,7 +3642,7 @@
    </properties>
   </object>
  </objectgroup>
- <layer name="foreground" width="32" height="28">
+ <layer name="foreground" width="32" height="28" visible="0">
   <properties>
    <property name="do_render" type="bool" value="true"/>
    <property name="render_order" type="int" value="100"/>

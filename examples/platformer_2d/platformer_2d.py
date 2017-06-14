@@ -43,8 +43,8 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
         self.is_active_character = False  # more than one Viking can exist in the level
         self.life_points = 3
         self.ladder_frame = 0
-        self.unhealthy_fall_speed = 340
-        self.unhealthy_fall_speed_on_slopes = 340  # on slopes, the vikings can fall a little harder without hurting themselves
+        self.unhealthy_fall_speed = 500
+        self.unhealthy_fall_speed_on_slopes = 400  # on slopes, vikings can fall a little harder without hurting themselves
 
         # add components to this Viking
         # loop time line:
@@ -227,8 +227,8 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
             self.play_animation("fall")
             return True
         # TODO: use something like on_ground to determine whether we are falling or not
-        #elif self.cmp_physics.vy > 30:
-        elif not self.on_ground[0]:
+        elif self.cmp_physics.vy != 0:
+        #elif not self.on_ground[0]:
             self.play_animation("jump")
             return True
         return False
@@ -277,14 +277,14 @@ class Baleog(Viking):
                                   "flags" : (spyg.Animation.ANIM_DISABLES_CONTROL | spyg.Animation.ANIM_PROHIBITS_STAND)},
             # disables control, except for action1 (which is pressed down)
             "swing_sword1"     : {"frames": [18, 19, 20, 21], "rate": 1 / 4, "loop": False, "next": 'stand',
-                                  "flags" : (spyg.Animation.ANIM_DISABLES_CONTROL | spyg.Animation.ANIM_SWING_SWORD), "keys_status": {"action1": 1}},
+                                  "flags" : (spyg.Animation.ANIM_DISABLES_CONTROL | spyg.Animation.ANIM_SWING_SWORD), "keys_status": {"space": 1}},
             # disables control, except for action1 (which is pressed down)
             "swing_sword2"     : {"frames": [22, 23, 24, 25], "rate": 1 / 4, "loop": False, "next": 'stand',
-                                  "flags" : (spyg.Animation.ANIM_DISABLES_CONTROL | spyg.Animation.ANIM_SWING_SWORD), "keys_status": {"action1": 1}},
+                                  "flags" : (spyg.Animation.ANIM_DISABLES_CONTROL | spyg.Animation.ANIM_SWING_SWORD), "keys_status": {"space": 1}},
             "draw_bow"         : {"frames": [27, 27, 28, 29, 30, 31], "rate": 1 / 5, "loop": False, "next": 'holdBow',
-                                  "flags" : (spyg.Animation.ANIM_DISABLES_CONTROL | spyg.Animation.ANIM_BOW), "keys_status": {"action2": 1}},
+                                  "flags" : (spyg.Animation.ANIM_DISABLES_CONTROL | spyg.Animation.ANIM_BOW), "keys_status": {"d": 1}},
             "hold_bow"         : {"frames"     : [31], "loop": False, "flags": (spyg.Animation.ANIM_DISABLES_CONTROL | spyg.Animation.ANIM_BOW),
-                                  "keys_status": {"action2": -1}},
+                                  "keys_status": {"d": -1}},
             "release_bow"      : {"frames": [33, 32, 33, 32, 33, 32, 0], "rate": 1 / 6, "loop": False, "next": "stand",
                                   "flags" : (spyg.Animation.ANIM_PROHIBITS_STAND | spyg.Animation.ANIM_BOW)},
         })
@@ -303,13 +303,13 @@ class Baleog(Viking):
     def check_hit_with_sword(self):
         anim_flags = self.components["animation"].flags
         brain = self.components["brain"]
-        # action1 is pressed AND user's sword is replenished (had released action1 key) AND anim is currently not swinging sword
-        if brain.commands["action1"] and not self.disable_sword and not (anim_flags & spyg.Animation.ANIM_SWING_SWORD):
+        # action1 is pressed AND user's sword is replenished (had released space) AND anim is currently not swinging sword
+        if brain.commands["sword"] and not self.disable_sword and not (anim_flags & spyg.Animation.ANIM_SWING_SWORD):
             self.disabled_sword = True
             self.play_animation(random.choice(["swing_sword1", "swing_sword2"]))
             return True
         # re-enable sword? (space key needs to be released between two sword strikes)
-        elif not spyg.GameLoop.active_loop.keyboard_inputs.keyboard_registry[pygame.K_SPACE]:  # TODO: what about touch screens?
+        elif not brain.commands["sword"]:  # TODO: what about touch screens?
             self.disabled_sword = False
 
         return anim_flags & spyg.Animation.ANIM_SWING_SWORD
@@ -321,14 +321,14 @@ class Baleog(Viking):
         anim = self.components["animation"]
         anim_flags = anim.flags
         brain = self.components["brain"]
-        if brain.commands["action2"] and not (anim_flags & spyg.Animation.ANIM_BOW):
+        if brain.commands["arrow"] and not (anim_flags & spyg.Animation.ANIM_BOW):
             self.play_animation("draw_bow")
             return True
-        elif not brain.commands["action2"] and anim.animation == "hold_bow":
+        elif not brain.commands["arrow"] and anim.animation == "hold_bow":
             self.play_animation("release_bow")
             self.stage.add_sprite(Arrow(self))
             return True
-        return brain.commands["action2"] and (anim_flags & spyg.Animation.ANIM_BOW)
+        return brain.commands["arrow"] and (anim_flags & spyg.Animation.ANIM_BOW)
 
 
 # define player: Erik the Swift
@@ -445,7 +445,7 @@ class VikingLevel(spyg.Level):
         # - the options-object below will be also stored in [Stage object].options
         stage = spyg.Stage.stage_screen(self, None, 0, {
             "tile_layer_physics_collisions": (spyg.PlatformerCollision(), spyg.PlatformerCollision()),
-            "tile_layer_physics_collision_handler": spyg.PlatformerPhysics.tile_layer_physics_collision_handler,
+            "tile_layer_physics_collision_postprocessor": spyg.PlatformerPhysics.tile_layer_physics_collision_postprocessor,
         })
 
         # find all Vikings in the Stage and store them for us
@@ -740,7 +740,7 @@ if __name__ == "__main__":
         # add more of your levels here
         # { ... },
 
-    ], title="The Lost Vikings - Return of the Heroes :)", debug_flags=spyg.DEBUG_NONE)
+    ], title="The Lost Vikings - Return of the Heroes :)", debug_flags=(spyg.DEBUG_NONE))  # spyg.DEBUG_DONT_RENDER_TILED_TILE_LAYERS | spyg.DEBUG_RENDER_COLLISION_TILES | spyg.DEBUG_RENDER_SPRITES_RECTS
 
     # that's it, play one of the levels -> this will enter an endless game loop
     game.levels_by_name["WRBC"].play()

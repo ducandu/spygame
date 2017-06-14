@@ -38,7 +38,7 @@ class MyAgent(spyg.Sprite):
 game = spyg.Game(screens_and_levels=[
     # the only level
     {
-        "class": spyg.Level, "name": "MAZE", "id": 1,
+        "class": spyg.Level, "id": 1, "name": "MAZE",  # <- this will read the data/maze.tmx file for the level's layout and setup data
     },
 
     # add more of your levels here
@@ -69,6 +69,10 @@ Please only use these (in your own projects and repos) for demonstration purpose
 If you would like to create more complex levels (or entire Games with many Screens and Levels), read the spygame documentation, in which we'll
 create a full-blown 2D platformer Level.
 
+### AI (Reinforcement Learning) with spygame
+I'm currently working on making spygame available as an openAI-gym Environment type, so that reinforcement learning algorithms can run against any spygame
+Level objects.
+
 ### Contribute to spygame
 If you would like to contribute to the spygame library, the following items are currently open:
 * add audio/sound support
@@ -76,3 +80,4 @@ If you would like to contribute to the spygame library, the following items are 
 * create more "Lost Vikings" levels
 * create more physics components (apart from the existing top-down and platformer)
 * create support for GUI elements (label, buttons, tick-boxes, etc..). This is an open Pygame problem and should probably be solved on the Pygame level.
+* help out with integrating spygame into openAI-gym and openAI-rllab repos

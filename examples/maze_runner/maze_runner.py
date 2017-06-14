@@ -40,7 +40,7 @@ if __name__ == "__main__":
     game = spyg.Game(screens_and_levels=[
         # the only level
         {
-            "class": spyg.Level, "name": "MAZE", "id": 1,
+            "class": spyg.Level, "id": 1, "name": "MAZE",  # <- this will read the data/maze.tmx file for the level's layout and setup data
         },
 
         # add more of your levels here
