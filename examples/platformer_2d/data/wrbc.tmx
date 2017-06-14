@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="32" height="28" tilewidth="16" tileheight="16" nextobjectid="16">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="32" height="28" tilewidth="16" tileheight="16" nextobjectid="17">
  <properties>
   <property name="keyboard_inputs" value="up,down,left,right,space,escape"/>
  </properties>
@@ -692,9 +692,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
+   <tile gid="0"/>
    <tile gid="1705"/>
-   <tile gid="1704"/>
-   <tile gid="1704"/>
    <tile gid="1704"/>
    <tile gid="1704"/>
    <tile gid="1704"/>
@@ -723,6 +722,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
+   <tile gid="0"/>
+   <tile gid="0"/>
    <tile gid="1705"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -734,8 +735,6 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
    <tile gid="1704"/>
    <tile gid="1704"/>
    <tile gid="1704"/>
@@ -755,7 +754,8 @@
    <tile gid="1704"/>
    <tile gid="1704"/>
    <tile gid="1704"/>
-   <tile gid="0"/>
+   <tile gid="1704"/>
+   <tile gid="1704"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -1815,7 +1815,7 @@
    <tile gid="0"/>
   </data>
  </layer>
- <layer name="background" width="32" height="28">
+ <layer name="background" width="32" height="28" visible="0">
   <properties>
    <property name="do_render" type="bool" value="true"/>
    <property name="render_order" type="int" value="10"/>
@@ -3624,12 +3624,12 @@
    <tile gid="0"/>
   </data>
  </layer>
- <objectgroup name="objects" visible="0">
+ <objectgroup name="objects">
   <properties>
    <property name="do_render" type="bool" value="true"/>
    <property name="render_order" type="int" value="50"/>
   </properties>
-  <object id="1" name="erik" gid="3303" x="229.333" y="145" width="32" height="32">
+  <object id="1" name="erik" gid="3303" x="224.333" y="19" width="32" height="32">
    <properties>
     <property name="agent" type="bool" value="true"/>
     <property name="sprite_class" value="Erik"/>

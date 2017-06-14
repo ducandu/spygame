@@ -43,8 +43,8 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
         self.is_active_character = False  # more than one Viking can exist in the level
         self.life_points = 3
         self.ladder_frame = 0
-        self.unhealthy_fall_speed = 500
-        self.unhealthy_fall_speed_on_slopes = 400  # on slopes, vikings can fall a little harder without hurting themselves
+        self.unhealthy_fall_speed = 420
+        self.unhealthy_fall_speed_on_slopes = 450  # on slopes, vikings can fall a little harder without hurting themselves
 
         # add components to this Viking
         # loop time line:
@@ -80,8 +80,16 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
             self.is_active_character = False
         return self
 
-    # Controls component's "tick"-method gets called first (event: entity.prestep fired by Player's "update"-method), only then the Player's step method is called
-    # - mainly determines player's animation that gets played
+    # sequence of this Sprite's tick-flow:
+    # - tick gets called by the Stage
+    # - pre_tick is triggered by this tick
+    # -- pre_tick calls tick of the Components (Animation, Brain (maps keyboard input to controls), Physics)
+    # -- Physics Component tick method runs:
+    # --- determines x/y speeds and moves according to s = v*dt
+    # --- runs collision detection against all layers
+    # --- if a layer detects a collision, it is postprocessed (e.g. slopes)
+    # --- then event "collision" is triggered on this Sprite
+    # --- Physics Component listens for this event and handles the collision by solving for wall-bumps and slopes
     def tick(self, game_loop):
         dt = game_loop.dt
 
@@ -226,9 +234,9 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
         elif self.cmp_physics.vy > self.unhealthy_fall_speed:
             self.play_animation("fall")
             return True
-        # TODO: use something like on_ground to determine whether we are falling or not
+        # TODO: use something like docking_state to determine whether we are falling or not
         elif self.cmp_physics.vy != 0:
-        #elif not self.on_ground[0]:
+        #elif not self.docking_state[0]:
             self.play_animation("jump")
             return True
         return False

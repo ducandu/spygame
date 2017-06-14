@@ -19,8 +19,8 @@ import sys
 import math
 import re
 
-# some debug flags that we can set to switch on debug rendering, collision handling, etc..
 
+# some debug flags that we can set to switch on debug rendering, collision handling, etc..
 DEBUG_NONE = 0x0  # no debugging
 DEBUG_ALL = 0xffff  # full debugging
 # will not render TiledTileLayers that are marked as 'do_render'==true in the tmx files
@@ -41,7 +41,7 @@ DEBUG_RENDER_SPRITES_AFTER_EACH_TICK = 0x20
 # will render every Sprite before the Sprite's collision detection algo runs
 DEBUG_RENDER_SPRITES_BEFORE_COLLISION_DETECTION = 0x40
 
-# by default, no debugging (set this through the Game c'tor)
+# by default, no debugging (you can set this through a Game's c'tor using the debug_flags kwarg)
 DEBUG_FLAGS = DEBUG_NONE
 
 
@@ -239,6 +239,7 @@ class KeyboardInputs(EventObject):
     def update_keys(self, new_key_list: Union[List, None] = None):
         """
         populates our registry and other dicts with the new key-list given (may be an empty list)
+
         :param list new_key_list: the new key list, where each item is the lower-case pygame keycode without the leading "K_" e.g. "up" for pygame.K_UP
                                   - use None for clearing out the registry (no keys assigned)
         """
@@ -1450,18 +1451,15 @@ class TiledTileLayer(TmxLayer):
                 self.tile_sprite.rect.y = tile_y * self.pytmx_tiled_map.tileheight
                 self.tile_sprite.tile_props = tile_props
 
-                # TODO: exclude collisions such as: where Nx=-1 with tiles that have a left x-neighbor (impossible!), OR where Nx=1 with a right x-neighbor, etc..
-                #       those collisions could cause a running character to get x-stuck in a floor-tile (and then play "push"-animation instead of "run"-animation)
-
                 # check the actual collision with our collision detector
                 col = self.collision_detector(sprite, self.tile_sprite, self.collision_objects, direction=direction, direction_veloc=direction_veloc)
 
-                # we got a new collision with this tile -> process collision via our handler and return
+                # we got a new collision with this tile -> post-process collision and - if still ok - return
                 if col and col.is_collided and col.magnitude > 0:
                     # post-process the collision depending on the given Physics engine's post-processor (e.g. to deal with slopes)
                     col = self.collision_postprocessor(col)
-                    # collision is still ok (after processing via handler) -> trigger collision event on Sprite
-                    if col:
+                    # collision is still ok (after post-processing) -> trigger collision event on Sprite
+                    if col.is_collided:
                         sprite.trigger_event("collision", col)
                         # return after the first tile collided with Sprite
                         return col
@@ -1722,8 +1720,12 @@ class Animation(Component):
         self.extend(self.play_animation)
         self.extend(self.blink_animation)
 
-    # gets called when the GameObject triggers a "pre_tick" event
     def tick(self, game_loop):
+        """
+        gets called when the GameObject triggers a "pre_tick" event
+
+        :param GameLoop game_loop: the GameLoop that's currently playing
+        """
         obj = self.game_object
 
         # blink stuff?
@@ -1791,6 +1793,14 @@ class Animation(Component):
                 obj.image = tiles_dict[anim_settings["frames"][int(self.frame)]]
 
     def play_animation(comp, game_object, name, priority=0):
+        """
+        plays an animation on our GameObject
+
+        :param GameObject game_object: the GameObject on which to play the animation; the animation has to be setup via register_settings with the name
+          of the SpriteSheet of the GameObject
+        :param str name: the name of the animation to play
+        :param int priority: the priority with which to play this animation (if this method is called multiple times, it will pick the higher one)
+        """
         if name and name != comp.animation and priority >= comp.priority:
             comp.animation = name
             comp.has_changed = True
@@ -1809,13 +1819,11 @@ class Animation(Component):
 
     def blink_animation(comp, game_object, rate=3.0, duration=3.0):
         """
+        blinks the GameObject with the given parameters
 
-        Args:
-            comp (Component): self
-            game_object (GameObject): our underlying GameObject
-            rate (float): in 1/s
-            duration (float): in s
-        Returns:
+        :param GameObject game_object: our GameObject to which blinking is applied
+        :param float rate: the rate with which to blink (in 1/s)
+        :param float duration: the duration of the blinking (in s); after the duration, the blinking stops
         """
         comp.blink_rate = rate
         comp.blink_duration = duration
@@ -1828,12 +1836,21 @@ class Dockable(Component):
     - other Sprites that are docked to us will be moved along with us
     """
 
+    DEFINITELY_DOCKED = 0x1  # this object is definitely docked to something right now
+    DEFINITELY_NOT_DOCKED = 0x2  # this object is definitely not docked to something right now
+    TO_BE_DETERMINED = 0x4  # the docking state of this object is currently being determined
+    PREVIOUSLY_DOCKED = 0x8  # if set, the object was docked to something in the previous frame
+
     def __init__(self, name):
+        """
+        :param str name: the name of the Component
+        """
         super().__init__(name)
         self.docked_sprites = {}  # dictionary that holds all Sprites (key=GameObject's id) currently docked to this one
         # holds the objects that we stand on and stood on previously:
         # slot 0=current state; slot 1=previous state (sometimes we need the previous state since the current state gets reset to 0 every step)
-        self.on_ground = [None, None]
+        self.docking_state = 0
+        self.docked_to = None  # the reference to the object that we are currently docked to
 
     def added(self):
         # make sure our GameObject is a Sprite
@@ -1888,22 +1905,55 @@ class Dockable(Component):
         for docked_sprite in self.docked_sprites:
             docked_sprite.move(x, y)
 
-    # a sprite lands on an elevator -> couple the elevator to the sprite so that when the elevator moves, the sprite moves along with it
-    def dock_to(self, mother_ship: Sprite):
+    def dock_to(self, mother_ship):
+        """
+        a sprite lands on an elevator -> couple the elevator to the sprite so that when the elevator moves, the sprite moves along with it
+        - only possible to dock to "default" objects
+
+        :param Sprite mother_ship: the Sprite to dock to (Sprite needs to have a dockable component)
+        """
+        prev = self.is_docked()
         obj = self.game_object
         if mother_ship.type & Sprite.get_type("default"):
-            self.on_ground[0] = mother_ship
+            self.docking_state = Dockable.DEFINITELY_DOCKED
+            if prev:
+                self.docking_state |= Dockable.PREVIOUSLY_DOCKED
+            self.docked_to = mother_ship
             if hasattr(mother_ship, "docked_objects"):
                 mother_ship.docked_objects[obj.id] = self
 
-    # undocks itself from the mothership
     def undock(self):
+        """
+        undocks itself from the mothership
+        """
         obj = self.game_object
-        mother_ship = self.on_ground[0]
-        self.on_ground[0] = None
+        prev = self.is_docked()
+        self.docking_state = Dockable.DEFINITELY_NOT_DOCKED
+        if prev:
+            self.docking_state |= Dockable.PREVIOUSLY_DOCKED
         # remove docked obj from mothership docked-obj-list
-        if mother_ship and "dockable" in mother_ship.components:
-            del mother_ship.components["dockable"].docked_sprites[obj.id]
+        if self.docked_to and "dockable" in self.docked_to.components:
+            del prev.components["dockable"].docked_sprites[obj.id]
+            self.docked_to = None
+
+    def to_determine(self):
+        """
+        changes our docking state to be undetermined (saves the current state as PREVIOUS flag)
+        """
+        prev = self.is_docked()
+        self.docking_state = Dockable.TO_BE_DETERMINED
+        if prev:
+            self.docking_state |= Dockable.PREVIOUSLY_DOCKED
+
+    def is_docked(self):
+        """
+        returns True if the current state is definitely docked OR (to-be-determined AND previous state was docked)
+
+        :return: most-likely docking state
+        :rtype: bool
+        """
+        return self.docking_state & Dockable.DEFINITELY_DOCKED or \
+               (self.docking_state & Dockable.TO_BE_DETERMINED and self.docking_state & Dockable.PREVIOUSLY_DOCKED)
 
 
 class PhysicsComponent(Component, metaclass=ABCMeta):
@@ -2154,7 +2204,7 @@ class PlatformerPhysics(PhysicsComponent):
         # physics
         self.run_acceleration = 300  # running acceleration
         self.vx_max = 150  # max run-speed
-        self.max_fall_speed = 400  # maximum fall speed
+        self.max_fall_speed = 550  # maximum fall speed
         self.gravity = True  # set to False to make this guy not be subject to y-gravity (e.g. while locked into ladder)
         self.gravity_y = 9.8 * 100
         self.jump_speed = 330  # jump-power
@@ -2163,7 +2213,7 @@ class PlatformerPhysics(PhysicsComponent):
         self.stops_abruptly_on_direction_change = True  # Vikings stop abruptly when running in one direction, then the other direction is pressed
         self.climb_speed = 70  # speed at which player can climb
         self.is_pushable = False  # set to True if a collision with the entity causes the entity to move a little
-        self.is_heavy = False  # set to true if this object should squeeze other objects that are below it and cannot move away
+        self.is_heavy = False  # set to True if this object should squeeze other objects that are below it and cannot move away
         self.squeeze_speed = 0  # set to a value > 0 to define the squeezeSpeed at which this object gets squeezed by heavy objects
         # (objects with is_heavy == True)
 
@@ -2197,22 +2247,31 @@ class PlatformerPhysics(PhysicsComponent):
         self.game_obj_cmp_brain = self.game_object.components.get("brain")
         assert isinstance(self.game_obj_cmp_brain, Brain), "ERROR: GameObject's `brain` Component is not of type Brain!"
 
-    # locks the GameObject into a ladder
     def lock_ladder(self):
+        """
+        locks the GameObject into a ladder
+        """
         obj = self.game_object
         self.on_ladder = obj.rect.y
+        # switch off gravity
         self.gravity = False
-        # move obj to center of ladder
+        # lock obj to center of ladder (which_ladder is always set to the one we are touching right now)
         obj.rect.x = self.which_ladder.rect.x
         self.vx = 0  # stop x-movement
 
-    # frees the GameObject from a ladder
     def unlock_ladder(self):
+        """
+        frees the GameObject from a ladder
+        """
         self.on_ladder = 0
         self.gravity = True
 
-    # determines x/y-speeds and moves the GameObject
     def tick(self, game_loop: GameLoop):
+        """
+        determines x/y-speeds and moves the GameObject
+
+        :param GameLoop game_loop: the GameLoop that's currently playing
+        """
         dt = game_loop.dt
         dt_step = dt
         ax = 0
@@ -2269,8 +2328,8 @@ class PlatformerPhysics(PhysicsComponent):
                     else:
                         self.vy = -self.climb_speed
                 # player locks into ladder
-                elif (self.which_ladder and obj.rect.y <= self.which_ladder.rect.top - obj.rect.height / 2 and
-                              obj.rect.y > self.which_ladder.rect.bottom - obj.rect.height / 2):
+                elif (self.which_ladder and obj.rect.y <= self.which_ladder.rect.top - obj.rect.height / 2 and \
+                                  obj.rect.y > self.which_ladder.rect.bottom - obj.rect.height / 2):
                     self.lock_ladder()
             # user is pressing only 'down' (ladder?)
             elif self.game_obj_cmp_brain.commands["down"]:
@@ -2281,7 +2340,7 @@ class PlatformerPhysics(PhysicsComponent):
                     # move down
                     else:
                         self.vy = self.climb_speed
-                elif self.which_ladder and obj.rect.y < self.which_ladder.rect.bottom - obj.rect.height / 2 and dockable.on_ground[0]:
+                elif self.which_ladder and obj.rect.y < self.which_ladder.rect.bottom - obj.rect.height / 2 and dockable.is_docked():
                     self.lock_ladder()
             # jumping?
             elif self.can_jump:
@@ -2289,13 +2348,11 @@ class PlatformerPhysics(PhysicsComponent):
                 if not jump:
                     self.disable_jump = False
                 else:
-                    if (self.on_ladder > 0 or dockable.on_ground[0]) and not self.disable_jump:
+                    if (self.on_ladder > 0 or dockable.is_docked()) and not self.disable_jump:
                         if self.on_ladder > 0:
                             self.unlock_ladder()
                         self.vy = -self.jump_speed
                         dockable.undock()
-                    else:
-                        pass
                     self.disable_jump = True
         # entity has no steering unit (x-speed = 0)
         else:
@@ -2315,7 +2372,7 @@ class PlatformerPhysics(PhysicsComponent):
 
             # if player stands on up-slope and x-speed is negative (or down-slope and x-speed is positive)
             # -> make y-speed as high as x-speed so we don't fly off the slope
-            if self.slope_up_down != 0 and dockable.on_ground[0]:
+            if self.slope_up_down != 0 and dockable.is_docked():
                 if self.slope_up_down == 1 and self.vy < -self.vx:
                     self.vy = -self.vx
                 elif self.slope_up_down == -1 and self.vy < self.vx:
@@ -2330,8 +2387,8 @@ class PlatformerPhysics(PhysicsComponent):
                     self.which_ladder = None
                 self.at_wall = False
                 self.at_exit = False
-                dockable.on_ground[1] = dockable.on_ground[0]  # store "old" value before un-docking
-                dockable.undock()
+                # store previous state before becoming undetermined
+                dockable.to_determine()
 
             # first move in x-direction and solve x-collisions
             if self.vx != 0.0:
@@ -2379,13 +2436,14 @@ class PlatformerPhysics(PhysicsComponent):
         other_obj = col.sprite2
         other_obj_physics = other_obj.components.get("physics", None)
 
-        # getting hit by a particle (arrow, scorpionshot, fireball, etc..)
+        # getting hit by a particle (Arrow, ScorpionShot, Fireball, etc..)
         if other_obj.type & Sprite.get_type("particle"):
             # shooter (this) is colliding with own shot -> ignore
             if obj is not other_obj.shooter:
                 obj.trigger_event("hit.particle", col)
-                other_obj.trigger_event("hit",
-                                        obj)  # for particles, force the reciprocal collisions (otherwise, the character that got shot could be gone (dead) before any collisions on the particle could get triggered (-> e.g. arrow will fly through a dying enemy without ever actually touching the enemy))
+                # for particles, force the reciprocal collisions (otherwise, the character that got shot could be gone (dead) before any collisions on the
+                # particle could get triggered (-> e.g. arrow will fly through a dying enemy without ever actually touching the enemy))
+                other_obj.trigger_event("hit", obj)
             return
 
         # colliding with a ladder
@@ -2413,24 +2471,10 @@ class PlatformerPhysics(PhysicsComponent):
             elif col.slope:
                 obj.move(0, col.slope_y_pull, True)  # TODO: check top whether we can move there (there could be a block)!!)) {
                 dockable.dock_to(other_obj)  # dock to collision layer (only if the pull )
-                #print("slope docked to tile {},{} y-speed={}".format(other_obj.tile_x, other_obj.tile_y, self.vy))
                 self.slope_up_down = col.slope_up_down
                 # set vy to 0.0 (we are docked to the ground -> if this is x-direction: no y-moves/checks necessary anymore)
                 self.vy = 0.0
                 return
-
-            #elif tile_props.get("slope", 0) != 0 and dockable.on_ground[1]:
-            #    abs_slope = abs(tile_props["slope"])
-            #    offset = tile_props["offset"]
-            #    # set p.y according to position of sprite within slope square
-            #    y_tile = (other_obj.tile_y + 1) * other_obj.tile_h  # bottom y-pos of tile
-            #    # subtract from bottom-y for different inclines and different stages within the incline
-            #    dy_wanted = (y_tile - (other_obj.tile_h * (offset - 1) / abs_slope) - (obj.rect.height / 2) - (col.x_in / abs_slope)) - obj.rect.centery
-            #    obj.move(0, dy_wanted, True)  # TODO: check top whether we can move there (there could be a block)!!)) {
-            #    self.vy = 0.0
-            #    dockable.dock_to(other_obj)  # dock to collision layer
-            #    self.slope_up_down = col.slope_up_down
-            #    return
 
         # normal collision
         col.impact = 0.0
@@ -2447,15 +2491,14 @@ class PlatformerPhysics(PhysicsComponent):
         # bottom collision
         if col.normal_y < -0.3:
             # a heavy object hit the ground -> rock the stage
-            # - on_ground[1]=check old value, the new one was reset to 0 before calling 'collide'
-            if self.is_heavy and not dockable.on_ground[1] and other_obj.type & Sprite.get_type("default"):
+            if self.is_heavy and not dockable.is_docked() and other_obj.type & Sprite.get_type("default"):
                 obj.stage.shake()
 
             other_obj_dockable = other_obj.components.get("dockable", None)
 
             # squeezing something
             if self.vy > 0 and isinstance(other_obj_physics, PlatformerPhysics) and self.is_heavy and other_obj_physics.squeeze_speed > 0 and \
-                    other_obj_dockable and other_obj_dockable.on_ground[0]:
+                    other_obj_dockable and other_obj_dockable.is_docked():
 
                 # adjust the collision separation to the new squeezeSpeed
                 if self.vy > other_obj_physics.squeeze_speed:
@@ -2474,7 +2517,6 @@ class PlatformerPhysics(PhysicsComponent):
                 col.impact = impact_y
                 dockable.dock_to(other_obj)  # dock to bottom object (collision layer or MovableRock, etc..)
                 obj.trigger_event("bump.bottom", col)
-            #print("vy after collision handler: {}".format(self.vy))
 
         # top collision
         if col.normal_y > 0.3:
@@ -2488,8 +2530,7 @@ class PlatformerPhysics(PhysicsComponent):
             col.impact = impact_x
             bump_wall = False
             # we hit a pushable object -> check if it can move
-            if (other_obj_physics and hasattr(other_obj_physics, "is_pushable") and other_obj_physics.is_pushable and
-                    dockable.on_ground[1]):  # 1=check old value, new one has been set to 0 before calling 'collide'
+            if other_obj_physics and hasattr(other_obj_physics, "is_pushable") and other_obj_physics.is_pushable and dockable.is_docked():
                 self.push_an_object(obj, col)
                 bump_wall = True
             # we hit a fixed wall (non-pushable)
@@ -2536,7 +2577,8 @@ class PlatformerPhysics(PhysicsComponent):
         assert col.direction in ["x", "y"], "ERROR: col.direction must be either 'x' or 'y'!"
 
         sprite = col.sprite1  # this must have a dockable
-        assert "dockable" in sprite.components, "ERROR: cannot postprocess collision without the sprite having a Dockable Component!"
+        assert "dockable" in sprite.components and isinstance(sprite.components["dockable"], Dockable), \
+            "ERROR: cannot postprocess collision without the sprite having a Dockable Component!"
         tile = col.sprite2  # this must be a TileSprite
         assert isinstance(tile, TileSprite), "ERROR: sprite2 in PlatformerCollision passed to handler must be of type TileSprite (is actually of type {})!".\
             format(type(tile).__name__)
@@ -2553,10 +2595,7 @@ class PlatformerPhysics(PhysicsComponent):
         # TODO: for now: only treat 45-degree
         slope = tile.tile_props.get("slope", 0)  # -3, -2, -1, 1, 2, 3: negative=down, positive=up (1==45 degree slope, 3=15 degree slope)
         if slope != 0:
-
-            x_in = 0  # calculate x-amount of intrusion by the sprite into the tile (this is always positive and between 0 and tile_w)
-            is_falling = False
-            is_downhill = False
+            # calculate x-amount of intrusion by the sprite into the tile (this is always positive and between 0 and tile_w)
             if col.direction == "x":
                 # moving up hill
                 if col.direction_veloc > 0.0 and slope > 0:
@@ -2564,20 +2603,12 @@ class PlatformerPhysics(PhysicsComponent):
                 # moving up hill
                 elif col.direction_veloc < 0.0 and slope < 0:
                     x_in = tile.rect.right - sprite.rect.left
-                # moving down hill -> prevent "flying off cliff" behavior
+                # moving down hill
                 else:
-                    is_downhill = True
-                    # check whether we were on ground before
-                    dockable = sprite.components["dockable"]
-                    # we were on ground one frame ago AND we are x-moving -> stay on ground (positive y-pull (down))
-                    if dockable.on_ground[1]:
-                        if col.direction_veloc > 0.0:
-                            x_in = tile.rect.right - sprite.rect.left
-                        else:
-                            x_in = sprite.rect.right - tile.rect.left
-                    # we are falling -> do nothing in x-direction (will be handled by y-collision detection)
+                    if col.direction_veloc > 0.0:
+                        x_in = tile.rect.right - sprite.rect.left
                     else:
-                        is_falling = True
+                        x_in = sprite.rect.right - tile.rect.left
             # y-direction (we are not moving left or right) -> calc x_in depending on up or down slope
             else:
                 if slope > 0:
@@ -2588,53 +2619,21 @@ class PlatformerPhysics(PhysicsComponent):
             # clamp x_in to tile_w
             x_in = min(x_in, tile.tile_w)
 
-            # we are outside the slope (falling) -> make this not a collision
-            if is_falling:
-                col.is_collided = False
-            # we are on the slope (not falling) -> pull us up or down
+            # the wanted y-position for the bottom of the sprite (iff we are docked to the ground)
+            y_grounded = tile.rect.bottom - x_in
+            slope_y_pull = y_grounded - sprite.rect.bottom
+
+            # we are in the air -> only apply y-pull if the y-pull is negative (up push)
+            # - otherwise -> keep falling (no collision)
+            if not sprite.components["dockable"].is_docked() and slope_y_pull > 0:
+                col.is_collided = False  # this will cause the detected collision (with the tile rect) to be ignored for now
+            # we are on the slope (not falling or having fallen into the slope already) -> pull us up or down
             else:
-                y_grounded = tile.rect.bottom - x_in  # the wanted y-position for the bottom of the sprite
-                # we are in the slope -> pull us up/down
                 col.slope = slope
                 col.slope_up_down = math.copysign(1, slope)
-                col.slope_y_pull =  y_grounded - sprite.rect.bottom
+                col.slope_y_pull = y_grounded - sprite.rect.bottom
 
         return col
-
-        ## reset slope flags
-        #col.slope = False
-        #col.slope_up_down = 0
-        #col.x_in = 0
-
-"""
-        # Sprite was on ground one frame before (standing)
-        if "dockable" in sprite.components and sprite.components["dockable"].on_ground[1]:
-            # up-slope or down-slope?
-            slope = tile.tile_props.get("slope", 0)  # -3, -2, -1, 1, 2, 3: negative=down, positive=up (1==45 degree slope, 3=15 degree slope)
-            if slope != 0:
-
-
-
-                slope_up_down = math.copysign(1, slope)
-                # up-slope (slope_up_down>0): right x-edge of sprite; down-slope: left x-edge of sprite
-                x_edge = sprite.rect.centerx + (sprite.rect.width / 2) * slope_up_down
-                # up-slope (slope_up_down>0): left x-edge of tile; down-slope: right x-edge of tile
-                x_tile = (tile.tile_x + (0 if slope_up_down == 1 else 1)) * tile.tile_w
-                x_in = (x_edge - x_tile) * slope_up_down
-
-                # get the properties of the next x-tile (if this tile is up-slope: next-tile=x+1, if this tile is down-slope: next-tile=x-1)
-                next_x_tile_props = tile.tiled_tile_layer.props_by_pos.get((tile.tile_x + slope_up_down, tile.tile_y))
-                next_x_tile_slope = next_x_tile_props.get("slope", 0) if next_x_tile_props else 0
-
-                # only count as collision, if x_edge of object is actually inside this tile (not already touching the next tile)
-                # or if next x-tile is NOT the same slope sign as this tile's slope (e.g. slopedown-straight, slopeup-slopedown, slopeup-straight, etc..)
-                if x_in > tile.tile_w and (slope_up_down == math.copysign(1, next_x_tile_slope)):
-                    return None
-                # store slope specifics so we don't have to pull and calc it all again in object's collision handler
-                col.slope = slope
-                col.slope_up_down = slope_up_down
-                col.x_in = min(tile.tile_w, x_in)
-"""
 
 
 class Viewport(Component):
@@ -2674,15 +2673,16 @@ class Viewport(Component):
         self.extend(self.move_to_with_viewport)
 
     # EXTENSION methods (take self as well as GameObject as first two params)
+
     def follow_object_with_viewport(self, game_object, obj_to_follow, directions=None, bounding_box=None, max_speed=float("inf")):
         """
+        makes the viewport follow a GameObject (obj_to_follow)
 
-        Args:
-            game_object (GameObject): our game_object (that has us as component)
-            obj_to_follow (GameObject): the GameObject that we should follow
-            directions (dict): dict with 'x' and 'y' set to either True or False depending on whether we follow only in x direction or y or both
-            bounding_box (dict): dict should contain min_x, max_x, min_y, max_y so we know the boundaries of the camera
-            max_speed (float): the max speed of the camera
+        :param GameObject game_object: our game_object (that has `self` as component)
+        :param GameObject obj_to_follow: the GameObject that we should follow
+        :param dict directions: dict with 'x' and 'y' set to either True or False depending on whether we follow only in x direction or y or both
+        :param dict bounding_box: should contain min_x, max_x, min_y, max_y so we know the boundaries of the camera
+        :param float max_speed: the max speed of the camera
         """
         game_object.off_event("post_tick", self, "follow")
         if not directions:
@@ -2705,6 +2705,11 @@ class Viewport(Component):
         self.follow(False if max_speed > 0.0 else True)
 
     def unfollow_object_with_viewport(self, game_object):
+        """
+        stops following
+
+        :param GameObject game_object: our game_object (that has `self` as component)
+        """
         game_object.off_event("post_tick", self, "follow")
         self.obj_to_follow = None
 
@@ -2828,10 +2833,14 @@ class SimpleScreen(Screen):
         self.labels = (kwargs["labels"] if "labels" in kwargs else [])
         ## TODO: audio? self.audio = kwargs["audio"] if "audio" in kwargs else []
 
-    # define the screen's stage function
-    # - stage functions are used to setup a Stage (before playing it)
     @staticmethod
     def screen_func(stage: Stage):
+        """
+        defines this screen's Stage setup
+        - stage functions are used to setup a Stage (before playing it)
+
+        :param Stage stage: the Stage to be setup
+        """
         # get the Screen object (instance) from the options
         screen = stage.options["screen_obj"]
 
@@ -2847,8 +2856,11 @@ class SimpleScreen(Screen):
         for game_obj in screen.game_objects:
             stage.add_sprite(game_obj, "sprites")
 
-    # plays the screen
     def play(self):
+        """
+        plays the screen
+        """
+
         # start screen (will overwrite the old 0-stage (=main-stage))
         # - also, will give our keyboard-input setup to the new GameLoop object
         Stage.stage_screen(self, SimpleScreen.screen_func, stage=0,
@@ -2875,9 +2887,6 @@ class Level(Screen, metaclass=ABCMeta):
         self.tmx_obj = pytmx.load_pygame(self.tmx_file)
         self.width = self.tmx_obj.width * self.tmx_obj.tilewidth
         self.height = self.tmx_obj.height * self.tmx_obj.tileheight
-
-        # define Level's Scene (default function that populates Stage with stuff from tmx file)
-        #OBSOLETE: self.scene = Scene.register_scene(self.name, options={"tmx_obj": self.tmx_obj})
 
         self.register_event("mastered", "aborted", "lost")
 
@@ -2936,15 +2945,17 @@ class Game(object):
     An object that serves as a container for Screen and Level objects
     - manages displaying the screens (start screen, menus, etc..) and playable levels of the game
     - also keeps a Display object (and determines its size), which is used for rendering and displaying the game
-    :param list screens_and_levels: a list of Screen and Level definitions. Each item is a dict with
-    :param int width: the width of the screen in pixels (0 for auto)
-    :param int height: the height of the screen in pixels (0 for auto)
-    :param str title: the title of the game (will be displayed as the game Window caption)
-    :param int max_fps: the max. number of frames in one second (could be less if Game runs slow, but never more)
-    :param int debug_flags: a bitmap for setting different debug flags (see global variables DEBUG_...)
     """
 
     def __init__(self, screens_and_levels, width: int = 0, height: int = 0, title: str = "spygame Demo!", max_fps: int = 60, debug_flags=DEBUG_NONE):
+        """
+        :param list screens_and_levels: a list of Screen and Level definitions. Each item is a dict with
+        :param int width: the width of the screen in pixels (0 for auto)
+        :param int height: the height of the screen in pixels (0 for auto)
+        :param str title: the title of the game (will be displayed as the game Window caption)
+        :param int max_fps: the max. number of frames in one second (could be less if Game runs slow, but never more)
+        :param int debug_flags: a bitmap for setting different debug flags (see global variables DEBUG_...)
+        """
         assert not Game.instantiated, "ERROR: can only create one {} object!".format(type(self).__name__)
         Game.instantiated = True
 
@@ -3089,6 +3100,7 @@ class AABBCollision(CollisionAlgorithm):
     def try_collide(o1, o2, collision_obj, direction, direction_veloc):
         """
         does the actual AABB collision test
+
         :param Sprite o1: object 1
         :param Sprite o2: object 2
         :param Collision collision_obj: the collision object to be populated
