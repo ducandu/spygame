@@ -554,7 +554,8 @@ class Sprite(GameObject, pygame.sprite.Sprite):
 
     def render(self, display):
         if self.image:
-            display.surface.blit(self.image, (self.rect.x + display.offsets[0], self.rect.y + display.offsets[1]))
+            #display.surface.blit(self.image, (self.rect.x + display.offsets[0], self.rect.y + display.offsets[1]))
+            display.surface.blit(self.image, (self.rect.x - display.offsets[0], self.rect.y - display.offsets[1]))
         if DEBUG_FLAGS & DEBUG_RENDER_SPRITES_RECTS:
             pygame.draw.rect(display.surface, DEBUG_RENDER_SPRITES_RECTS_COLOR, pygame.Rect((self.rect.x, self.rect.y), (self.rect.w, self.rect.h)), 1)
 
@@ -565,13 +566,14 @@ class Repeater(Sprite):
     """
     def __init__(self, x, y, image_file, **kwargs):
         super().__init__(x, y, image_file)
-        self.vx = 1
-        self.vy = 1
+        self.vx = 1.2
+        self.vy = 1.2
         self.repeat_x = kwargs.get("repeat_x", True)
         self.repeat_y = kwargs.get("repeat_y", True)
         self.repeat_w = kwargs.get("repeat_w", self.rect.width)
         self.repeat_h = kwargs.get("repeat_h", self.rect.height)
-        self.type = Sprite.get_type("none")  # ??
+        # don't collide with nothing
+        self.type = Sprite.get_type("none")
         self.collision_mask = 0
 
     def render(self, display):
@@ -1581,9 +1583,10 @@ class TiledObjectGroup(TmxLayer):
 
             # if the (Sprite) class of the object is given, construct it here using its c'tor
             # - classes are given as strings: e.g. sypg.Sprite, vikings.Viking, Agent (Agent class would be in __main__ module)
-            if "sprite_class" in obj_props:
-                match_obj = re.fullmatch('^((.+)\.)?(\w+)$', obj_props["sprite_class"])
-                assert match_obj, "ERROR: class property in pytmx.pytmx.TiledObjectGroup does not match pattern!"
+            if obj.type:
+                #print("found a sprite in the tiled-object-group: class={}".format(obj.type))
+                match_obj = re.fullmatch('^((.+)\.)?(\w+)$', obj.type)
+                assert match_obj, "ERROR: type field ({}) of object in pytmx.pytmx.TiledObjectGroup does not match pattern!".format(obj.type)
                 _, module_, class_ = match_obj.groups(default="__main__")  # if no module given, assume a class defined in __main__
 
                 sheet_or_image = None
@@ -2838,8 +2841,7 @@ class Viewport(Component):
         follow_y = self.directions["y"](self.obj_to_follow) if callable(self.directions["y"]) else  self.directions["y"]
 
         func = self.center_on if first else self.soft_center_on
-        func(self.obj_to_follow.rect.x + self.obj_to_follow.rect.width / 2 - self.x if follow_x else None,
-             self.obj_to_follow.rect.y + self.obj_to_follow.rect.height / 2 - self.y if follow_y else None)
+        func(self.obj_to_follow.rect.centerx if follow_x else None, self.obj_to_follow.rect.centery if follow_y else None)
 
     # OBSOLETE: does not seem to be called
     #def offset(self, x, y):

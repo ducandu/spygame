@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="32" height="28" tilewidth="16" tileheight="16" nextobjectid="22">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="32" height="28" tilewidth="16" tileheight="16" nextobjectid="23">
  <properties>
   <property name="keyboard_inputs" value="up,down,left,right,space,escape"/>
-  <property name="repeater" value="bg_wbrc"/>
  </properties>
  <tileset firstgid="1" source="wrbc.tsx"/>
  <tileset firstgid="1703" source="generic.tsx"/>
@@ -2721,21 +2720,19 @@
   </data>
  </layer>
  <objectgroup name="objects">
-  <object id="1" name="erik" gid="3303" x="224.333" y="19" width="32" height="32">
+  <object id="1" name="erik" type="Erik" gid="3303" x="224.333" y="19" width="32" height="32">
    <properties>
     <property name="agent" type="bool" value="true"/>
     <property name="do_render" type="bool" value="true"/>
     <property name="render_order" type="int" value="50"/>
-    <property name="sprite_class" value="Erik"/>
     <property name="tsx" value="erik"/>
    </properties>
   </object>
-  <object id="21" name="repeater" gid="1746" x="1" y="1" width="16" height="16">
+  <object id="21" name="repeater" type="spygame.Repeater" gid="1746" x="1" y="1" width="16" height="16">
    <properties>
     <property name="do_render" type="bool" value="true"/>
     <property name="img" value="bg_wrbc"/>
     <property name="render_order" type="int" value="0"/>
-    <property name="sprite_class" value="spygame.Repeater"/>
    </properties>
   </object>
  </objectgroup>
