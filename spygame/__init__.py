@@ -1,10 +1,10 @@
 """
  -------------------------------------------------------------------------
  spygame (pygame based 2D game engine for the openAI gym)
+ -------------------------------------------------------------------------
 
  created: 2017/04/04 in PyCharm
  (c) 2017 Sven Mika - ducandu GmbH
- -------------------------------------------------------------------------
 """
 
 from abc import ABCMeta, abstractmethod
@@ -463,6 +463,8 @@ class Sprite(GameObject, pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         GameObject.__init__(self)
 
+        self.do_render = True
+
         # all sprites need to have a position
         # - but support Sprites without SpriteSheets:
         # -- some Rect without image
@@ -471,6 +473,7 @@ class Sprite(GameObject, pygame.sprite.Sprite):
             self.image = None  # pygame.Surface((sheet_or_wh_or_file[0], sheet_or_wh_or_file[1]))
             # self.image.fill(pygame.Color(0, 0, 0, 255))  # all transparent image
             self.rect = pygame.Rect(x, y, sheet_or_wh_or_file[0], sheet_or_wh_or_file[1])
+            self.do_render = False
         # -- with SpriteSheet
         elif isinstance(sheet_or_wh_or_file, SpriteSheet):
             self.spritesheet = sheet_or_wh_or_file
@@ -486,6 +489,7 @@ class Sprite(GameObject, pygame.sprite.Sprite):
             self.spritesheet = None
             self.image = None  # pygame.Surface((0, 0))
             self.rect = pygame.Rect(x, y, 1, 1)
+            self.do_render = False
 
         # GameObject specific stuff
         self.type = Sprite.get_type("default")  # specifies the type of the GameObject (can be used e.g. for collision detection)
@@ -494,6 +498,7 @@ class Sprite(GameObject, pygame.sprite.Sprite):
 
         self.stage = None  # the current Stage this Sprite is in
         self.sprite_groups = []  # the current Groups that this Sprite belongs to
+        self.render_order = 50  # the higher this number the later this Sprite will be rendered in the Stage's render function
         self.flip = {"x": False, "y": False}  # 'x': flip in x direction, 'y': flip in y direction, False: don't flip
 
         self.register_event("added_to_stage")  # allow any Stage to trigger this event using this Sprite
@@ -566,13 +571,14 @@ class Repeater(Sprite):
         self.repeat_y = kwargs.get("repeat_y", True)
         self.repeat_w = kwargs.get("repeat_w", self.rect.width)
         self.repeat_h = kwargs.get("repeat_h", self.rect.height)
-        self.type = 0  # ??
+        self.type = Sprite.get_type("none")  # ??
+        self.collision_mask = 0
 
     def render(self, display):
         view_x = display.offsets[0]
         view_y = display.offsets[1]
-        offset_x = self.rect.centerx + view_x * self.vx
-        offset_y = self.rect.centery + view_y * self.vy
+        offset_x = self.rect.x + view_x * self.vx
+        offset_y = self.rect.y + view_y * self.vy
         cur_x = 0
         cur_y = 0
         start_x = 0
@@ -688,7 +694,7 @@ class GameLoop(object):
                 dont_play (bool): whether - after creating the GameLoop - it should be `play`ed. Can be used for openAI gym purposes, where we just `step`,
                                   not `tick`
         :return: the created/played GameLoop object or None
-        :rtype: Union[GameLoop, None]
+        :rtype: Union[GameLoop,None]
         """
 
         defaults(kwargs, {"force_loop": False, "screen_obj": None, "keyboard_inputs": None, "display": None, "max_fps": None,
@@ -938,7 +944,14 @@ class Stage(GameObject):
             Stage.clear_stage(i)
 
     @staticmethod
-    def get_stage(idx=Union[int, None]):
+    def get_stage(idx=0):
+        """
+        returns the Stage at the given index (returns None if none found)
+
+        :param Union[int,None] idx: the index of the Stage to return (0=default Stage)
+        :return: the Stage object at the given index or None if there is no Stage at that index
+        :rtype: Union[Stage,None]
+        """
         if idx is None:
             idx = Stage.active_stage
         return Stage.stages[idx]
@@ -991,11 +1004,11 @@ class Stage(GameObject):
         super().__init__()
         self.screen = screen  # the screen object associated with this Stage
         self.tiled_layers = {}  # pytmx.pytmx.TiledLayer (TiledTileLayer or TiledObjectGroup) by name
-        self.tiled_layers_to_render = []  # list of all layers by name (TiledTileLayers AND TiledObjectGroups) in the order in which they have to be rendered
+        self.to_render = []  # list of all layers by name (TiledTileLayers AND TiledObjectGroups) in the order in which they have to be rendered
         self.tiled_layers_to_collide = []  # list of all layers that collide (mask is not 0) by name (TiledTileLayers)
 
         # dict of pygame.sprite.Group objects (by name) that contain Sprites (each TiledObjectGroup results in one Group)
-        # - the name of the group is always the name of the TiledObjectLayer in the tmx file
+        # - the name of the group is always the name of the TiledObjectGroup in the tmx file
         self.sprite_groups = {}
         self.sprites = []  # a plain list of all Sprites in this Stage
 
@@ -1014,9 +1027,10 @@ class Stage(GameObject):
                             "pre_render", "post_render"  # before/after we render all our layers
                             )
 
-        # add Components to this Stage
+        # add Components to this Stage (given in options)
         if "components" in self.options:
             for comp in self.options["components"]:
+                assert isinstance(comp, Component), "ERROR: one of the given components in Stage's c'tor (options['components']) is not of type Component!"
                 self.add_component(comp)
 
         # make sure our destroyed method is called when the stage is destroyed
@@ -1059,14 +1073,23 @@ class Stage(GameObject):
             if detector(sprite, *params):
                 return sprite
 
-    def add_tiled_layer(self, pytmx_layer: pytmx.pytmx.TiledElement, pytmx_tiled_map: pytmx.pytmx.TiledMap):
+    def add_tiled_layer(self, pytmx_layer, pytmx_tiled_map):
+        """
+        adds a pytmx.TiledElement to the Stage with all its tiles or objects
+        - the TiledElement could either be converted into a TiledTileLayer or a TiledObjectGroup (these objects are generated in this function based on the
+        pytmx equivalent being passed in)
+
+        :param pytmx.pytmx.TiledElement pytmx_layer: the original pytmx object to derive our TiledTileLayer or TileObjectGroup from
+        :param pytmx.pytmx.TiledMap pytmx_tiled_map: the original pytmx TiledMap object (the tmx file) to which this layer belongs
+        """
         assert pytmx_layer.name not in self.tiled_layers, "ERROR: pytmx_layer with name {} already exists!".format(pytmx_layer.name)
 
-        # make a spygame.TmxLayer
+        # a TiledObjectGroup ("Object Layer" in the tmx file)
         if isinstance(pytmx_layer, pytmx.pytmx.TiledObjectGroup):
-            # TODO: what if we have many objects in the layer that should have different render_order? (e.g. a Repeater)
-            # try once more with another object layer (but there was a bug in pytmx)
             l = TiledObjectGroup(pytmx_layer, pytmx_tiled_map)
+            self.add_tiled_object_group(l)
+
+        # a TiledTileLayer ("Tile Layer" in the tmx file)
         elif isinstance(pytmx_layer, pytmx.pytmx.TiledTileLayer):
             # use default collision objects if not given
             if "tile_layer_physics_collisions" not in self.options:
@@ -1077,35 +1100,62 @@ class Stage(GameObject):
                 "ERROR: a TiledTileLayer needs a physics collision handler given in the Stage's option: `tile_layer_physics_collision_postprocessor`!"
             l = TiledTileLayer(pytmx_layer, pytmx_tiled_map, self.options["tile_layer_physics_collisions"],
                                self.options["tile_layer_physics_collision_detector"], self.options["tile_layer_physics_collision_postprocessor"])
-            # put the pytmx_layer into one of the collision groups (normal or touch)?
-            # - this is useful for our solve_collisions method
-            if l.type != Sprite.get_type("none"):
-                self.tiled_layers_to_collide.append(l)
+            self.add_tiled_tile_layer(l)
+
         else:
             raise Exception("ERROR: pytmx_layer of type {} cannot be added to Stage. Needs to be pytmx.pytmx.TiledTileLayer or pytmx.pytmx.TiledObjectGroup!".
                             format(type(pytmx_layer).__name__))
 
-        self.tiled_layers[l.name] = l
-        if l.do_render:
-            self.tiled_layers_to_render.append(l)
-            self.tiled_layers_to_render.sort(key=lambda x: x.render_order)
-
-        # if layer is a TiledObjectGroup -> add the (already existing) sprite-group to this stage under the name of the layer
-        if isinstance(l, TiledObjectGroup):
-            assert l.name not in self.sprite_groups, \
-                "ERROR: trying to add a TiledObjectGroup to a Stage, but the Stage already has a spritegroup with the name of that layer ({})". \
-                    format(l.name)
-            self.sprite_groups[l.name] = l.sprite_group
-            for sprite in l.sprite_group.sprites():
-                self.add_sprite(sprite, l.name)
-
-    # TODO: Sprite or GameObject??
-    def add_sprite(self, sprite: Sprite, group_name: str):
+    def add_tiled_object_group(self, tiled_object_group):
         """
-        adds a new sprite to an existing or a new Group
-            :param GameObject sprite: the GameObject to be added
-            :param str group_name: the name of the group to which the GameObject should be added (group will not be created if it doesn't exist yet)
-            :return: the Sprite that was added
+        adds a TiledObjectGroup (all it's objects as single Sprites) to this Stage
+        :param TiledObjectGroup tiled_object_group:
+        """
+        # add the layer to our tiled_layers list
+        self.tiled_layers[tiled_object_group.name] = tiled_object_group
+
+        # add the (already created) sprite-group to this stage under the name of the layer
+        assert tiled_object_group.name not in self.sprite_groups, \
+            "ERROR: trying to add a TiledObjectGroup to a Stage, but the Stage already has a spritegroup with the name of that layer ({})". \
+                format(tiled_object_group.name)
+        self.sprite_groups[tiled_object_group.name] = tiled_object_group.sprite_group
+
+        # add each single Sprite to the sorted (by render_order) to_render list and to the "all"-sprites list
+        # - note: the to_render list also contains entire TiledTileLayer objects
+        for sprite in tiled_object_group.sprite_group.sprites():
+            self.add_sprite(sprite, tiled_object_group.name)
+            if sprite.do_render:
+                self.to_render.append(sprite)
+                self.to_render.sort(key=lambda x: x.render_order)
+
+    def add_tiled_tile_layer(self, tiled_tile_layer):
+        """
+        adds a TiledTileLayer to this Stage
+        - puts it in the ordered to_render list, in the tiled_layers list, as well as in the tiled_layers_to_collide list (iff type != none)
+
+        :param TiledTileLayer tiled_tile_layer: the TiledTileLayer to add to this Stage
+        """
+        # put the pytmx_layer into one of the collision groups (if not type==none)?
+        # - this is useful for our solve_collisions method
+        if tiled_tile_layer.type != Sprite.get_type("none"):
+            self.tiled_layers_to_collide.append(tiled_tile_layer)
+
+        # put only TiledTileLayers in to_render (iff do_render=true) and single Sprites (from the TiledObjectGroup) all ordered by render_order
+        self.tiled_layers[tiled_tile_layer.name] = tiled_tile_layer
+
+        # add it to the to_render list and re-sort the list by render_order values (note: this list also contains single Sprites)
+        if tiled_tile_layer.do_render:
+            self.to_render.append(tiled_tile_layer)
+            self.to_render.sort(key=lambda x: x.render_order)
+
+    def add_sprite(self, sprite, group_name):
+        """
+        adds a new single Sprite to an existing or a new pygame.sprite.Group
+
+        :param Sprite sprite: the Sprite to be added to this Stage (the Sprite's position is defined in its rect.x/y properties)
+        :param str group_name: the name of the group to which the GameObject should be added (group will not be created if it doesn't exist yet)
+        :return: the Sprite that was added
+        :rtype: Sprite
         """
         # if the group doesn't exist yet, create it
         if group_name not in self.sprite_groups:
@@ -1122,12 +1172,23 @@ class Stage(GameObject):
         return sprite
 
     def remove_sprite(self, sprite: Sprite):
+        """
+        removes a Sprite from this Stage by putting it in the remove_list for later removal
+
+        :param Sprite sprite: the Sprite to be removed from the Stage
+        """
         self.remove_list.append(sprite)
 
     def force_remove_sprite(self, sprite: Sprite):
-        # try to remove from sprites list (if it's still in there)
+        """
+        force-removes the given Sprite immediately (without putting it in the remove_list first)
+
+        :param Sprite sprite: the Sprite to be removed from the Stage
+        """
         try:
             self.sprites.remove(sprite)
+            if sprite.do_render:
+                self.to_render.remove(sprite)
         except ValueError:
             return
 
@@ -1136,9 +1197,15 @@ class Stage(GameObject):
         self.trigger_event("removed_from_stage", sprite)
 
     def pause(self):
+        """
+        pauses playing the Stage
+        """
         self.is_paused = True
 
     def unpause(self):
+        """
+        unpauses playing the Stage
+        """
         self.is_paused = False
 
     def solve_collisions(self):
@@ -1234,7 +1301,8 @@ class Stage(GameObject):
     def render(self, display: Display):
         """
         gets called each frame by the GameLoop (after 'tick' is called on all Stages)
-        - renders all GameObjects
+        - renders all its layers (ordered by 'render_order' property of the TiledTileLayer in the tmx file)
+        TODO: - renders Sprites that are not part of any layer
 
         :param Display display: the Display object to render on
         """
@@ -1242,8 +1310,9 @@ class Stage(GameObject):
             return False
 
         self.trigger_event("pre_render", display)
-        for layer in self.tiled_layers_to_render:
-            layer.render(display)
+        # loop through the sorted to_render list and render all TiledTileLayer and Sprite objects in this list
+        for layer_or_sprite in self.to_render:
+            layer_or_sprite.render(display)
         self.trigger_event("post_render", display)
 
 
@@ -1396,7 +1465,7 @@ class TiledTileLayer(TmxLayer):
         :param str direction: the direction in which to check for collision ('x' or 'y')
         :param float direction_veloc: the velocity of the Sprite in the given direction (can be negative)
         :return: a Collision object with all details of the collision between the Sprite and this layer (None if there is no collision)
-        :rtype: Union[None, Collision]
+        :rtype: Union[None,Collision]
         """
         # determine the tile steps (left/right up/down)
         direction_x = 1
@@ -1480,7 +1549,7 @@ class TileSprite(Sprite):
         :param TiledTileLayer layer: the TiledTileLayer object to which this tile belongs
         :param pytmx.pytmx.TiledMap pytmx_tiled_map: the tmx tiled-map object to which this tile belongs
                                                      (useful to have to look up certain map-side properties, e.g. tilewidth/height)
-        :param Union[pygame.Rect, None] rect: the pygame.Rect representing the position and size of the tile
+        :param Union[pygame.Rect,None] rect: the pygame.Rect representing the position and size of the tile
         """
         self.tiled_tile_layer = layer
         self.pytmx_tiled_map = pytmx_tiled_map
@@ -1520,11 +1589,15 @@ class TiledObjectGroup(TmxLayer):
                 sheet_or_image = None
                 if "tsx" in obj_props:
                     sheet_or_image = SpriteSheet("data/" + obj_props["tsx"] + ".tsx")
-                elif "image_file" in obj_props:
-                    sheet_or_image = "images/" + obj_props["image_file"] + ".png"
+                elif "img" in obj_props:
+                    sheet_or_image = "images/" + obj_props["img"] + ".png"
 
                 # generate the Sprite
                 sprite = getattr(sys.modules[module_], class_)(obj.x, obj.y, sheet_or_image)
+                # add the do_render and render_order to the new instance
+                sprite.do_render = (obj_props.get("do_render", "false") == "true")
+                if sprite.do_render:
+                    sprite.render_order = int(obj_props.get("render_order", 0))
                 self.sprite_group.add(sprite)
 
     def render(self, display):
@@ -2448,7 +2521,7 @@ class PlatformerPhysics(PhysicsComponent):
 
         # colliding with a ladder
         if other_obj.type & Sprite.get_type("ladder"):
-            # set which_ladder to the ladder's props
+            # set which_ladder to the ladder
             self.which_ladder = other_obj
             # if we are not locked into ladder AND on very top of the ladder, collide normally (don't fall through ladder's top)
             if (self.on_ladder > 0 or col.normal_x != 0  # don't x-collide with ladder
@@ -2640,10 +2713,13 @@ class Viewport(Component):
     """
     A viewport is a component that can be added to a Stage to help that Stage render the scene depending on scrolling/obj_to_follow certain GameObjects
     - any GameObject with offset_x/y fields is supported, the Viewport will set these offsets to the Viewports x/y values
-      before each render call
+    before each render call
     """
 
     def __init__(self, display: Display):
+        """
+        :param Display display: the Display object associated with this Viewport
+        """
         super().__init__("viewport")  # fix name to 'viewport' (only one viewport per Stage)
 
         self.display = display  # the pygame display (Surface) to draw on; so far we only need it to get the display's dimensions
@@ -2665,12 +2741,14 @@ class Viewport(Component):
         self.bounding_box = None
 
     def added(self):
+        assert isinstance(self.game_object, Stage), "ERROR: can only add a Viewport Component to a Stage object, but GameObject is of type {}!".\
+            format(type(self.game_object).__name__)
         self.game_object.on_event("pre_render", self, "pre_render")
 
         self.extend(self.follow_object_with_viewport)
         self.extend(self.unfollow_object_with_viewport)
-        self.extend(self.center_on_object_with_viewport)
-        self.extend(self.move_to_with_viewport)
+        self.extend(self.center_on_xy_with_viewport)
+        self.extend(self.move_to_xy_with_viewport)
 
     # EXTENSION methods (take self as well as GameObject as first two params)
 
@@ -2678,7 +2756,7 @@ class Viewport(Component):
         """
         makes the viewport follow a GameObject (obj_to_follow)
 
-        :param GameObject game_object: our game_object (that has `self` as component)
+        :param GameObject game_object: our game_object (the Stage) that has `self` as component
         :param GameObject obj_to_follow: the GameObject that we should follow
         :param dict directions: dict with 'x' and 'y' set to either True or False depending on whether we follow only in x direction or y or both
         :param dict bounding_box: should contain min_x, max_x, min_y, max_y so we know the boundaries of the camera
@@ -2692,9 +2770,8 @@ class Viewport(Component):
         # - if we don't have a Level (just a Screen), use the display's size
         if not bounding_box:  # get a default bounding box
             # TODO: this is very specific to us having always a Stage (with options['screen_obj']) as our owning game_object
-            screen = self.game_object.options["screen_obj"]
-            w = screen.width if hasattr(screen, "width") else self.display.surface.get_width()
-            h = screen.height if hasattr(screen, "height") else self.display.surface.get_height()
+            w = self.game_object.screen.width if hasattr(self.game_object.screen, "width") else self.display.surface.get_width()
+            h = self.game_object.screen.height if hasattr(self.game_object.screen, "height") else self.display.surface.get_height()
             bounding_box = {"min_x": 0, "min_y": 0, "max_x": w, "max_y": h}
 
         self.directions = directions
@@ -2702,24 +2779,39 @@ class Viewport(Component):
         self.bounding_box = bounding_box
         self.max_speed = max_speed
         game_object.on_event("post_tick", self, "follow")
-        self.follow(False if max_speed > 0.0 else True)
+        self.follow(first=(False if max_speed > 0.0 else True))  # start following
 
     def unfollow_object_with_viewport(self, game_object):
         """
         stops following
 
-        :param GameObject game_object: our game_object (that has `self` as component)
+        :param GameObject game_object: our game_object (the Stage) that has `self` as component
         """
         game_object.off_event("post_tick", self, "follow")
         self.obj_to_follow = None
 
-    def center_on_object_with_viewport(self, game_object, x, y):
+    def center_on_xy_with_viewport(self, game_object, x, y):
+        """
+        centers the Viewport on a given x/y position (so that the x/y position is in the center of the screen afterwards)
+
+        :param GameObject game_object: our game_object (the Stage) that has `self` as component
+        :param int x: the x position to center on
+        :param int y: the y position to center on
+        """
         self.center_on(x, y)
 
-    def move_to_with_viewport(self, game_object, x, y):
-        return self.move_to(x, y)
+    def move_to_xy_with_viewport(self, game_object, x, y):
+        """
+        moves the Viewport to the given x/y position (top-left corner, not center(!))
+
+        :param GameObject game_object: our game_object (the Stage) that has `self` as component
+        :param int x: the x position to move to
+        :param int y: the y position to move to
+        """
+        self.move_to(x, y)
 
     # END: EXTENSION METHODS
+
 
     """shake: function() {
         setTimeout(function(vp) {vp.shakeY = 1;}, 30, this.viewport);
@@ -2734,29 +2826,43 @@ class Viewport(Component):
     },
     """
 
-    def follow(self, first: bool):
+    def follow(self, game_loop=None, first=False):
+        """
+        helper method to follow our self.obj_to_follow (should not be called by the API user)
+        - called when the Stage triggers Event 'post_tick' (passes GameLoop into it which is not used)
+
+        :param GameLoop game_loop: the GameLoop that's currently playing
+        :param bool first: whether this is the very first call to this function (if so, do a hard center on, otherwise a soft-center-on)
+        """
         follow_x = self.directions["x"](self.obj_to_follow) if callable(self.directions["x"]) else  self.directions["x"]
         follow_y = self.directions["y"](self.obj_to_follow) if callable(self.directions["y"]) else  self.directions["y"]
 
         func = self.center_on if first else self.soft_center_on
-        func(self.obj_to_follow.rect.x + self.obj_to_follow.rect.width / 2 - self.offset_x if follow_x else None,
-             self.obj_to_follow.rect.y + self.obj_to_follow.rect.height / 2 - self.offset_y if follow_y else None)
+        func(self.obj_to_follow.rect.x + self.obj_to_follow.rect.width / 2 - self.x if follow_x else None,
+             self.obj_to_follow.rect.y + self.obj_to_follow.rect.height / 2 - self.y if follow_y else None)
 
-    def offset(self, x, y):
-        self.offset_x = x
-        self.offset_y = y
+    # OBSOLETE: does not seem to be called
+    #def offset(self, x, y):
+    #    self.x = x
+    #    self.y = y
 
-    def soft_center_on(self, x: Union[int, None] = None, y: Union[int, None] = None):
+    def soft_center_on(self, x=None, y=None):
+        """
+        soft-centers on a given x/y position respecting the Viewport's max_speed property (unlike center_on)
+
+        :param Union[int,None] x: the x position to center on (None if we should ignore the x position)
+        :param Union[int,None] y: the y position to center on (None if we should ignore the y position)
+        """
         if x:
             dx = (x - self.display.surface.get_width() / 2 / self.scale - self.x) / 3  # //, this.followMaxSpeed);
             if abs(dx) > self.max_speed:
                 dx = math.copysign(self.max_speed, dx)
 
             if self.bounding_box:
-                if (self.x + dx) < self.bounding_box.min_x:
-                    self.x = self.bounding_box.min_x / self.scale
-                elif self.x + dx > (self.bounding_box.max_x - self.display.surface.get_width()) / self.scale:
-                    self.x = (self.bounding_box.max_x - self.display.surface.get_width()) / self.scale
+                if (self.x + dx) < self.bounding_box["min_x"]:
+                    self.x = self.bounding_box["min_x"] / self.scale
+                elif self.x + dx > (self.bounding_box["max_x"] - self.display.surface.get_width()) / self.scale:
+                    self.x = (self.bounding_box["max_x"] - self.display.surface.get_width()) / self.scale
                 else:
                     self.x += dx
             else:
@@ -2767,22 +2873,34 @@ class Viewport(Component):
             if abs(dy) > self.max_speed:
                 dy = math.copysign(self.max_speed, dy)
             if self.bounding_box:
-                if self.y + dy < self.bounding_box.min_y:
-                    self.y = self.bounding_box.min_y / self.scale
-                elif self.y + dy > (self.bounding_box.max_y - self.display.surface.get_height()) / self.scale:
-                    self.y = (self.bounding_box.max_y - self.display.surface.get_height()) / self.scale
+                if self.y + dy < self.bounding_box["min_y"]:
+                    self.y = self.bounding_box["min_y"] / self.scale
+                elif self.y + dy > (self.bounding_box["max_y"] - self.display.surface.get_height()) / self.scale:
+                    self.y = (self.bounding_box["max_y"] - self.display.surface.get_height()) / self.scale
                 else:
                     self.y += dy
             else:
                 self.y += dy
 
-    def center_on(self, x, y):
+    def center_on(self, x=None, y=None):
+        """
+        centers on a given x/y position without(!) respecting the Viewport's max_speed property (unlike soft_center_on)
+
+        :param Union[int,None] x: the x position to center on (None if we should ignore the x position)
+        :param Union[int,None] y: the y position to center on (None if we should ignore the y position)
+        """
         if x:
             self.x = x - self.display.surface.get_width() / 2 / self.scale
         if y:
             self.y = y - self.display.surface.get_height() / 2 / self.scale
 
-    def move_to(self, x, y):
+    def move_to(self, x=None, y=None):
+        """
+        moves the Viewport to a given x/y position (top-left corner, not centering) without(!) respecting the Viewport's max_speed property
+
+        :param Union[int,None] x: the x position to move to (None if we should ignore the x position)
+        :param Union[int,None] y: the y position to move to (None if we should ignore the y position)
+        """
         if x:
             self.x = x
         if y:
@@ -2790,7 +2908,11 @@ class Viewport(Component):
         return self.game_object  # ?? why
 
     def pre_render(self, display: Display):
-        # simply set the offset of our Display
+        """
+        sets the offset property of the given Display so that it matches our (previously) calculated x/y values
+
+        :param Display display: the Display, whose offset we will change here
+        """
         self.display.offsets[0] = self.x
         self.display.offsets[1] = self.y
 
@@ -2863,8 +2985,7 @@ class SimpleScreen(Screen):
 
         # start screen (will overwrite the old 0-stage (=main-stage))
         # - also, will give our keyboard-input setup to the new GameLoop object
-        Stage.stage_screen(self, SimpleScreen.screen_func, stage=0,
-                                options={"components": [Viewport(self.display)]})  # <-this options-object will be stored in stage.options
+        Stage.stage_screen(self, SimpleScreen.screen_func, stage=0)
 
     def done(self):
         print("we're done!")
@@ -2925,7 +3046,7 @@ class Level(Screen, metaclass=ABCMeta):
         - the options-object below will be also stored in [Stage object].options
         - child Level classes only need to do these three things: a) stage a screen, b) register some possible events, c) play a new game loop
         """
-        Stage.stage_screen(self, self.screen_func, 0)
+        Stage.stage_screen(self, self.screen_func, stage=0)
         # activate level triggers
         self.on_event("agent_reached_exit", self, "done", register=True)
         # play a new GameLoop giving it some options
@@ -2947,7 +3068,7 @@ class Game(object):
     - also keeps a Display object (and determines its size), which is used for rendering and displaying the game
     """
 
-    def __init__(self, screens_and_levels, width: int = 0, height: int = 0, title: str = "spygame Demo!", max_fps: int = 60, debug_flags=DEBUG_NONE):
+    def __init__(self, screens_and_levels, width=0, height=0, title="spygame Demo!", max_fps=60, debug_flags=DEBUG_NONE):
         """
         :param list screens_and_levels: a list of Screen and Level definitions. Each item is a dict with
         :param int width: the width of the screen in pixels (0 for auto)
@@ -2974,7 +3095,7 @@ class Game(object):
         DEBUG_FLAGS = debug_flags
 
         # create the Display object for the entire game: we pass it to all levels and screen objects
-        self.display = Display(600, 400, title)  # use 600x400 for now (default); this will be reset to the largest Level dimensions further below
+        self.display = Display(width, height, title)  # use widthxheight for now (default); this will be reset to the largest Level dimensions further below
 
         # our levels (if any) determine the size of the display
         get_w_from_levels = True if width == 0 else False
@@ -3062,10 +3183,10 @@ class CollisionAlgorithm(object):
 
         :param Sprite sprite1: sprite 1
         :param Sprite sprite2: sprite 2 (the other sprite)
-        :param Union[None, Tuple[Collision]] collision_objects: the two always-recycled returnable Collision instances (aside from None); if None,
+        :param Union[None,Tuple[Collision]] collision_objects: the two always-recycled returnable Collision instances (aside from None); if None,
         use our default ones
         :return: a Collision object with all details of the collision between the two Sprites (None if there is no collision)
-        :rtype: Union[None, Collision]
+        :rtype: Union[None,Collision]
         """
         pass
 

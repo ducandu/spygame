@@ -454,6 +454,7 @@ class VikingLevel(spyg.Level):
         stage = spyg.Stage.stage_screen(self, None, 0, {
             "tile_layer_physics_collisions": (spyg.PlatformerCollision(), spyg.PlatformerCollision()),
             "tile_layer_physics_collision_postprocessor": spyg.PlatformerPhysics.tile_layer_physics_collision_postprocessor,
+            "components": [spyg.Viewport(self.display)]
         })
 
         # find all Vikings in the Stage and store them for us
@@ -468,7 +469,11 @@ class VikingLevel(spyg.Level):
         # manage the characters in this level
         self.state.set("vikings", self.vikings)
         self.state.on_event("changed.active_viking", self, "active_viking_changed")
+
         self.state.set("active_viking", 0, True)  # 0=set to first Viking, True=trigger event
+        # tell the Viewport of the Stage to follow the active Viking
+        stage.follow_object_with_viewport(self.vikings[0])
+
         self.state.set("orig_num_vikings", len(self.vikings))
 
         # activate level triggers
@@ -582,20 +587,21 @@ class VikingLevel(spyg.Level):
 
     # reacts to a change in the active character to some new slot
     # - changes the viewport follow to the new guy
-    def active_viking_changed(self, new_viking, old_viking):
+    def active_viking_changed(self, new_viking_idx, old_viking_idx):
         vikings = self.state.get("vikings")
         # someone is active
-        if new_viking is not None:
+        if new_viking_idx is not None:
             for i in range(len(vikings)):
-                if i != new_viking:
+                if i != new_viking_idx:
                     vikings[i].deactivate()
                 else:
                     vikings[i].activate()
 
-            # TODO: follow with camera
-            # stage = spyg.Stage.get_stage(0)  # default stage
-            # stage.follow(characters[params[0]], {x: true, y: true}, {minX: 0, maxX: this.p.collisionLayer.p.w, minY: 0, maxY: this.p.collisionLayer.p.h}, (typeof params[1] == 'undefined' ? 0 : 15)/*max follow-speed (only when not first character)*/)
-            vikings[new_viking].blink_animation(15, 1.5)  # 15/s for 1.5s
+            # make the Stage follow the new Viking
+            stage = spyg.Stage.get_stage(0)  # default stage
+            stage.follow_object_with_viewport(vikings[new_viking_idx])
+            # make the new Viking blink for a while
+            vikings[new_viking_idx].blink_animation(15, 1.5)  # 15/s for 1.5s
         # no one is active anymore -> switch 'em all off
         else:
             for viking in vikings:
@@ -748,7 +754,8 @@ if __name__ == "__main__":
         # add more of your levels here
         # { ... },
 
-    ], title="The Lost Vikings - Return of the Heroes :)", debug_flags=(spyg.DEBUG_NONE))  # spyg.DEBUG_DONT_RENDER_TILED_TILE_LAYERS | spyg.DEBUG_RENDER_COLLISION_TILES | spyg.DEBUG_RENDER_SPRITES_RECTS
+        ], width=200,height=200,
+        title="The Lost Vikings - Return of the Heroes :)", debug_flags=(spyg.DEBUG_NONE))  # spyg.DEBUG_DONT_RENDER_TILED_TILE_LAYERS | spyg.DEBUG_RENDER_COLLISION_TILES | spyg.DEBUG_RENDER_SPRITES_RECTS
 
     # that's it, play one of the levels -> this will enter an endless game loop
     game.levels_by_name["WRBC"].play()

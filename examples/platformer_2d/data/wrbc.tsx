@@ -8,11 +8,20 @@
  </tile>
  <tile id="1">
   <properties>
-   <property name="test" type="float" value="5.555"/>
    <property name="type" value="ladder"/>
   </properties>
  </tile>
  <tile id="2">
+  <properties>
+   <property name="type" value="ladder"/>
+  </properties>
+ </tile>
+ <tile id="3">
+  <properties>
+   <property name="type" value="ladder"/>
+  </properties>
+ </tile>
+ <tile id="4">
   <properties>
    <property name="type" value="ladder"/>
   </properties>
