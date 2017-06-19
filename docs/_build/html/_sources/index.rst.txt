@@ -10,11 +10,9 @@ Welcome to spygame's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-.. automodule:: spygame
-
-.. autoclass:: Viewport
-    :members:
-
+   spygame.rst
+   modules.rst
+   
 Indices and tables
 ==================
 

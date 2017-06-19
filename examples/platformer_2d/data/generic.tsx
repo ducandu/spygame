@@ -80,12 +80,12 @@
  </tile>
  <tile id="40">
   <properties>
-   <property name="exit" type="bool" value="true"/>
+   <property name="type" value="exit"/>
   </properties>
  </tile>
  <tile id="41">
   <properties>
-   <property name="exit" type="bool" value="true"/>
+   <property name="type" value="exit"/>
   </properties>
  </tile>
  <tile id="42">

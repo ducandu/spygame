@@ -6,16 +6,6 @@
    <property name="no_collision" type="bool" value="true"/>
   </properties>
  </tile>
- <tile id="1">
-  <properties>
-   <property name="type" value="ladder"/>
-  </properties>
- </tile>
- <tile id="2">
-  <properties>
-   <property name="type" value="ladder"/>
-  </properties>
- </tile>
  <tile id="3">
   <properties>
    <property name="type" value="ladder"/>

@@ -26,7 +26,8 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="spygame package" href="spygame.html" /> 
   </head>
   <body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -38,6 +39,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="spygame.html" title="spygame package"
+             accesskey="N">next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">spygame 0.1.0 documentation</a> &#187;</li> 
       </ul>
     </div>
@@ -45,13 +49,13 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Welcome to spygame’s documentation!</a><ul>
-<li><a class="reference internal" href="#spygame-pygame-based-2d-game-engine-for-the-openai-gym">spygame (pygame based 2D game engine for the openAI gym)</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#">Welcome to spygame’s documentation!</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 
+  <h4>Next topic</h4>
+  <p class="topless"><a href="spygame.html"
+                        title="next chapter">spygame package</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -80,180 +84,18 @@
   <div class="section" id="welcome-to-spygame-s-documentation">
 <h1>Welcome to spygame’s documentation!<a class="headerlink" href="#welcome-to-spygame-s-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="spygame.html">spygame package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spygame.html#module-spygame">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">spygame</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spygame.html">spygame package</a></li>
+</ul>
+</li>
+</ul>
 </div>
-<span class="target" id="module-spygame"></span><div class="section" id="spygame-pygame-based-2d-game-engine-for-the-openai-gym">
-<h2>spygame (pygame based 2D game engine for the openAI gym)<a class="headerlink" href="#spygame-pygame-based-2d-game-engine-for-the-openai-gym" title="Permalink to this headline">¶</a></h2>
-<p>created: 2017/04/04 in PyCharm
-(c) 2017 Sven Mika - ducandu GmbH</p>
-</div>
-<dl class="class">
-<dt id="spygame.Viewport">
-<em class="property">class </em><code class="descclassname">spygame.</code><code class="descname">Viewport</code><span class="sig-paren">(</span><em>display: spygame.Display</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Viewport"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Viewport" title="Permalink to this definition">¶</a></dt>
-<dd><p>A viewport is a component that can be added to a Stage to help that Stage render the scene depending on scrolling/obj_to_follow certain GameObjects
-- any GameObject with offset_x/y fields is supported, the Viewport will set these offsets to the Viewports x/y values
-before each render call</p>
-<dl class="method">
-<dt id="spygame.Viewport.center_on">
-<code class="descname">center_on</code><span class="sig-paren">(</span><em>x=None</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Viewport.center_on"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Viewport.center_on" title="Permalink to this definition">¶</a></dt>
-<dd><p>centers on a given x/y position without(!) respecting the Viewport’s max_speed property (unlike soft_center_on)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>x</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em>]</em>) – the x position to center on (None if we should ignore the x position)</li>
-<li><strong>y</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em>]</em>) – the y position to center on (None if we should ignore the y position)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="spygame.Viewport.center_on_xy_with_viewport">
-<code class="descname">center_on_xy_with_viewport</code><span class="sig-paren">(</span><em>game_object</em>, <em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Viewport.center_on_xy_with_viewport"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Viewport.center_on_xy_with_viewport" title="Permalink to this definition">¶</a></dt>
-<dd><p>centers the Viewport on a given x/y position (so that the x/y position is in the center of the screen afterwards)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>game_object</strong> (<em>GameObject</em>) – our game_object (the Stage) that has <cite>self</cite> as component</li>
-<li><strong>x</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the x position to center on</li>
-<li><strong>y</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the y position to center on</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="spygame.Viewport.follow">
-<code class="descname">follow</code><span class="sig-paren">(</span><em>game_loop=None</em>, <em>first=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Viewport.follow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Viewport.follow" title="Permalink to this definition">¶</a></dt>
-<dd><p>helper method to follow our self.obj_to_follow (should not be called by the API user)
-- called when the Stage triggers Event ‘post_tick’ (passes GameLoop into it which is not used)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>game_loop</strong> (<em>GameLoop</em>) – the GameLoop that’s currently playing</li>
-<li><strong>first</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – whether this is the very first call to this function (if so, do a hard center on, otherwise a soft-center-on)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="spygame.Viewport.follow_object_with_viewport">
-<code class="descname">follow_object_with_viewport</code><span class="sig-paren">(</span><em>game_object</em>, <em>obj_to_follow</em>, <em>directions=None</em>, <em>bounding_box=None</em>, <em>max_speed=inf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Viewport.follow_object_with_viewport"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Viewport.follow_object_with_viewport" title="Permalink to this definition">¶</a></dt>
-<dd><p>makes the viewport follow a GameObject (obj_to_follow)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>game_object</strong> (<em>GameObject</em>) – our game_object (the Stage) that has <cite>self</cite> as component</li>
-<li><strong>obj_to_follow</strong> (<em>GameObject</em>) – the GameObject that we should follow</li>
-<li><strong>directions</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – dict with ‘x’ and ‘y’ set to either True or False depending on whether we follow only in x direction or y or both</li>
-<li><strong>bounding_box</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – should contain min_x, max_x, min_y, max_y so we know the boundaries of the camera</li>
-<li><strong>max_speed</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the max speed of the camera</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="spygame.Viewport.move_to">
-<code class="descname">move_to</code><span class="sig-paren">(</span><em>x=None</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Viewport.move_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Viewport.move_to" title="Permalink to this definition">¶</a></dt>
-<dd><p>moves the Viewport to a given x/y position (top-left corner, not centering) without(!) respecting the Viewport’s max_speed property</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>x</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em>]</em>) – the x position to move to (None if we should ignore the x position)</li>
-<li><strong>y</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em>]</em>) – the y position to move to (None if we should ignore the y position)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="spygame.Viewport.move_to_xy_with_viewport">
-<code class="descname">move_to_xy_with_viewport</code><span class="sig-paren">(</span><em>game_object</em>, <em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Viewport.move_to_xy_with_viewport"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Viewport.move_to_xy_with_viewport" title="Permalink to this definition">¶</a></dt>
-<dd><p>moves the Viewport to the given x/y position (top-left corner, not center(!))</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>game_object</strong> (<em>GameObject</em>) – our game_object (the Stage) that has <cite>self</cite> as component</li>
-<li><strong>x</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the x position to move to</li>
-<li><strong>y</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the y position to move to</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="spygame.Viewport.pre_render">
-<code class="descname">pre_render</code><span class="sig-paren">(</span><em>display: spygame.Display</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Viewport.pre_render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Viewport.pre_render" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets the offset property of the given Display so that it matches our (previously) calculated x/y values</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>display</strong> (<em>Display</em>) – the Display, whose offset we will change here</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="spygame.Viewport.soft_center_on">
-<code class="descname">soft_center_on</code><span class="sig-paren">(</span><em>x=None</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Viewport.soft_center_on"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Viewport.soft_center_on" title="Permalink to this definition">¶</a></dt>
-<dd><p>soft-centers on a given x/y position respecting the Viewport’s max_speed property (unlike center_on)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>x</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em>]</em>) – the x position to center on (None if we should ignore the x position)</li>
-<li><strong>y</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em>]</em>) – the y position to center on (None if we should ignore the y position)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="spygame.Viewport.unfollow_object_with_viewport">
-<code class="descname">unfollow_object_with_viewport</code><span class="sig-paren">(</span><em>game_object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Viewport.unfollow_object_with_viewport"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Viewport.unfollow_object_with_viewport" title="Permalink to this definition">¶</a></dt>
-<dd><p>stops following</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>game_object</strong> (<em>GameObject</em>) – our game_object (the Stage) that has <cite>self</cite> as component</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
@@ -279,6 +121,9 @@ before each render call</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="spygame.html" title="spygame package"
+             >next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">spygame 0.1.0 documentation</a> &#187;</li> 
       </ul>
     </div>

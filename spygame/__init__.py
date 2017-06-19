@@ -32,6 +32,7 @@ DEBUG_RENDER_COLLISION_TILES_COLOR_OTHER = pygame.Color("cyan")
 # render the tiles currently under consideration for colliding with a sprite
 DEBUG_RENDER_ACTIVE_COLLISION_TILES = 0x4
 DEBUG_RENDER_ACTIVE_COLLISION_TILES_COLOR = pygame.Color("green")
+DEBUG_RENDER_ACTIVE_COLLISION_TILES_COLOR_GREYED_OUT = pygame.Color("grey")
 # will render all Sprites (even those without an image (e.g. when blinking) with a rectangular frame representing the Sprite's .rect property
 DEBUG_RENDER_SPRITES_RECTS = 0x8
 DEBUG_RENDER_SPRITES_RECTS_COLOR = pygame.Color("orange")
@@ -47,47 +48,66 @@ DEBUG_FLAGS = DEBUG_NONE
 
 class EventObject(object):
     """
-    Corresponds to evented class in Quintus/html5
-    - NOTE: these are not pygame events!
+    an EventObject introduces event handling and most objects that occur in spygame games will inherit from this class
+    - NOTE: spygame events are not(!) pygame events
+    - EventObject can 'have' some events, which are simple strings (the names of the events, e.g. 'hit', 'jump', 'collided', etc..)
+    - EventObject can trigger any event by their name
+    - if an EventObject wants to trigger an event, this event must have been registered with the EventObject beforehand (will raise exception otherwise)
+    -
     """
-
     def __init__(self):
         # - listeners keeps a list of callbacks indexed by event name for quick lookup
         # - a listener is an array of 2 elements: 0=target, 1=callback
-        self.listeners = {}  # keys=event names
+        self.listeners = {}  # keys=event names; values=list of 2 elements (0=target object, 1=callback method)
         # stores all valid event names; that way, we can check validity of event when subscribers subscribe to some event
         self.valid_events = set()
 
-    def register_event(self, *events: str):
+    def register_event(self, *events):
+        """
+        registers a possible event (str) with this object; only registered events are allowed to be triggered later
+
+        :param str events: the event (or events) that should be registered
+        """
         for event in events:
             self.valid_events.add(event)
 
-    def unregister_event(self, event: str):
+    def unregister_event(self, *events):
+        """
+        removes one or more events from this EventObject's event registry; unregistered events are no longer allowed to be triggered
+
+        :param str events: the event(s) that should be removed from the registry
+        """
         self.valid_events.remove(event)
 
     def unregister_events(self):
+        """
+        unregisters all events from this GameObject (see 'unregister_event')
+        """
         self.valid_events.clear()
 
     def check_event(self, event: str):
+        """
+        checks whether the given event is in this EventObject's registry (raises exception if not)
+
+        :param str event: the event to be checked
+        """
         # make sure the event is valid (registered)
-        assert event in self.valid_events, "ERROR: event {} not valid in this EventObject ({}), has not been registered!".format(event, type(self).__name__)
+        if event not in self.valid_events:
+            raise Exception("ERROR: event '{}' not valid in this EventObject ({}); event has not been registered!".format(event, type(self).__name__))
 
-    def on_event(self, event: Union[str, List[str]], target=None, callback=None, register=False):
+    def on_event(self, event, target=None, callback=None, register=False):
         """
-        Binds a callback to an event on this object. If you provide a
-        `target` object, that object will add this event to it's list of
-        binds, allowing it to automatically remove it when it is destroyed.
+        binds a callback to an event on this EventObject
+        - if you provide a `target` object, that object will add this event to it's list of binds, allowing it to automatically remove it when
+        it is destroyed.
+        - from here on, if the event gets triggered, the callback will be called on the target object
+        - note: only previously registered events may be triggered (we can register the event here by setting register=True)
 
-        Args:
-            event (str): The event name (e.g. tick, got_hit, etc..)
-            target (object): The target object on which to call the callback (defaults to self if not given)
-            callback (callable): The (bound!) method to call on target
-            register (bool): whether we should register this event at the same time
-
-        Returns:
-
+        :param Union[str,List[str]] event: the name of the event to be bound to the callback (e.g. tick, got_hit, etc..)
+        :param target (EventObject): The target object on which to call the callback (defaults to self if not given)
+        :param callable callback: the bound method to call on target if the event gets triggered
+        :param bool register: whether we should register this event right now (only registered events are allowed to be triggered later)
         """
-
         if register:
             self.register_event(event)
         else:
@@ -126,13 +146,11 @@ class EventObject(object):
     # TODO: good debugging: warn if a registered event doesn't get triggered for a long time?
     def trigger_event(self, event, *params):
         """
-        triggers an event, passing in some optional additional data about the event
-        Args:
-            event (str): the event's name
-            params (*): the params to be passed to the handler methods as *args
+        triggers an event and specifies the parameters to be passed to the bound event handlers (callbacks) as \*params
 
-        Returns:
-
+        :param str event: the name of the event that should be triggered; note: this event name will have to be registered with the EventObject
+            in order for the trigger to succeed
+        :param any params: the parameters to be passed to the handler methods as \*args
         """
         self.check_event(event)
 
@@ -144,17 +162,13 @@ class EventObject(object):
 
     def off_event(self, event, target=None, callback=None, unregister=False):
         """
-        unbinds an event
+        unbinds an event from a target/callback
         - can be called with 1, 2, or 3 parameters, each of which unbinds a more specific listener
 
-        Args:
-            event ():
-            target ():
-            callback ():
-            unregister (bool): whether we should unregister this event as well
-
-        Returns:
-
+        :param str event: the name of the event to unbind from the callback
+        :param EventObject target: the target EventObject to unbind this event from (callback would be a member of this target)
+        :param callable callback: the callback to unbind the event from
+        :param bool unregister: whether we should unregister this event as well
         """
         if unregister:
             self.unregister_event(event)
@@ -181,9 +195,6 @@ class EventObject(object):
         """
         called to remove any listeners from this object
         - e.g. when this object is destroyed you'll want all the event listeners to be removed from this object
-
-        Returns:
-
         """
         if hasattr(self, "event_binds"):
             for source, event, _ in self.event_binds:
@@ -221,6 +232,14 @@ class State(EventObject):
 
 
 class KeyboardInputs(EventObject):
+    """
+    a class to handle keyboard inputs by the user playing the spygame game
+    - a KeyboardInput object is passed to the GameLoop c'tor, so that the GameLoop can `tick` the KeyboardInput object each frame
+    - single keys to watch out for can be registered via the `update_keys` method (not registered keys will be ignored)
+    - the tick method collects all keydown/keyup pygame events and stores the currently registered keys in the `keyboard_registry` as True (currently pressed)
+    or False (currently not pressed)
+    - all keys are described by their pygame names (without the leading `K_`), e.g. pygame.K_UP=`up`, pygame.K_ESCAPE=`escape`, etc..
+    """
     def __init__(self, key_list=None):
         super().__init__()
 
@@ -236,12 +255,12 @@ class KeyboardInputs(EventObject):
             key_list = ["up", "down", "left", "right"]
         self.update_keys(key_list)
 
-    def update_keys(self, new_key_list: Union[List, None] = None):
+    def update_keys(self, new_key_list=None):
         """
         populates our registry and other dicts with the new key-list given (may be an empty list)
 
-        :param list new_key_list: the new key list, where each item is the lower-case pygame keycode without the leading "K_" e.g. "up" for pygame.K_UP
-                                  - use None for clearing out the registry (no keys assigned)
+        :param Union[List,None] new_key_list: the new key list, where each item is the lower-case pygame keycode without the leading
+            `K_` e.g. `up` for pygame.K_UP; use None for clearing out the registry (no keys assigned)
         """
         self.unregister_events()
         self.keyboard_registry.clear()
@@ -260,7 +279,7 @@ class KeyboardInputs(EventObject):
         """
         pulls all keyboard events from the event queue and processes them according to our keyboard_registry/descriptions
         - triggers events for all registered keys like: 'key_down.[desc]' (when  pressed) and 'key_up.[desc]' (when released),
-          where desc is the lowercase string after 'pygame.K_'... (e.g. 'down', 'up', etc..)
+        where desc is the lowercase string after `pygame.K_`... (e.g. 'down', 'up', etc..)
         """
         events = pygame.event.get([pygame.KEYDOWN, pygame.KEYUP])
         for e in events:
@@ -276,9 +295,10 @@ class KeyboardInputs(EventObject):
 
 class GameObject(EventObject):
     """
-    Inherits from Sprite, but also adds capability to add Components
+    a GameObject adds the capability to add one or more Component objects to the GameObject
+    (e.g. animation, physics, etc..)
+    - Component objects are stored by their name in the GameObject.components dict
     """
-
     # stores all GameObjects by a unique int ID
     id_to_obj = {}
     next_id = 0
@@ -295,12 +315,11 @@ class GameObject(EventObject):
 
     def add_component(self, component):
         """
-        Adds a component object to this game Entity -> calls the component's added method
-        Args:
-            component (Component): component to be added to GameObject under game_obj.components[component.name]
+        Adds a component object to this GameObject -> calls the component's added method
 
-        Returns:
-            component (Component): for chaining
+        :param Component component: component to be added to GameObject under game_obj.components[component.name]
+        :return: the same Component for chaining
+        :rtype: Component
         """
 
         component.game_object = self
@@ -310,6 +329,11 @@ class GameObject(EventObject):
         return component
 
     def remove_component(self, component):
+        """
+        removes the given component from this GameObject
+
+        :param Component component: the Component object to be removed
+        """
         assert component.name in self.components, "ERROR: component with name {} does no exist in Entity!".format(component.name)
         # call the removed handler (if implemented)
         component.removed()
@@ -318,10 +342,8 @@ class GameObject(EventObject):
 
     def destroy(self):
         """
-        Destroys the object by calling debind and removing the object from it's parent
-        - will trigger a destroyed event callback
-        Returns:
-
+        Destroys the GameObject by calling debind and removing the object from it's parent
+        - will trigger a `destroyed` event (callback)
         """
         # we are already dead -> return
         if self.is_destroyed:
@@ -338,17 +360,27 @@ class GameObject(EventObject):
         # remove ourselves from the id_to_obj dict
         del GameObject.id_to_obj[self.id]
 
-    # a tick (coming from the containing Stage); may do something or not
     def tick(self, game_loop):
+        """
+        a tick (coming from the GameObject containing Stage); override this if you want your GameObject to do something each frame
+        :param GameLoop game_loop: the GameLoop that's currently playing
+        """
         pass
 
 
 class SpriteSheet(object):
     """
-    loads a spritesheet from a tsx file and assigns frames to each sprite (Surface) in the sheet
+    represents a spritesheet loaded from a tsx file
+    - stores each single image (as pygame.Surface) in the sheet by its position
+    - allows for already doing flip transformations (x/y and/or both axes) so we save time during the game
+    - stores single tile properties in tile_props_by_id dict (only for those tiles that actually have custom properties defined in the tsx file)
     """
 
-    def __init__(self, file, store_flips: Union[dict, None] = None):
+    def __init__(self, file, store_flips=None):
+        """
+        :param str file: the tsx file name to be loaded into this object
+        :param dict store_flips: dictionary ({"x": [True|False], "y": [True|False]}) with the flip-options; None for default (only x)
+        """
         try:
             tree = xml.etree.ElementTree.parse(file)
         except:
@@ -423,7 +455,10 @@ class SpriteSheet(object):
 
 class Sprite(GameObject, pygame.sprite.Sprite):
     """
-    adds a SpriteSheet to the object and inherits from pygame.sprite.Sprite, so a Sprite has an image and a position via rect
+    a Sprite can be added to a Stage; has a type and a collision mask for collision detection with other Sprites or TiledTileLayers also on the Stage
+    - Sprite objects inherit from pygame.sprite.Sprite, so a Sprite has an image and a position via rect
+    - each Sprite can have either a static image or hold a SpriteSheet object from which it can pull images for animation purposes; either way, the image
+    property is set that way
     """
 
     # dict of Sprite types (by name) to bitmappable-int (1, 2, 4, 8, 16, etc..)
@@ -447,19 +482,24 @@ class Sprite(GameObject, pygame.sprite.Sprite):
         """
         returns the bitmap code for an already existing Sprite type or for a new type (the code will be created then)
         - types are usually used for collision masks
-        Args:
-            type (str): the type, whose code should be returned
 
-        Returns: int
-
+        :param str type: the type, whose code should be returned
+        :return: the type as an int
+        :rtype: int
         """
         if type not in Sprite.types:
             Sprite.types[type] = Sprite.next_type
             Sprite.next_type *= 2
         return Sprite.types[type]
 
-    # TODO: make Sprite accept an image file as well (png will be loaded and simply set as image)
     def __init__(self, x: int, y: int, sheet_or_wh_or_file: Union[SpriteSheet, str, Tuple[int], None] = None):
+        """
+        :param int x: the initial x position of this Sprite
+        :param int y: the initial y position of this Sprite
+        :param Union[SpriteSheet,str,Tuple[int,int],None] sheet_or_wh_or_file: if SpriteSheet -> use that SpriteSheet (set initial image to first frame in the
+        SpriteSheet); if str -> use str as file name for a static image; if Tuple[int] -> empty image (no rendering) with a rect of given tuple sizes;
+        if None: no image, rect=1x1, no rendering
+        """
         pygame.sprite.Sprite.__init__(self)
         GameObject.__init__(self)
 
@@ -473,7 +513,7 @@ class Sprite(GameObject, pygame.sprite.Sprite):
             self.image = None  # pygame.Surface((sheet_or_wh_or_file[0], sheet_or_wh_or_file[1]))
             # self.image.fill(pygame.Color(0, 0, 0, 255))  # all transparent image
             self.rect = pygame.Rect(x, y, sheet_or_wh_or_file[0], sheet_or_wh_or_file[1])
-            self.do_render = False
+            self.do_render = True if DEBUG_FLAGS & DEBUG_RENDER_SPRITES_RECTS else False
         # -- with SpriteSheet
         elif isinstance(sheet_or_wh_or_file, SpriteSheet):
             self.spritesheet = sheet_or_wh_or_file
@@ -489,7 +529,7 @@ class Sprite(GameObject, pygame.sprite.Sprite):
             self.spritesheet = None
             self.image = None  # pygame.Surface((0, 0))
             self.rect = pygame.Rect(x, y, 1, 1)
-            self.do_render = False
+            self.do_render = True if DEBUG_FLAGS & DEBUG_RENDER_SPRITES_RECTS else False
 
         # GameObject specific stuff
         self.type = Sprite.get_type("default")  # specifies the type of the GameObject (can be used e.g. for collision detection)
@@ -553,30 +593,39 @@ class Sprite(GameObject, pygame.sprite.Sprite):
             sprite_group.remove(self)
 
     def render(self, display):
+        """
+        paints the Sprite with its current image onto the given Display object
+
+        :param Display display: the Display object to render on (Display has a pygame.Surface, on which we blit our image)
+        """
         if self.image:
-            #display.surface.blit(self.image, (self.rect.x + display.offsets[0], self.rect.y + display.offsets[1]))
             display.surface.blit(self.image, (self.rect.x - display.offsets[0], self.rect.y - display.offsets[1]))
         if DEBUG_FLAGS & DEBUG_RENDER_SPRITES_RECTS:
-            pygame.draw.rect(display.surface, DEBUG_RENDER_SPRITES_RECTS_COLOR, pygame.Rect((self.rect.x, self.rect.y), (self.rect.w, self.rect.h)), 1)
+            pygame.draw.rect(display.surface, DEBUG_RENDER_SPRITES_RECTS_COLOR, \
+                             pygame.Rect((self.rect.x - display.offsets[0], self.rect.y - display.offsets[1]), (self.rect.w, self.rect.h)), 1)
 
 
 class Repeater(Sprite):
     """
-    a background 2D repeater that scrolls slower than the viewport
+    a background 2D repeater that scrolls slower than the Viewport
     """
     def __init__(self, x, y, image_file, **kwargs):
         super().__init__(x, y, image_file)
-        self.vx = 1.2
-        self.vy = 1.2
+        self.vx = kwargs.get("vx", 1.0)
+        self.vy = kwargs.get("vy", 1.0)
         self.repeat_x = kwargs.get("repeat_x", True)
         self.repeat_y = kwargs.get("repeat_y", True)
         self.repeat_w = kwargs.get("repeat_w", self.rect.width)
         self.repeat_h = kwargs.get("repeat_h", self.rect.height)
-        # don't collide with nothing
+        # don't collide with anything
         self.type = Sprite.get_type("none")
         self.collision_mask = 0
 
+    # @override(Sprite)
     def render(self, display):
+        # debug rendering (no backgrounds) -> early out
+        if DEBUG_FLAGS & DEBUG_DONT_RENDER_TILED_TILE_LAYERS:
+            return
         view_x = display.offsets[0]
         view_y = display.offsets[1]
         offset_x = self.rect.x + view_x * self.vx
@@ -613,9 +662,37 @@ class Repeater(Sprite):
                 break
 
 
+class Ladder(Sprite):
+    """
+    a Ladder object that actors can climb on
+    - a Ladder object does not have an image and is thus not(!) being rendered; the image of the ladder has to be integrated into a TiledTileLayer
+    - TiledTileLayers have the possibility to generate lists of Ladder objects from those tiles that are flagged with the type='ladder' property
+    """
+    def __init__(self, x, y, width=32, height=100):
+        """
+        :param int x: the x position of the Ladder
+        :param int y: the y position of the Ladder
+        :param int width: the width of the Ladder in pixels (not tiles!)
+        :param int height: the height of the Ladder in pixels (not tiles!)
+        """
+        # transform values here to make collision with ladder to only trigger when player is relatively close to the x-center of the ladder
+        # - make this a 2px wide vertical axis in the center of the ladder
+        x = x + int(width/2) - 1
+        width = 2
+        super().__init__(x, y, (width, height))
+
+        # collision types
+        self.type = Sprite.get_type("touch") | Sprite.get_type("ladder")
+        self.collision_mask = 0  # do not do any collisions
+
+        # important to be able to start the 'top-of-ladder' animation sequence for agents that climb up the ladder
+        self.almost_top = self.rect.top + 12
+
+
 class AnimatedSprite(Sprite):
     """
-    adds an Animation component to each instance
+    adds an Animation component to each Sprite instance
+    - AnimatedSprites need a SpriteSheet (no static images or no-render allowed)
 
     :param int x: the initial x position of the Sprite
     :param int y: the initial y position of the Sprite
@@ -625,24 +702,37 @@ class AnimatedSprite(Sprite):
     """
 
     def __init__(self, x: int, y: int, spritesheet, animation_setup: dict):
+        """
+        :param int x: the initial x position of the AnimatedSprite
+        :param int y: the initial y position of the AnimatedSprite
+        :param SpriteSheet spritesheet: the SpriteSheet to use for animamations
+        :param dict animation_setup: a dictionary with all the different animation name and their settings (animation speed, frames to use, etc..)
+        """
+        assert isinstance(spritesheet, SpriteSheet), "ERROR: AnimatedSprite needs a SpriteSheet in its c'tor!"
+
         super().__init__(x, y, spritesheet)  # assign the image/rect for the Sprite
         self.register_event("post_tick")
         self.cmp_animation = self.add_component(Animation("animation"))
 
         Animation.register_settings(spritesheet.name, animation_setup, register_events_on=self)
-        # play the default animation
+        # play the default animation (now that we have added the Animation Component, we can call play_animation on ourselves)
         self.play_animation(animation_setup["default"])
 
 
 class Display(object):
-    instantiated = False
-
     """
     a simple wrapper class for a pygame.display/pygame.Surface object representing the pygame display
-    - also stores offset information
+    - also stores offset information for Viewport focusing (if Viewport is smaller that the Level, which is usually the case)
     """
 
-    def __init__(self, width: int = 600, height: int = 400, title="Spygame Rocks!"):
+    instantiated = False
+
+    def __init__(self, width=600, height=400, title="Spygame Rocks!"):
+        """
+        :param int width: the width of the Display
+        :param int height: the height of the Display
+        :param str title: the caption to use on the pygame display
+        """
         assert not Display.instantiated, "ERROR: can only create one {} object!".format(type(self).__name__)
         Display.instantiated = True
 
@@ -650,19 +740,18 @@ class Display(object):
         self.surface = pygame.display.set_mode((width, height))
         self.offsets = [0, 0]
 
-    def change_offsets(self, x, y):
-        self.offsets[0] = x
-        self.offsets[1] = y
-
     def change_dims(self, width, height):
+        """
+        changes the Display's size dynamically (during the game)
+        :param int width: the new width to use
+        :param int height: the new height to use
+        """
         pygame.display.set_mode((width, height))
         assert self.surface is pygame.display.get_surface(), "ERROR: self.display is not same object as pygame.display.get_surface() anymore!"
 
     def debug_refresh(self):
         """
-        force-refreshes the display (only for debug purposes)
-        Returns:
-
+        force-refreshes the display (used only for debug purposes)
         """
         pygame.display.flip()
         pygame.event.get([])  # we seem to have to do this
@@ -670,9 +759,9 @@ class Display(object):
 
 class GameLoop(object):
     """
-    Class that represents the GameLoop
-    - has play and pause functions: play stats the tick/callback loop
-    - has clock for ticking (keeps track of self.dt each tick), handles max-fps rate
+    class that represents the GameLoop
+    - has play and pause functions: play starts the tick/callback loop
+    - has clock for ticking (keeps track of self.dt each tick), handles and abides to max-fps rate setting
     - handles keyboard input registrations via its KeyboardInputs object
     - needs a callback to know what to do each tick. Does the keyboard_inputs.tick, then calls callback with self as only argument
     """
@@ -683,7 +772,7 @@ class GameLoop(object):
     @staticmethod
     def play_a_loop(**kwargs):
         """
-        factory: plays a given GameLoop object or creates a new one using the given **kwargs options
+        factory: plays a given GameLoop object or creates a new one using the given \*\*kwargs options
 
         :param any kwargs:
                 force_loop (bool): whether to play regardless of whether we still have some active loop running
@@ -693,8 +782,7 @@ class GameLoop(object):
                 max_fps (int): the max frames per second to loop through
                 screen_obj (Screen): alternatively, a Screen can be given, from which we will extract `display`, `max_fps` and `keyboard_inputs`
                 game_loop (Union[str,GameLoop]): the GameLoop to use (instead of creating a new one); "new" or [empty] for new one
-                dont_play (bool): whether - after creating the GameLoop - it should be `play`ed. Can be used for openAI gym purposes, where we just `step`,
-                                  not `tick`
+                dont_play (bool): whether - after creating the GameLoop - it should be `play`ed. Can be used for openAI gym purposes, where we just `step`, not `tick`
         :return: the created/played GameLoop object or None
         :rtype: Union[GameLoop,None]
         """
@@ -747,11 +835,11 @@ class GameLoop(object):
 
     def __init__(self, callback: callable, display: Display, keyboard_inputs: KeyboardInputs = None, max_fps=60):
         """
-
-        Args:
-            callback (callable): The callback function used for looping
-            keyboard_inputs (KeyboardInputs): The keyboard input registry to use
-            max_fps (float): the maximum frame rate per second to allow when ticking. fps can be slower, but never faster
+        :param callable callback: the callback function to call each time we `tick` (after collecting keyboard events)
+        :param Display display: the Display object associated with the loop
+        :param KeyboardInputs keyboard_inputs: the KeyboardInputs object to use for collecting keyboard information each tick (we simply call the
+        KeyboardInputs' `tick` method during our own `tick` method)
+        :param int max_fps: the maximum frame rate per second to allow when ticking. fps can be slower, but never faster
         """
         self.is_paused = True  # True -> Game loop will be paused (no frames, no ticks)
         self.callback = callback  # gets called each tick with this GameLoop instance as the first parameter (can then extract dt as `game_loop.dt`)
@@ -765,19 +853,34 @@ class GameLoop(object):
         self.max_fps = max_fps
 
     def pause(self):
+        """
+        pauses this GameLoop
+        """
         self.is_paused = True
         GameLoop.active_loop = None
 
     def play(self, max_fps=None):
+        """
+        plays this GameLoop (after pausing the currently running GameLoop, if any)
+        """
         # pause the current loop
         if GameLoop.active_loop:
             GameLoop.active_loop.pause()
         GameLoop.active_loop = self
         self.is_paused = False
+        # tick as long as we are not paused
         while not self.is_paused:
             self.tick(max_fps)
 
     def tick(self, max_fps=None):
+        """
+        called each frame of the GameLoop
+        - collects keyboard events
+        - calls the GameLoop's `callback`
+        - keeps a frame counter
+
+        :param int max_fps: the maximum allowed number of frames per second (usually 60)
+        """
         if not max_fps:
             max_fps = self.max_fps
 
@@ -801,12 +904,11 @@ class GameLoop(object):
 
     def step(self, action):
         """
+        (!)for reinforcement learning only(!) WIP:
         executes one action on the game
         - the action gets translated into a keyboard sequence first, then is played
-        :param action:
-        :type action:
-        :return:
-        :rtype:
+
+        :param str action: the action to execute on the MDP
         """
         # default global events?
         events = pygame.event.get(pygame.QUIT)  # TODO: add more here?
@@ -824,64 +926,12 @@ class GameLoop(object):
         self.frame += 1
 
 
-# OBSOLETE: got rid of Scenes altogether. They seemed to make things overly complicated.
-#class Scene(object):
-#    """
-#    A Scene class that allows a 'scene-func' to be run when the Scene is staged (on one of the Stages of the Game)
-#    """
-#
-#    # stores all scenes of the game by name
-#    scenes_registry = {}
-#
-#    @staticmethod
-#    def register_scene(name: str, scene_or_func=None, options=None):
-#        if not scene_or_func:
-#            scene_or_func = Scene.default_scene_func_from_pytmx
-#        if not options:
-#            options = {}
-
-#        # we have to create the scene from the scene_func
-#        if callable(scene_or_func):
-#            scene = Scene(scene_or_func, options)
-#        # we are given the Scene
-#        else:
-#            scene = scene_or_func
-#        Scene.scenes_registry[name] = scene
-#        return scene
-
-#    @staticmethod
-#    def get_scene(name: str):
-#        if name not in Scene.scenes_registry:
-#            return None
-#        return Scene.scenes_registry[name]
-
-#    # helper function for setting up a scene on a stage
-#    # reads a tmx file and creates a scene from it
-#    @staticmethod
-#    def default_scene_func_from_pytmx(stage):
-#        # mandatory options: tmx (the tmx object)
-#        if "tmx_obj" not in stage.options:
-#            return
-#        tmx_obj = stage.options["tmx_obj"]
-#        for layer in tmx_obj.layers:
-#            stage.add_tiled_layer(layer, tmx_obj)
-
-#    def __init__(self, scene_func, options=None):
-#        """
-
-#        Args:
-#            scene_func (callable): the function to be executed when the Scene is staged
-#            options (None,iterable): the options to pass on to the Stage when staging this Scene
-#        """
-#        self.scene_func = scene_func  # will take Stage object as only(!) parameter (options can be retrieved from stage.options)
-#        self.options = options or {}  # options for the Scene; will be merged with Stage's options when staging the Scene
-
-
 class Stage(GameObject):
     """
-    A Stage is a container class for Sprites (GameObjects) divided in groups
-    - each group has a name
-    - Sprites within a Stage can collide with each other
+    A Stage is a container class for Sprites sorted by pygame.sprite.Groups and TiledTileLayers
+    - Sprites within a Stage can collide with each other or with the TiledTileLayers in the Stage
+    - Sprites and TiledTileLayers that are to be rendered are stored sorted by their render_order property (lowest renders first)
+    -
     """
 
     # list of all Stages
@@ -914,14 +964,12 @@ class Stage(GameObject):
         Stage.active_stage = 0
 
     @staticmethod
-    def render_stages(display: Display, refresh_after_render: bool = False):
+    def render_stages(display, refresh_after_render=False):
         """
         loops through all Stages and renders all of them
-        Args:
-            display (Display): Display object on which to render
-            refresh_after_render (bool): do we refresh the pygame.display after all Stages have been called with `render`?
 
-        Returns:
+        :param Display display: Display object on which to render
+        :param bool refresh_after_render: do we refresh the pygame.display after all Stages have been called with `render`?
         """
         # black out display (really necessary? I think so)
         display.surface.fill(pygame.Color("#000000"))
@@ -965,7 +1013,7 @@ class Stage(GameObject):
         - stage_idx (int): sets the stage index to use (0-9)
         - stage_class (class): sets the class (must be a Stage class) to be used when creating the new Stage
         - force_loop (bool): if set to True and we currently have a GameLoop running, stop the current GameLoop and replace it with a new one, which has
-                                to be given via the "game_loop" option (as GameLoop object, or as string "new" for a default GameLoop)
+        to be given via the "game_loop" option (as GameLoop object, or as string "new" for a default GameLoop)
         - keyboard_inputs (KeyboardInputs): the KeyboardInputs object to use for the new GameLoop
         - display (Display): the Display to use for the new GameLoop
         - components (List[Component]): a list of Component objects to add to the new Stage (e.g. a Viewport)
@@ -1006,7 +1054,7 @@ class Stage(GameObject):
         super().__init__()
         self.screen = screen  # the screen object associated with this Stage
         self.tiled_layers = {}  # pytmx.pytmx.TiledLayer (TiledTileLayer or TiledObjectGroup) by name
-        self.to_render = []  # list of all layers by name (TiledTileLayers AND TiledObjectGroups) in the order in which they have to be rendered
+        self.to_render = []  # list of all layers and sprites by name (TiledTileLayers AND Sprites) in the order in which they have to be rendered
         self.tiled_layers_to_collide = []  # list of all layers that collide (mask is not 0) by name (TiledTileLayers)
 
         # dict of pygame.sprite.Group objects (by name) that contain Sprites (each TiledObjectGroup results in one Group)
@@ -1096,12 +1144,15 @@ class Stage(GameObject):
             # use default collision objects if not given
             if "tile_layer_physics_collisions" not in self.options:
                 self.options["tile_layer_physics_collisions"] = (Collision(), Collision())
-            assert "tile_layer_physics_collision_detector" in self.options, \
-                "ERROR: a TiledTileLayer needs a physics collision detector given in the Stage's option: `tile_layer_physics_collision_detector`!"
+            assert "tile_layer_physics_collision_tile_selector" in self.options, \
+                "ERROR: a TiledTileLayer needs a physics collision tile selector given in the Stage's option as `tile_layer_physics_collision_tile_selector`!"
+            assert "physics_collision_detector" in self.options, \
+                "ERROR: a TiledTileLayer needs a physics collision detector given in the Stage's option as `physics_collision_detector`!"
             assert "tile_layer_physics_collision_postprocessor" in self.options, \
                 "ERROR: a TiledTileLayer needs a physics collision handler given in the Stage's option: `tile_layer_physics_collision_postprocessor`!"
             l = TiledTileLayer(pytmx_layer, pytmx_tiled_map, self.options["tile_layer_physics_collisions"],
-                               self.options["tile_layer_physics_collision_detector"], self.options["tile_layer_physics_collision_postprocessor"])
+                               self.options["tile_layer_physics_collision_tile_selector"],
+                               self.options["physics_collision_detector"], self.options["tile_layer_physics_collision_postprocessor"])
             self.add_tiled_tile_layer(l)
 
         else:
@@ -1122,13 +1173,9 @@ class Stage(GameObject):
                 format(tiled_object_group.name)
         self.sprite_groups[tiled_object_group.name] = tiled_object_group.sprite_group
 
-        # add each single Sprite to the sorted (by render_order) to_render list and to the "all"-sprites list
-        # - note: the to_render list also contains entire TiledTileLayer objects
+        # add each single sprite of the group to the Stage
         for sprite in tiled_object_group.sprite_group.sprites():
             self.add_sprite(sprite, tiled_object_group.name)
-            if sprite.do_render:
-                self.to_render.append(sprite)
-                self.to_render.sort(key=lambda x: x.render_order)
 
     def add_tiled_tile_layer(self, tiled_tile_layer):
         """
@@ -1150,6 +1197,13 @@ class Stage(GameObject):
             self.to_render.append(tiled_tile_layer)
             self.to_render.sort(key=lambda x: x.render_order)
 
+        # TODO: make this ladder process more generic (maybe other object types could be built like that as well)
+        # capture ladders?
+        if tiled_tile_layer.properties.get("build_ladders") == "true":
+            ladders = tiled_tile_layer.capture_ladders()
+            for ladder in ladders:
+                self.add_sprite(ladder, "ladders")
+
     def add_sprite(self, sprite, group_name):
         """
         adds a new single Sprite to an existing or a new pygame.sprite.Group
@@ -1166,6 +1220,12 @@ class Stage(GameObject):
         self.sprite_groups[group_name].add(sprite)
         self.sprites.append(sprite)
         sprite.sprite_groups.append(self.sprite_groups[group_name])
+
+        # add each single Sprite to the sorted (by render_order) to_render list and to the "all"-sprites list
+        # - note: the to_render list also contains entire TiledTileLayer objects
+        if sprite.do_render:
+            self.to_render.append(sprite)
+            self.to_render.sort(key=lambda x: x.render_order)
 
         # trigger two events, one on the Stage with the object as target and one on the object with the Stage as target
         self.trigger_event("added_to_stage", sprite)
@@ -1229,17 +1289,19 @@ class Stage(GameObject):
                         if col:
                             sprite.trigger_event("collision", col)
 
-        # collide all objects with all other game-objects
-        exhaustive = self.sprites.copy()
+        # collide all Sprites with all other Sprites (both ways!)
+        # - only check if sprite1's collision_matrix matches sprite2's type
         for sprite in self.sprites:
-            exhaustive.remove(sprite)
-            # if this game_object completely handles its own collisions within its tick -> ignore it
+            # if this Sprite completely handles its own collisions within its tick -> ignore it
             if not sprite.handles_own_collisions and sprite.collision_mask > 0:
-                for sprite2 in exhaustive:
-                    col = SATCollision.collide(sprite, sprite2)
-                    if col:
-                        # TODO: do we have to trigger the reversed collision as well?
-                        sprite.trigger_event("collision", col)
+                for sprite2 in self.sprites:
+                    if sprite is not sprite2 and not sprite2.handles_own_collisions and sprite2.collision_mask > 0 and \
+                                    sprite.collision_mask & sprite2.type and sprite2.collision_mask & sprite.type:
+                        col = self.options["physics_collision_detector"](sprite, sprite2)
+                        if col:
+                            # trigger "collision" for both Sprites
+                            sprite.trigger_event("collision", col)
+                            sprite2.trigger_event("collision", col.invert())
 
     def tick(self, game_loop):
         """
@@ -1334,12 +1396,6 @@ class TmxLayer(object, metaclass=ABCMeta):
         properties = tmx_layer_obj.properties
         defaults(properties, {"do_render": "true", "render_order": 0})
         self.properties = properties
-        self.do_render = (properties["do_render"] == "true")
-        self.render_order = int(properties["render_order"])
-
-    @abstractmethod
-    def render(self, display: Display):
-        pass
 
 
 class TiledTileLayer(TmxLayer):
@@ -1349,10 +1405,11 @@ class TiledTileLayer(TmxLayer):
     - implements `render`
     """
 
-    def __init__(self, pytmx_layer, pytmx_tiled_map, collision_objects, collision_detector, collision_postprocessor):
+    def __init__(self, pytmx_layer, pytmx_tiled_map, collision_objects, collision_tile_selector, collision_detector, collision_postprocessor):
         """
         :param pytmx.pytmx.TiledTileLayer pytmx_layer: the underlying pytmx TiledTileLayer
         :param pytmx.pytmx.TiledMap pytmx_tiled_map: the underlying pytmx TiledMap object (representing the tmx file)
+        :param callable collision_tile_selector: the function that selects the tiles to be tested for collision (in the right order)
         :param callable collision_detector: the function to use for detecting collisions (e.g. spyg.SATCollision/spyg.AABBCollision/etc..)
         :param callable collision_postprocessor: the function to use to handle collisions (once detected by the collision_detector)
         """
@@ -1361,7 +1418,6 @@ class TiledTileLayer(TmxLayer):
         self.type_str = self.properties.get("type", "none")
         self.type = 0
 
-        self.props_by_pos = {}  # stores the properties of each tile by position tuple (x, y)
         # an object representing a single tile from this layer to pass to a collision function
         self.tile_sprite = TileSprite(self, pytmx_tiled_map, pygame.Rect((0, 0), (self.pytmx_tiled_map.tilewidth, self.pytmx_tiled_map.tileheight)))
         # store our tuple of two Collision objects for passing into the collision handler
@@ -1369,6 +1425,7 @@ class TiledTileLayer(TmxLayer):
                isinstance(collision_objects[0], Collision) and isinstance(collision_objects[1], Collision), \
             "ERROR: parameter collision_objects needs to be a tuple of two Collision objects!"
         self.collision_objects = collision_objects
+        self.collision_tile_selector = collision_tile_selector
         self.collision_detector = collision_detector
         self.collision_postprocessor = collision_postprocessor
 
@@ -1378,69 +1435,47 @@ class TiledTileLayer(TmxLayer):
             self.type |= Sprite.get_type(t)
 
         # update do_render indicator depending on some debug settings
-        self.do_render = (self.do_render and not (DEBUG_FLAGS & DEBUG_DONT_RENDER_TILED_TILE_LAYERS)) or \
+        self.do_render = (self.properties["do_render"] == "true" and not (DEBUG_FLAGS & DEBUG_DONT_RENDER_TILED_TILE_LAYERS)) or \
                          (self.type != Sprite.get_type("none") and (DEBUG_FLAGS & DEBUG_RENDER_COLLISION_TILES))
+        self.render_order = int(self.properties["render_order"])
+
         # put this layer in one single Sprite that we can then blit on the display (with 'area=' to avoid drawing the entire layer each time)
         self.pygame_sprite = None
-
         # we are rendering this layer, need to get entire image into this structure
         if self.do_render:
-            surf = pygame.Surface((self.pytmx_layer.width * self.pytmx_tiled_map.tilewidth, self.pytmx_layer.height * self.pytmx_tiled_map.tileheight),
-                                  flags=pygame.SRCALPHA)
-            # rendered collision layer
-            if self.type != Sprite.get_type("none") and (DEBUG_FLAGS & DEBUG_RENDER_COLLISION_TILES):
-                # red for normal collisions, light-blue for touch collisions
-                color = DEBUG_RENDER_COLLISION_TILES_COLOR_DEFAULT if self.type & Sprite.get_type("default") else DEBUG_RENDER_COLLISION_TILES_COLOR_OTHER
-                for (x, y, image), (_, _, gid) in zip(self.pytmx_layer.tiles(), self.pytmx_layer.iter_data()):
-                    surf.blit(image.convert_alpha(), (x * self.pytmx_tiled_map.tilewidth, y * self.pytmx_tiled_map.tileheight))
-                    tile_props = self.pytmx_tiled_map.get_tile_properties_by_gid(gid) or {}
-                    # normal collision tiles
-                    if not tile_props.get("no_collision"):
-                        pygame.draw.rect(surf, color, pygame.Rect((x * self.pytmx_tiled_map.tilewidth, y * self.pytmx_tiled_map.tileheight),
-                                                                  (self.pytmx_tiled_map.tilewidth, self.pytmx_tiled_map.tileheight)), 1)
-            # "normal" layer (and no debug rendering)
-            else:
-                for x, y, image in self.pytmx_layer.tiles():
-                    surf.blit(image.convert_alpha(), (x * self.pytmx_tiled_map.tilewidth, y * self.pytmx_tiled_map.tileheight))
+            self.pygame_sprite = self.build_sprite_surface()
 
-            pygame_sprite = pygame.sprite.Sprite()
-            pygame_sprite.image = surf
-            pygame_sprite.rect = surf.get_rect()
-            self.pygame_sprite = pygame_sprite
+        self.props_by_pos = {}  # stores the properties of each tile by position tuple (x, y)
+        # this is a collision or a ladders layer, need to store each non-empty tile's (gid > 0) properties
+        if self.type != Sprite.get_type("none") or self.properties.get("build_ladders") == "true":
+            self.store_tile_props_by_pos()
 
-        # this is a collision layer, need to store each non-empty tile's (gid > 0) properties
-        if self.type != Sprite.get_type("none"):
-            # loop through each tile and store tile props by x/y tuple in our dict
-            for x, y, gid in self.pytmx_layer.iter_data():
-                # skip empty tiles (gid==0)
-                if gid == 0:
-                    continue
+    def build_sprite_surface(self):
+        """
+        builds the image (pygame.Surface) for this tile layer based on all found tiles in the layer
+        """
+        surf = pygame.Surface((self.pytmx_layer.width * self.pytmx_tiled_map.tilewidth, self.pytmx_layer.height * self.pytmx_tiled_map.tileheight),
+                              flags=pygame.SRCALPHA)
+        # rendered collision layer
+        if self.type != Sprite.get_type("none") and (DEBUG_FLAGS & DEBUG_RENDER_COLLISION_TILES):
+            # red for normal collisions, light-blue for touch collisions
+            color = DEBUG_RENDER_COLLISION_TILES_COLOR_DEFAULT if self.type & Sprite.get_type("default") else DEBUG_RENDER_COLLISION_TILES_COLOR_OTHER
+            for (x, y, image), (_, _, gid) in zip(self.pytmx_layer.tiles(), self.pytmx_layer.iter_data()):
+                surf.blit(image.convert_alpha(), (x * self.pytmx_tiled_map.tilewidth, y * self.pytmx_tiled_map.tileheight))
                 tile_props = self.pytmx_tiled_map.get_tile_properties_by_gid(gid) or {}
-                # go through dict and translate data types into proper python types ("true" -> bool, 0.0 -> float, etc..)
-                for key, value in tile_props.items():
-                    # bool
-                    if value == "true" or value == "false":
-                        value = (value == "true")
-                    # int
-                    elif re.fullmatch('\d+', str(value)):
-                        value = int(value)
-                    # float (or string)
-                    else:
-                        try:
-                            value = float(value)
-                        except (ValueError, TypeError):  # string/list/etc..
-                            pass
-                    # assign correct typed value
-                    tile_props[key] = value
+                # normal collision tiles
+                if not tile_props.get("no_collision"):
+                    pygame.draw.rect(surf, color, pygame.Rect((x * self.pytmx_tiled_map.tilewidth, y * self.pytmx_tiled_map.tileheight),
+                                                              (self.pytmx_tiled_map.tilewidth, self.pytmx_tiled_map.tileheight)), 1)
+        # "normal" layer (and no debug rendering)
+        else:
+            for x, y, image in self.pytmx_layer.tiles():
+                surf.blit(image.convert_alpha(), (x * self.pytmx_tiled_map.tilewidth, y * self.pytmx_tiled_map.tileheight))
 
-                # directly translate possible tile types (for collision) into the correct bitmask
-                types_ = tile_props.get("type")
-                # type of this tile has not been translated into bitmap yet
-                if isinstance(types_, str):
-                    tile_props["type"] = 0
-                    for t in types_.split(","):
-                        tile_props["type"] |= Sprite.get_type(t)
-                self.props_by_pos[(x, y)] = tile_props
+        pygame_sprite = pygame.sprite.Sprite()
+        pygame_sprite.image = surf
+        pygame_sprite.rect = surf.get_rect()
+        return pygame_sprite
 
     def render(self, display: Display):
         """
@@ -1469,76 +1504,120 @@ class TiledTileLayer(TmxLayer):
         :return: a Collision object with all details of the collision between the Sprite and this layer (None if there is no collision)
         :rtype: Union[None,Collision]
         """
-        # determine the tile steps (left/right up/down)
-        direction_x = 1
-        direction_y = 1
-        if direction == 'x':
-            direction_x = int(math.copysign(1.0, direction_veloc))
-        else:
-            direction_y = int(math.copysign(1.0, direction_veloc))
 
-        tile_start_x = sprite.rect.left // self.pytmx_tiled_map.tilewidth
-        tile_end_x = sprite.rect.right // self.pytmx_tiled_map.tilewidth
-        tile_start_y = sprite.rect.top // self.pytmx_tiled_map.tileheight
-        tile_end_y = sprite.rect.bottom // self.pytmx_tiled_map.tileheight
+        # TODO: implement for PlatformerPhysics (smart slope processing (highest slopes first)) and TopDownPhysics (easy)
+        tiles = self.collision_tile_selector(self, sprite, direction, direction_veloc)
 
-        if DEBUG_FLAGS & DEBUG_RENDER_ACTIVE_COLLISION_TILES:
-            for tile_y in range(tile_start_y, tile_end_y + 1):
-                for tile_x in range(tile_start_x, tile_end_x + 1):
-                    pygame.draw.rect(GameLoop.active_loop.display.surface, DEBUG_RENDER_ACTIVE_COLLISION_TILES_COLOR,
-                                     pygame.Rect((tile_x * self.pytmx_tiled_map.tilewidth, tile_y * self.pytmx_tiled_map.tileheight),
-                                                 (self.pytmx_tiled_map.tilewidth, self.pytmx_tiled_map.tileheight)), 1)
-            GameLoop.active_loop.display.debug_refresh()
+        for i, tile_xy in enumerate(tiles):
+            tile_props = self.props_by_pos.get(tile_xy)
 
-        if direction_x < 0:
-            tmp = tile_end_x
-            tile_end_x = tile_start_x
-            tile_start_x = tmp
-        if direction_y < 0:
-            tmp = tile_end_y
-            tile_end_y = tile_start_y
-            tile_start_y = tmp
+            # empty tile OR no_collision property of this tile is set to 'true' -> skip
+            if tile_props is None or tile_props.get("no_collision"):
+                continue
 
-        # - slope handling takes place here
-        #   - slope-handling: pick that tile for the collision that has to deal with shifting the y-pos of the character up
-        #     (which means, if we find a collision with a slope-2-offset-1-tile and the character is already touching the next tile with its right-x-corner, we pick the next tile (if it's also a slope 2, etc...)
-        # - pick the first collision and return it
-        # - make sure each tile is only checked once for collisions (use tileFlags hash to tag tiles as "already processed")
-        # - the order of the tiles we loop through is bottom-up and in direction of characters running direction (objp.vx)
-        for tile_y in range(tile_start_y, tile_end_y + direction_y, direction_y):
-            for tile_x in range(tile_start_x, tile_end_x + direction_x, direction_x):
-                tile_xy = (tile_x, tile_y)
+            # draw the currently analyzed tile (and make the old one greyed out)
+            if DEBUG_FLAGS & DEBUG_RENDER_ACTIVE_COLLISION_TILES:
+                display = GameLoop.active_loop.display
+                # grey out the previously drawn one
+                if i > 0:
+                    pygame.draw.rect(GameLoop.active_loop.display.surface, DEBUG_RENDER_ACTIVE_COLLISION_TILES_COLOR_GREYED_OUT,
+                                 pygame.Rect((tiles[i-1][0] * self.pytmx_tiled_map.tilewidth - display.offsets[0],
+                                              tiles[i-1][1] * self.pytmx_tiled_map.tileheight - display.offsets[1]),
+                                             (self.pytmx_tiled_map.tilewidth, self.pytmx_tiled_map.tileheight)), 1)
+                # paint the current one
+                pygame.draw.rect(GameLoop.active_loop.display.surface, DEBUG_RENDER_ACTIVE_COLLISION_TILES_COLOR,
+                                 pygame.Rect((tile_xy[0] * self.pytmx_tiled_map.tilewidth - display.offsets[0],
+                                              tile_xy[1] * self.pytmx_tiled_map.tileheight - display.offsets[1]),
+                                             (self.pytmx_tiled_map.tilewidth, self.pytmx_tiled_map.tileheight)), 1)
+                GameLoop.active_loop.display.debug_refresh()
 
-                tile_props = self.props_by_pos.get(tile_xy)
+            # set up our TileSprite (a Sprite that represents a single tile) for the collision detector
+            self.tile_sprite.tile_x = tile_xy[0]
+            self.tile_sprite.tile_y = tile_xy[1]
+            self.tile_sprite.rect.x = tile_xy[0] * self.pytmx_tiled_map.tilewidth
+            self.tile_sprite.rect.y = tile_xy[1] * self.pytmx_tiled_map.tileheight
+            self.tile_sprite.tile_props = tile_props
 
-                # empty tile OR no_collision property of this tile is set to 'true' -> skip
-                if tile_props is None or tile_props.get("no_collision"):
+            # check the actual collision with our collision detector
+            col = self.collision_detector(sprite, self.tile_sprite, self.collision_objects, direction=direction, direction_veloc=direction_veloc)
+
+            # we got a new collision with this tile -> post-process collision and - if still ok - return
+            if col and col.is_collided and col.magnitude > 0:
+                # post-process the collision depending on the given Physics engine's post-processor (e.g. to deal with slopes)
+                col = self.collision_postprocessor(col)
+                # collision is still ok (after post-processing) -> trigger collision event on Sprite
+                if col.is_collided:
+                    sprite.trigger_event("collision", col)
+                    # return after the first tile collided with Sprite
+                    return col
+                else:
+                    # keep looking for other tiles that might collide
                     continue
 
-                # set up our TileSprite (a Sprite that represents a single tile) for the collision detector
-                self.tile_sprite.tile_x = tile_x
-                self.tile_sprite.tile_y = tile_y
-                self.tile_sprite.rect.x = tile_x * self.pytmx_tiled_map.tilewidth
-                self.tile_sprite.rect.y = tile_y * self.pytmx_tiled_map.tileheight
-                self.tile_sprite.tile_props = tile_props
-
-                # check the actual collision with our collision detector
-                col = self.collision_detector(sprite, self.tile_sprite, self.collision_objects, direction=direction, direction_veloc=direction_veloc)
-
-                # we got a new collision with this tile -> post-process collision and - if still ok - return
-                if col and col.is_collided and col.magnitude > 0:
-                    # post-process the collision depending on the given Physics engine's post-processor (e.g. to deal with slopes)
-                    col = self.collision_postprocessor(col)
-                    # collision is still ok (after post-processing) -> trigger collision event on Sprite
-                    if col.is_collided:
-                        sprite.trigger_event("collision", col)
-                        # return after the first tile collided with Sprite
-                        return col
-                    else:
-                        # keep looking for other tiles that might collide
-                        continue
-
         return None  # no collision
+
+    def capture_ladders(self):
+        """
+        captures all ladder objects in this layer and returns them in a list of Ladder objects
+        - once a ladder tile is found: searches neighboring tiles (starting to move right and down) for the same property and thus measures the ladder width
+        and height (in tiles)
+
+        :return: list of generated Ladder objects
+        :rtype: List[Ladder]
+        """
+        ladders = []
+        # loop through each tile and look for ladder type property
+        for y in range(self.pytmx_layer.height):
+            for x in range(self.pytmx_layer.width):
+                props = self.props_by_pos.get((x, y))
+                if not props:
+                    continue
+                # we hit the upper left corner of a ladder
+                elif props.get("type") == "ladder":
+                    props_tile_left = self.props_by_pos.get((x-1, y))
+                    props_tile_top = self.props_by_pos.get((x, y-1))
+                    if (props_tile_left and props_tile_left.get("type") == "ladder") or (props_tile_top and props_tile_top.get("type") == "ladder"):
+                        continue
+                    # measure width and height
+                    w = 1
+                    h = 1
+                    x2 = x+1
+                    while True:
+                        props2 = self.props_by_pos.get((x2, y))
+                        if not (props2 and props2.get("type") == "ladder"):
+                            break
+                        w += 1
+                        x2 += 1
+
+                    y2 = y+1
+                    while True:
+                        props2 = self.props_by_pos.get((x, y2))
+                        if not (props2 and props2.get("type") == "ladder"):
+                            break
+                        h += 1
+                        y2 += 1
+
+                    # insert new Ladder
+                    ladders.append(Ladder(x * self.pytmx_tiled_map.tilewidth, y * self.pytmx_tiled_map.tileheight,\
+                                          w * self.pytmx_tiled_map.tilewidth, h * self.pytmx_tiled_map.tileheight))
+        return ladders
+
+    def store_tile_props_by_pos(self):
+        """
+        populates the props_by_pos dict; all tiles that have at least one custom property defined will end up in this dict under their tile x/y-pos
+        """
+        # loop through each tile and store tile props by x/y tuple in our dict
+        for x, y, gid in self.pytmx_layer.iter_data():
+            # skip empty tiles (gid==0)
+            if gid == 0:
+                continue
+            tile_props = self.pytmx_tiled_map.get_tile_properties_by_gid(gid) or {}
+            # go through dict and translate data types into proper python types ("true" -> bool, 0.0 -> float, etc..)
+            for key, value in tile_props.items():
+                value = convert_type(value)
+                tile_props[key] = value
+
+            self.props_by_pos[(x, y)] = tile_props
 
 
 class TileSprite(Sprite):
@@ -1584,7 +1663,6 @@ class TiledObjectGroup(TmxLayer):
             # if the (Sprite) class of the object is given, construct it here using its c'tor
             # - classes are given as strings: e.g. sypg.Sprite, vikings.Viking, Agent (Agent class would be in __main__ module)
             if obj.type:
-                #print("found a sprite in the tiled-object-group: class={}".format(obj.type))
                 match_obj = re.fullmatch('^((.+)\.)?(\w+)$', obj.type)
                 assert match_obj, "ERROR: type field ({}) of object in pytmx.pytmx.TiledObjectGroup does not match pattern!".format(obj.type)
                 _, module_, class_ = match_obj.groups(default="__main__")  # if no module given, assume a class defined in __main__
@@ -1595,19 +1673,28 @@ class TiledObjectGroup(TmxLayer):
                 elif "img" in obj_props:
                     sheet_or_image = "images/" + obj_props["img"] + ".png"
 
+                # get other kwargs for the Sprite's c'tor
+                kwargs = {}
+                if "kwargs" in obj_props:
+                    for kwarg in obj_props["kwargs"].split(","):
+                        match_obj = re.fullmatch('^(\w+)=(.+)$', kwarg)
+                        assert match_obj, "ERROR: kwarg {} of object {} in pytmx.pytmx.TiledObjectGroup does not match pattern!".format(class_, kwarg)
+                        key, value = match_obj.groups()
+                        kwargs[key] = convert_type(value)
+
                 # generate the Sprite
-                sprite = getattr(sys.modules[module_], class_)(obj.x, obj.y, sheet_or_image)
+                sprite = getattr(sys.modules[module_], class_)(obj.x, obj.y, sheet_or_image, **kwargs)
                 # add the do_render and render_order to the new instance
                 sprite.do_render = (obj_props.get("do_render", "false") == "true")
                 if sprite.do_render:
                     sprite.render_order = int(obj_props.get("render_order", 0))
                 self.sprite_group.add(sprite)
 
-    def render(self, display):
-        # loop through each Sprite in the group and blit it to the Display's Surface
-        for sprite in self.sprite_group.sprites():
-            sprite.render(display)
-            # display.surface.blit(sprite.image, dest=(sprite.rect.x + display.offsets[0], sprite.rect.y + display.offsets[1]))
+    #def render(self, display):
+    #    # loop through each Sprite in the group and blit it to the Display's Surface
+    #    for sprite in self.sprite_group.sprites():
+    #        sprite.render(display)
+    #        # display.surface.blit(sprite.image, dest=(sprite.rect.x + display.offsets[0], sprite.rect.y + display.offsets[1]))
 
 
 class Collision(object):
@@ -1627,6 +1714,21 @@ class Collision(object):
         self.separate = [0, 0]  # (distance * normal_x, distance * normal_y)
         self.direction = None  # None, 'x' or 'y' (direction in which we measure the collision; the other direction is ignored)
         self.direction_veloc = 0  # velocity direction component (e.g. direction=='x' veloc==5 -> moving right, veloc==-10.4 -> moving left)
+
+    def invert(self):
+        """
+        inverts this Collision in place to yield the Collision for the case that the two Sprites are switched
+        """
+        # flip the sprites
+        tmp = self.sprite1
+        self.sprite1 = self.sprite2
+        self.sprite2 = tmp
+        # invert the normal and separate (leave distance negative, leave magnitude positive)
+        self.normal_x = -self.normal_x
+        self.normal_y = -self.normal_y
+        self.separate = [-self.separate[0], -self.separate[1]]
+        # the direction veloc
+        self.direction_veloc = -self.direction_veloc
 
 
 class PlatformerCollision(Collision):
@@ -1694,7 +1796,9 @@ class Brain(Component):
             commands = []
         self.commands = {command: False for command in commands}
         self.game_obj_cmp_anim = None  # our GameObject's Animation Component (if any); needed for animation flags
-        self.animation_flags = 0  # a copy of the GameObject's current Animation flags (store copy here for performance reasons)
+
+        self.disabled = False  # is this brain disabled? (e.g. when agent is dizzy)
+        self.disabled_exceptions = None  # keys that are still ok to be handled, even if disabled
 
     def reset(self):
         """
@@ -1713,14 +1817,17 @@ class Brain(Component):
     def tick(self, game_loop: GameLoop):
         # update current animation flags
         if self.game_obj_cmp_anim:
-            self.animation_flags = self.game_obj_cmp_anim.flags
+            self.disabled = bool(self.game_obj_cmp_anim.flags & Animation.ANIM_DISABLES_CONTROL)
+            self.disabled_exceptions = self.game_obj_cmp_anim.disabled_exceptions
+
+        # first reset everything to False
+        self.reset()
+
         # current animation does not block: normal commands possible
-        if not (self.animation_flags & Animation.ANIM_DISABLES_CONTROL):
-            for (key, value), desc in zip(game_loop.keyboard_inputs.keyboard_registry.items(), game_loop.keyboard_inputs.descriptions.values()):
+        for (key, value), desc in zip(game_loop.keyboard_inputs.keyboard_registry.items(), game_loop.keyboard_inputs.descriptions.values()):
+            # we are either not disabled, or the key is in the exception list
+            if not self.disabled or desc in self.disabled_exceptions:
                 self.commands[desc] = value
-        # all commands are blocked right now -> set everything to False
-        else:
-            self.reset()
 
 
 class Animation(Component):
@@ -1735,6 +1842,10 @@ class Animation(Component):
     ANIM_DISABLES_CONTROL = 0x2
     ANIM_PROHIBITS_STAND = 0x4  # anims that should never be overwritten by 'stand'(even though player might not x - move)
     ANIM_BOW = 0x8
+    # if set: this animation does not change the Sprite's image depending on time, but they have to be set manually via the
+    # frame property of the Animation component (which gives the SpriteSheet's frame, not the anim_settings frame-slot)
+    ANIM_SET_FRAMES_MANUALLY = 0x10
+
 
     @staticmethod
     def register_settings(settings_name, settings, register_events_on=None):
@@ -1754,7 +1865,7 @@ class Animation(Component):
                         "next_priority": -1,  # which priority to use for next if next is given
                         "trigger"      : None,  # which events to trigger on the game_object that plays this animation
                         "trigger_data" : None,  # data to pass to the event handler if trigger is given
-                        "keys_status"  : {},  # ??? can override DISABLE_MOVEMENT setting only for certain keys
+                        "disabled_exceptions" : set(),  # ??? can override DISABLE_MOVEMENT setting only for certain keys
                     })
             Animation.animation_settings[settings_name] = settings
 
@@ -1770,14 +1881,14 @@ class Animation(Component):
 
     def __init__(self, name: str):
         super().__init__(name)
-        self.animation = None  # str: if set to something, we are playing this animation
+        self.animation = None  # str: we are playing this animation; None: we are undefined -> waiting for the next anim setup
         self.rate = 1 / 3  # default rate in s
         self.has_changed = False
         self.priority = -1  # animation priority (takes the value of the highest priority animation that wants to be played simultaneously)
-        self.frame = 0  # the current frame in the animation 'frames' list
+        self.frame = 0  # the current frame in the animation 'frames' list OR: if self.animation is None: this is the actual frame from the SpriteSheet
         self.time = 0  # the current time after starting the animation in s
         self.flags = 0
-        self.keys_status = {}
+        self.disabled_exceptions = set()  # set of key descriptors (e.g. "up", "down") for which an animation's disabled-flag does not count
         self.blink_rate = 3.0
         self.blink_duration = 0
         self.blink_time = 0
@@ -1816,7 +1927,7 @@ class Animation(Component):
                 self.is_hidden = True if frame % 2 == 0 else False
 
         # animation stuff?
-        if self.animation:
+        if self.animation and not self.flags & Animation.ANIM_SET_FRAMES_MANUALLY:
             anim_settings = Animation.get_settings(obj.spritesheet.name, self.animation)
             rate = anim_settings["rate"] or self.rate
             stepped = 0
@@ -1852,20 +1963,25 @@ class Animation(Component):
 
                 obj.trigger_event("anim_frame")
 
-            # assign the correct image to the `image` field of the GameObject (already correctly x/y-flipped)
-            # hidden: no image
-            if self.is_hidden:
-                obj.image = None
-            # visible: some image
+        # assign the correct image to the `image` field of the GameObject (already correctly x/y-flipped)
+        # hidden: no image
+        if self.is_hidden:
+            obj.image = None
+        # visible: some image
+        else:
+            tiles_dict = obj.spritesheet.tiles  # no flipping
+            if obj.flip["x"]:
+                if obj.flip["y"]:
+                    tiles_dict = obj.spritesheet.tiles_flipped_xy
+                else:
+                    tiles_dict = obj.spritesheet.tiles_flipped_x
+            elif obj.flip["y"]:
+                tiles_dict = obj.spritesheet.tiles_flipped_y
+            # manual animation -> frame in SpriteSheet directly set manually
+            if self.flags & Animation.ANIM_SET_FRAMES_MANUALLY:
+                obj.image = tiles_dict[int(self.frame)]
+            # automatic animation: self.frame is the slot in the animation's frame list (not the SpriteSheet's!)
             else:
-                tiles_dict = obj.spritesheet.tiles  # no flipping
-                if obj.flip["x"]:
-                    if obj.flip["y"]:
-                        tiles_dict = obj.spritesheet.tiles_flipped_xy
-                    else:
-                        tiles_dict = obj.spritesheet.tiles_flipped_x
-                elif obj.flip["y"]:
-                    tiles_dict = obj.spritesheet.tiles_flipped_y
                 obj.image = tiles_dict[anim_settings["frames"][int(self.frame)]]
 
     def play_animation(comp, game_object, name, priority=0):
@@ -1888,7 +2004,7 @@ class Animation(Component):
             anim_settings = Animation.get_settings(game_object.spritesheet.name, comp.animation)
             # set flags to sprite's properties
             comp.flags = anim_settings["flags"]
-            comp.keys_status = anim_settings["keys_status"]
+            comp.disabled_exceptions = anim_settings["disabled_exceptions"]
 
             game_object.trigger_event("anim")
             game_object.trigger_event("anim." + comp.animation)
@@ -2061,7 +2177,7 @@ class PhysicsComponent(Component, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def collision(self, col: Collision):
+    def collision(self, col):
         """
         this is the resolver for a Collision that happened between two Sprites under this PhysicsComponent
 
@@ -2070,12 +2186,39 @@ class PhysicsComponent(Component, metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def tile_layer_physics_collision_postprocessor(col: Collision) -> Union[None, Collision, Tuple[Collision]]:
+    def tile_layer_physics_collision_tile_selector(tiled_tile_layer, sprite, direction, direction_veloc):
+        """
+        returns a list of tiles (as x/y tuples) in the order in which they should be checked for collisions between the given TiledTileLayer
+        and the given Sprite assuming that the Sprite is moving in `direction` (`x` or `y`) and with speed `direction_veloc`
+
+        :param TiledTileLayer tiled_tile_layer: the TiledTileLayer object for which a set of tiles should be returned
+        :param sprite: the sprite that we need to check for collision with the TiledTileLayer
+        :param str direction: the direction (`x` or `y`)
+        :param float direction_veloc: the velocity of the Sprite in the `direction` component
+        :return: a list of tiles as x/y tuples
+        :rtype: List[Tuple[int,int]]
+        """
+        tile_start_x = sprite.rect.left // tiled_tile_layer.pytmx_tiled_map.tilewidth
+        tile_end_x = sprite.rect.right // tiled_tile_layer.pytmx_tiled_map.tilewidth
+        tile_start_y = sprite.rect.top // tiled_tile_layer.pytmx_tiled_map.tileheight
+        tile_end_y = sprite.rect.bottom // tiled_tile_layer.pytmx_tiled_map.tileheight
+
+        # simple physics: no specific order
+        ret = []
+        for tile_y in range(tile_start_y, tile_end_y + 1):
+            for tile_x in range(tile_start_x, tile_end_x + 1):
+                ret.append((tile_x, tile_y))
+
+        return ret
+
+    @staticmethod
+    def tile_layer_physics_collision_postprocessor(col):
         """
         determines what a Layer should do once it detects a collision via its `collide` method
-        Args:
-            col (Collision): the collision object detected by the Layer
-        Returns: col (Collision)
+
+        :param Collision col: the collision object detected by the Layer
+        :return: the same Collision (maybe processed)
+        :rtype: Collision
         """
         # by default, just set collided to True and return the collision as is
         # - specific Physics behavior will have to be implemented by the different physics Components
@@ -2225,6 +2368,45 @@ class TopDownPhysics(PhysicsComponent):
 
             dt_step -= dt
 
+    @staticmethod
+    def tile_layer_physics_collision_tile_selector(tiled_tile_layer, sprite, direction, direction_veloc):
+        """
+        tiles are selected based on the direction and veloc of the agent
+        e.g. if running/colliding right and we have a 3x3 tile grid to check -> check left 3 tiles first (order doesn't matter) -> then center 3 -> then right 3
+        """
+
+        direction_x = 1
+        direction_y = 1
+        if direction == 'x':
+            direction_x = int(math.copysign(1.0, direction_veloc))
+        else:
+            direction_y = int(math.copysign(1.0, direction_veloc))
+
+        tile_start_x = sprite.rect.left // tiled_tile_layer.pytmx_tiled_map.tilewidth
+        tile_end_x = sprite.rect.right // tiled_tile_layer.pytmx_tiled_map.tilewidth
+        tile_start_y = sprite.rect.top // tiled_tile_layer.pytmx_tiled_map.tileheight
+        tile_end_y = sprite.rect.bottom // tiled_tile_layer.pytmx_tiled_map.tileheight
+
+        if direction_x < 0:
+            tmp = tile_end_x
+            tile_end_x = tile_start_x
+            tile_start_x = tmp
+        if direction_y < 0:
+            tmp = tile_end_y
+            tile_end_y = tile_start_y
+            tile_start_y = tmp
+
+        ret = []
+        if direction == "x":
+            for tile_x in range(tile_start_x, tile_end_x + direction_x, direction_x):
+                for tile_y in range(tile_start_y, tile_end_y + direction_y, direction_y):
+                    ret.append((tile_x, tile_y))
+        else:
+            for tile_y in range(tile_start_y, tile_end_y + direction_y, direction_y):
+                for tile_x in range(tile_start_x, tile_end_x + direction_x, direction_x):
+                    ret.append((tile_x, tile_y))
+        return ret
+
     def collision(self, col: Collision):
         obj = self.game_object
         assert obj is col.sprite1, "ERROR: game_object ({}) of physics component is not identical with passed in col.sprite1 ({})!".format(obj, col.sprite1)
@@ -2304,7 +2486,7 @@ class PlatformerPhysics(PhysicsComponent):
         self.at_wall = False
         self.slope_up_down = 0  # 1 if on up-slope, -1 if on down-slope
         self.on_ladder = 0  # 0 if GameObject is not locked into a ladder; y-pos of obj, if obj is currently locked into a ladder (in climbing position)
-        self.which_ladder = None  # holds the ladder Sprite, if player is currently touching a ladder sprite, otherwise: 0
+        self.touched_ladder = None  # holds the ladder Sprite, if player is currently touching a ladder sprite, otherwise: 0
         self.climb_frame_value = 0  # int([climb_frame_value]) determines the frame to use to display climbing position
 
         self.game_obj_cmp_brain = None  # the GameObject's Brain component (used by Physics for steering and action control)
@@ -2323,6 +2505,10 @@ class PlatformerPhysics(PhysicsComponent):
         self.game_obj_cmp_brain = self.game_object.components.get("brain")
         assert isinstance(self.game_obj_cmp_brain, Brain), "ERROR: GameObject's `brain` Component is not of type Brain!"
 
+        # add default and ladder to the collision mask of our GameObject
+        obj.collision_mask |= Sprite.get_type("default")
+        obj.collision_mask |= Sprite.get_type("ladder")
+
     def lock_ladder(self):
         """
         locks the GameObject into a ladder
@@ -2331,8 +2517,8 @@ class PlatformerPhysics(PhysicsComponent):
         self.on_ladder = obj.rect.y
         # switch off gravity
         self.gravity = False
-        # lock obj to center of ladder (which_ladder is always set to the one we are touching right now)
-        obj.rect.x = self.which_ladder.rect.x
+        # lock obj to center of ladder (touched_ladder is always set to the one we are touching right now)
+        obj.rect.centerx = self.touched_ladder.rect.centerx
         self.vx = 0  # stop x-movement
 
     def unlock_ladder(self):
@@ -2366,7 +2552,7 @@ class PlatformerPhysics(PhysicsComponent):
                     if self.stops_abruptly_on_direction_change and self.vx > 0:
                         self.vx = 0  # stop first if still walking in other direction
                     ax = -(self.run_acceleration or 999000000000)  # accelerate left
-                    obj.flip['x'] = True  # mirror sprite
+                    obj.flip['x'] = True  # mirror other_sprite
 
                     # user is pressing left or right -> leave on_ladder state
                     if self.on_ladder > 0:
@@ -2399,24 +2585,23 @@ class PlatformerPhysics(PhysicsComponent):
                 # obj is currently on ladder
                 if self.on_ladder > 0:
                     # reached the top of the ladder -> lock out of ladder
-                    if obj.rect.y <= self.which_ladder.ytop - obj.rect.height / 2:
+                    if obj.rect.bottom <= self.touched_ladder.rect.top:
                         self.unlock_ladder()
                     else:
                         self.vy = -self.climb_speed
                 # player locks into ladder
-                elif (self.which_ladder and obj.rect.y <= self.which_ladder.rect.top - obj.rect.height / 2 and \
-                                  obj.rect.y > self.which_ladder.rect.bottom - obj.rect.height / 2):
+                elif (self.touched_ladder and obj.rect.bottom <= self.touched_ladder.rect.bottom and obj.rect.bottom > self.touched_ladder.rect.top):
                     self.lock_ladder()
             # user is pressing only 'down' (ladder?)
             elif self.game_obj_cmp_brain.commands["down"]:
                 if self.on_ladder > 0:
                     # we reached the bottom of the ladder -> lock out of ladder
-                    if obj.rect.y >= self.which_ladder.rect.bottom - obj.rect.height / 2:
+                    if obj.rect.bottom >= self.touched_ladder.rect.bottom:
                         self.unlock_ladder()
                     # move down
                     else:
                         self.vy = self.climb_speed
-                elif self.which_ladder and obj.rect.y < self.which_ladder.rect.bottom - obj.rect.height / 2 and dockable.is_docked():
+                elif self.touched_ladder and obj.rect.bottom < self.touched_ladder.rect.bottom and dockable.is_docked():
                     self.lock_ladder()
             # jumping?
             elif self.can_jump:
@@ -2448,19 +2633,20 @@ class PlatformerPhysics(PhysicsComponent):
 
             # if player stands on up-slope and x-speed is negative (or down-slope and x-speed is positive)
             # -> make y-speed as high as x-speed so we don't fly off the slope
-            if self.slope_up_down != 0 and dockable.is_docked():
-                if self.slope_up_down == 1 and self.vy < -self.vx:
-                    self.vy = -self.vx
-                elif self.slope_up_down == -1 and self.vy < self.vx:
-                    self.vy = self.vx
+            #if self.slope_up_down != 0 and dockable.is_docked():
+            #    if self.slope_up_down == 1 and self.vy < -self.vx:
+            #        self.vy = -self.vx
+            #    elif self.slope_up_down == -1 and self.vy < self.vx:
+            #        self.vy = self.vx
+
             if abs(self.vy) > self.max_fall_speed:
-                self.vy = -self.max_fall_speed if self.vy < 0 else self.max_fall_speed
+                self.vy = math.copysign(self.max_fall_speed, self.vy)  # if  < 0 else self.max_fall_speed
 
             # reset all touch flags before doing all the collision analysis
             if self.vx != 0.0 or self.vy != 0.0:
                 self.slope_up_down = 0
                 if self.on_ladder == 0:
-                    self.which_ladder = None
+                    self.touched_ladder = None
                 self.at_wall = False
                 self.at_exit = False
                 # store previous state before becoming undetermined
@@ -2475,7 +2661,7 @@ class PlatformerPhysics(PhysicsComponent):
 
                 # then do the 'default' collision layer(s)
                 for layer in stage.tiled_layers_to_collide:
-                    if layer.type & Sprite.get_type("default"):
+                    if obj.collision_mask & layer.type:
                         layer.collide(obj, "x", self.vx)
 
             # then move in y-direction and solve y-collisions
@@ -2487,16 +2673,63 @@ class PlatformerPhysics(PhysicsComponent):
 
                 # then do the 'default' collision layer(s)
                 for layer in stage.tiled_layers_to_collide:
-                    if layer.type & Sprite.get_type("default"):
+                    if obj.collision_mask & layer.type:
                         layer.collide(obj, "y", self.vy)
 
             # finally: check for touch collisions first (e.g. ladders)
-            for layer in stage.tiled_layers_to_collide:
-                if layer.type & Sprite.get_type("touch"):
-                    layer.collide(obj)
-            # TODO: solve collisions with other objects
+            if obj.collision_mask & Sprite.get_type("touch"):
+                for other_sprite in stage.sprites:
+                    if other_sprite.type & Sprite.get_type("touch"):
+                        col = AABBCollision.collide(obj, other_sprite)
+                        if col:
+                            obj.trigger_event("collision", col)
+
+            # TODO: solve collisions with other (non-touch) objects
 
             dt_step -= dt
+
+    #TODO: implement correctly based on slopes being next to each other below the character -> pick the tile first with the "highest" slope
+    #(slope tile whose y-function value is lowest measured at the sprite.rect.left and sprite.rect.right positions)
+    #a y-function is the function of the slope with respect to the x-coordinate value (e.g. slope1 y=x, slope2 offset1 y=1/2x, slope2 offset2 y=1/2x+1/2*width)
+
+    @staticmethod
+    def tile_layer_physics_collision_tile_selector(tiled_tile_layer, sprite, direction, direction_veloc):
+        """
+        tiles are selected based on the direction and veloc of the agent
+        e.g. if running/colliding right and we have a 3x3 tile grid to check -> check left 3 tiles first (order doesn't matter) -> then center 3 -> then right 3
+        """
+
+        direction_x = 1
+        direction_y = 1
+        if direction == 'x':
+            direction_x = int(math.copysign(1.0, direction_veloc))
+        else:
+            direction_y = int(math.copysign(1.0, direction_veloc))
+
+        tile_start_x = sprite.rect.left // tiled_tile_layer.pytmx_tiled_map.tilewidth
+        tile_end_x = sprite.rect.right // tiled_tile_layer.pytmx_tiled_map.tilewidth
+        tile_start_y = sprite.rect.top // tiled_tile_layer.pytmx_tiled_map.tileheight
+        tile_end_y = sprite.rect.bottom // tiled_tile_layer.pytmx_tiled_map.tileheight
+
+        if direction_x < 0:
+            tmp = tile_end_x
+            tile_end_x = tile_start_x
+            tile_start_x = tmp
+        if direction_y < 0:
+            tmp = tile_end_y
+            tile_end_y = tile_start_y
+            tile_start_y = tmp
+
+        ret = []
+        if direction == "x":
+            for tile_x in range(tile_start_x, tile_end_x + direction_x, direction_x):
+                for tile_y in range(tile_start_y, tile_end_y + direction_y, direction_y):
+                    ret.append((tile_x, tile_y))
+        else:
+            for tile_y in range(tile_start_y, tile_end_y + direction_y, direction_y):
+                for tile_x in range(tile_start_x, tile_end_x + direction_x, direction_x):
+                    ret.append((tile_x, tile_y))
+        return ret
 
     def collision(self, col: PlatformerCollision):
         """
@@ -2524,11 +2757,10 @@ class PlatformerPhysics(PhysicsComponent):
 
         # colliding with a ladder
         if other_obj.type & Sprite.get_type("ladder"):
-            # set which_ladder to the ladder
-            self.which_ladder = other_obj
-            # if we are not locked into ladder AND on very top of the ladder, collide normally (don't fall through ladder's top)
-            if (self.on_ladder > 0 or col.normal_x != 0  # don't x-collide with ladder
-                    or col.normal_y > 0):  # don't collide with bottom of ladder
+            # set touched_ladder to the ladder
+            self.touched_ladder = other_obj
+            # we are locked into a ladder OR x-colliding with the ladder OR colliding with the bottom of the ladder -> return
+            if (self.on_ladder > 0 or col.normal_x != 0 or col.normal_y > 0):
                 return
 
         # a collision layer
@@ -2668,9 +2900,9 @@ class PlatformerPhysics(PhysicsComponent):
         col.slope_y_pull = 0  # amount of y that Sprite has to move up (negative) or down (positive)
 
         # calculate y-pull based on pixels we are "in" the slope
-        # TODO: for now: only treat 45-degree
         slope = tile.tile_props.get("slope", 0)  # -3, -2, -1, 1, 2, 3: negative=down, positive=up (1==45 degree slope, 3=15 degree slope)
         if slope != 0:
+            offset = tile.tile_props.get("offset", 1)  # 1=first tile of the slope (when walking uphill), 2=second tile of the slope (when walking uphill), etc
             # calculate x-amount of intrusion by the sprite into the tile (this is always positive and between 0 and tile_w)
             if col.direction == "x":
                 # moving up hill
@@ -2696,8 +2928,10 @@ class PlatformerPhysics(PhysicsComponent):
             x_in = min(x_in, tile.tile_w)
 
             # the wanted y-position for the bottom of the sprite (iff we are docked to the ground)
-            y_grounded = tile.rect.bottom - x_in
-            slope_y_pull = y_grounded - sprite.rect.bottom
+            abs_slope = abs(slope)
+            y_grounded = tile.rect.bottom - ((1 / abs_slope) * x_in + ((offset - 1) / abs_slope) * tile.tile_h)
+            # print("tile.rect.bottom={} abs_slope={} x_in={} offset={} y_grounded={}".format(tile.rect.bottom, abs_slope, x_in, offset, y_grounded))
+            slope_y_pull = y_grounded - sprite.rect.bottom  # can be positive (pull towards slop surface) or negative (push from inside slope to slope surface)
 
             # we are in the air -> only apply y-pull if the y-pull is negative (up push)
             # - otherwise -> keep falling (no collision)
@@ -2707,7 +2941,7 @@ class PlatformerPhysics(PhysicsComponent):
             else:
                 col.slope = slope
                 col.slope_up_down = math.copysign(1, slope)
-                col.slope_y_pull = y_grounded - sprite.rect.bottom
+                col.slope_y_pull = slope_y_pull
 
         return col
 
@@ -3036,7 +3270,8 @@ class Level(Screen, metaclass=ABCMeta):
 
         # force add the default physics functions to the Stage's options
         defaults(stage.options, {"components": [Viewport(stage.screen.display)],
-                                 "tile_layer_physics_collision_detector": AABBCollision.collide,
+                                 "tile_layer_physics_collision_tile_selector": PhysicsComponent.tile_layer_physics_collision_tile_selector,
+                                 "physics_collision_detector": AABBCollision.collide,
                                  "tile_layer_physics_collision_postprocessor": PhysicsComponent.tile_layer_physics_collision_postprocessor
                                  })
         for layer in stage.screen.tmx_obj.layers:
@@ -3186,7 +3421,7 @@ class CollisionAlgorithm(object):
         :param Sprite sprite1: sprite 1
         :param Sprite sprite2: sprite 2 (the other sprite)
         :param Union[None,Tuple[Collision]] collision_objects: the two always-recycled returnable Collision instances (aside from None); if None,
-        use our default ones
+            use our default ones
         :return: a Collision object with all details of the collision between the two Sprites (None if there is no collision)
         :rtype: Union[None,Collision]
         """
@@ -3401,28 +3636,41 @@ class SATCollision(CollisionAlgorithm):
 
 def defaults(dictionary, defaults_dict):
     """
-    adds all key/value pairs from defaults_dict into dictionary, but only if dictionary doesn't have the key
-    Args:
-        dictionary (the target dictionary):
-        defaults_dict (the source (default) dictionary):
+    adds all key/value pairs from defaults_dict into dictionary, but only if dictionary doesn't have the key defined yet
 
-    Returns:
-
+    :param dict dictionary: the target dictionary
+    :param dict defaults_dict: the source (default) dictionary to take the keys from (only if they are not defined in dictionary
     """
     for key, value in defaults_dict.items():
         if key not in dictionary:  # overwrite only if key is missing
             dictionary[key] = value
 
 
+# OBSOLETE: use
 def extend(dictionary, extend_dict):
     """
     extends the dictionary with extend_dict, thereby overwriting existing keys
-    Args:
-        dictionary (the target dictionary):
-        extend_dict (the source dictionary):
 
-    Returns:
-
+    :param dict dictionary: the target dictionary
+    :param dict extend_dict: the source (extension) dictionary to take the keys from (even if they are not defined in dictionary)
     """
     for key, value in extend_dict.items():
         dictionary[key] = value  # overwrite no matter what
+
+
+# simple type conversion (from string input) by regular expression matching
+def convert_type(value):
+    as_str = str(value)
+    # int
+    if re.fullmatch('-?\\d+', as_str):
+        return int(value)
+    # float
+    elif re.fullmatch('-?\d+\.\d+', as_str):
+        return float(value)
+    # bool
+    elif re.fullmatch('(true|false)', as_str, flags=re.I):
+        return bool(value)
+    # str (or list or others)
+    return value
+
+
