@@ -1,8 +1,7 @@
 # spygame
 
-![Lost Vikings - Sample spygame Level](https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen1.png)
-
-<sub>All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)</sub>
+![Lost Vikings - Sample spygame Level](https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen2.png)
+<br /><sub>All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)</sub>
 
 ## 2D game engine based on Pygame and level-tmx files
 
@@ -81,3 +80,6 @@ If you would like to contribute to the spygame library, the following items are 
 * create more physics components (apart from the existing top-down and platformer)
 * create support for GUI elements (label, buttons, tick-boxes, etc..). This is an open Pygame problem and should probably be solved on the Pygame level.
 * help out with integrating spygame into openAI-gym and openAI-rllab repos
+
+![Lost Vikings - Sample spygame Level](https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen1.png)
+<br /><sub>All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)</sub>

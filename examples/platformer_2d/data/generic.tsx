@@ -6,96 +6,82 @@
    <property name="no_collision" type="bool" value="true"/>
   </properties>
  </tile>
+ <tile id="1">
+  <properties>
+   <property name="offset" value="1.0"/>
+   <property name="slope" type="float" value="0"/>
+  </properties>
+ </tile>
  <tile id="2">
   <properties>
-   <property name="offset" type="int" value="1"/>
-   <property name="slope" type="int" value="1"/>
+   <property name="offset" type="float" value="0"/>
+   <property name="slope" type="float" value="1"/>
   </properties>
  </tile>
  <tile id="3">
   <properties>
-   <property name="offset" type="int" value="1"/>
-   <property name="slope" type="int" value="2"/>
+   <property name="offset" type="float" value="0"/>
+   <property name="slope" type="float" value="0.5"/>
   </properties>
  </tile>
  <tile id="4">
   <properties>
-   <property name="offset" type="int" value="2"/>
-   <property name="slope" type="int" value="2"/>
+   <property name="offset" type="float" value="0.5"/>
+   <property name="slope" type="float" value="0.5"/>
   </properties>
  </tile>
  <tile id="5">
   <properties>
-   <property name="offset" type="int" value="1"/>
-   <property name="slope" type="int" value="3"/>
+   <property name="offset" type="float" value="0"/>
+   <property name="slope" type="float" value="0.33333"/>
   </properties>
  </tile>
  <tile id="6">
   <properties>
-   <property name="offset" type="int" value="2"/>
-   <property name="slope" type="int" value="3"/>
+   <property name="offset" type="float" value="0.33333"/>
+   <property name="slope" type="float" value="0.33333"/>
   </properties>
  </tile>
  <tile id="7">
   <properties>
-   <property name="offset" type="int" value="3"/>
-   <property name="slope" type="int" value="3"/>
+   <property name="offset" type="float" value="0.66666"/>
+   <property name="slope" type="float" value="0.33333"/>
   </properties>
  </tile>
  <tile id="8">
   <properties>
-   <property name="offset" type="int" value="1"/>
-   <property name="slope" type="int" value="-1"/>
+   <property name="offset" value="1.0"/>
+   <property name="slope" type="float" value="-1"/>
   </properties>
  </tile>
  <tile id="9">
   <properties>
-   <property name="offset" type="int" value="2"/>
-   <property name="slope" type="int" value="-2"/>
+   <property name="offset" value="1.0"/>
+   <property name="slope" type="float" value="-0.5"/>
   </properties>
  </tile>
  <tile id="10">
   <properties>
-   <property name="offset" type="int" value="1"/>
-   <property name="slope" type="int" value="-2"/>
+   <property name="offset" type="float" value="0.5"/>
+   <property name="slope" type="float" value="-0.5"/>
   </properties>
  </tile>
  <tile id="11">
   <properties>
-   <property name="offset" type="int" value="3"/>
-   <property name="slope" type="int" value="-3"/>
+   <property name="offset" value="1.0"/>
+   <property name="slope" type="float" value="-0.33333"/>
   </properties>
  </tile>
  <tile id="12">
   <properties>
-   <property name="offset" type="int" value="2"/>
-   <property name="slope" type="int" value="-3"/>
+   <property name="offset" type="float" value="0.66666"/>
+   <property name="slope" type="float" value="-0.33333"/>
   </properties>
  </tile>
  <tile id="13">
   <properties>
-   <property name="offset" type="int" value="1"/>
-   <property name="slope" type="int" value="-3"/>
-  </properties>
- </tile>
- <tile id="40">
-  <properties>
-   <property name="type" value="exit"/>
-  </properties>
- </tile>
- <tile id="41">
-  <properties>
-   <property name="type" value="exit"/>
-  </properties>
- </tile>
- <tile id="42">
-  <properties>
-   <property name="goal_state" type="bool" value="true"/>
-  </properties>
- </tile>
- <tile id="43">
-  <properties>
-   <property name="liquid" value="quicksand"/>
+   <property name="offset" type="float" value="0.33333"/>
+   <property name="slope" type="float" value="-0.33333"/>
   </properties>
  </tile>
 </tileset>
