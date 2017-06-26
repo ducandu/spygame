@@ -53,8 +53,11 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
         # - pre-tick: HumanPlayerBrain (needs animation comp to check e.g., which commands are paralyzed), Physics (movement + collision resolution)
         # - tick: chose animation to play
         # - post-tick: Animation
-        self.register_event("pre_tick", "post_tick", "collision")
-        self.cmp_brain = self.add_component(spyg.HumanPlayerBrain("brain", ["up", "down", "left", "right", "action1", "action2"]))  # type: spyg.HumanPlayerBrain
+        self.register_event("pre_brain", "pre_physics", "post_physics", "collision", "pre_animation", "post_animation")
+
+        # add our Components
+        self.cmp_brain = self.add_component(spyg.HumanPlayerBrain("brain", ["up", "down", "left", "right"]))  # type: spyg.HumanPlayerBrain
+
         phys = spyg.PlatformerPhysics("physics")
         phys.squeeze_speed = 0.5
         self.cmp_physics = self.add_component(phys)  # type: spyg.PlatformerPhysics
@@ -81,19 +84,36 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
 
     # sequence of this Sprite's tick-flow:
     # - tick gets called by the Stage
-    # - pre_tick is triggered by this tick
-    # -- pre_tick calls tick of the Components (Animation, HumanPlayerBrain (maps keyboard input to controls), Physics)
-    # -- Physics Component tick method runs:
-    # --- determines x/y speeds and moves according to s = v*dt
-    # --- runs collision detection against all layers
-    # --- if a layer detects a collision, it is postprocessed (e.g. slopes)
-    # --- then event "collision" is triggered on this Sprite
+    # - pre_brain is triggered
+    # - HumanPlayerBrain is ticked
+    # - pre_physics is triggered
+    # - PlatformerPhysocs is ticked
+    # -- determines x/y speeds and moves according to s = v*dt
+    # -- runs collision detection against all layers
+    # -- event "collision" is triggered on this Sprite if collisions are found
     # --- Physics Component listens for this event and handles the collision by solving for wall-bumps and slopes
+    # - post_physics is triggered
+    # - next animation to play is determined (play_animation is called)
+    # - pre_animation is triggered
+    # - Animation is ticked (now, the played animation will actually be blitted)
+    # - post_animation is triggered
     def tick(self, game_loop):
         dt = game_loop.dt
 
-        # tell our subscribers (e.g. Components) that we are ticking
-        self.trigger_event("pre_tick", game_loop)
+        # pre-brain event
+        self.trigger_event("pre_brain", game_loop)
+
+        # brain
+        self.cmp_brain.tick(game_loop)
+
+        # pre physics
+        self.trigger_event("pre_physics", game_loop)
+
+        # physics
+        self.cmp_physics.tick(game_loop)
+
+        # post physics
+        self.trigger_event("post_physics", game_loop)
 
         # player is currently standing on ladder (locked into ladder)
         if self.check_on_ladder(dt):
@@ -131,7 +151,14 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
             elif self.allow_play_stand():
                 pass
 
-        self.trigger_event("post_tick", game_loop)
+        # pre animation
+        self.trigger_event("pre_animation", game_loop)
+
+        # animation
+        self.cmp_animation.tick(game_loop)
+
+        # post animation
+        self.trigger_event("post_animation", game_loop)
 
         return
 
@@ -306,8 +333,14 @@ class Baleog(Viking):
                                   "flags" : (spyg.Animation.ANIM_PROHIBITS_STAND | spyg.Animation.ANIM_BOW)},
         })
 
+        # add non-standard actions to our Brain
+        self.cmp_brain.add_translations([
+            ("space", "swing_sword", spyg.KeyboardBrainTranslation.DOWN_ONE_TICK),  # sword
+            ("d", "draw_bow", spyg.KeyboardBrainTranslation.DOWN_LEAVE_UP_ONE_TICK, "release_bow"),  # bow
+        ])
+
         self.components["physics"].can_jump = False
-        self.disabled_sword = False
+        #self.disabled_sword = False
 
     def check_actions(self):
         # sword or arrow?
@@ -321,13 +354,15 @@ class Baleog(Viking):
         anim_flags = self.components["animation"].flags
         brain = self.components["brain"]
         # action1 is pressed AND user's sword is replenished (had released space) AND anim is currently not swinging sword
-        if brain.commands["sword"] and not self.disable_sword and not (anim_flags & spyg.Animation.ANIM_SWING_SWORD):
-            self.disabled_sword = True
+        #if brain.commands["swing_sword"] and not self.disable_sword and not (anim_flags & spyg.Animation.ANIM_SWING_SWORD):
+        if brain.commands["swing_sword"] and not (anim_flags & spyg.Animation.ANIM_SWING_SWORD):
+            #self.disabled_sword = True
             self.play_animation(random.choice(["swing_sword1", "swing_sword2"]))
             return True
+        #OBSOLETE via Brain?:
         # re-enable sword? (space key needs to be released between two sword strikes)
-        elif not brain.commands["sword"]:  # TODO: what about touch screens?
-            self.disabled_sword = False
+        #elif not brain.commands["sword"]:  # TODO: what about touch screens?
+        #    #self.disabled_sword = False
 
         return anim_flags & spyg.Animation.ANIM_SWING_SWORD
 
@@ -338,14 +373,14 @@ class Baleog(Viking):
         anim = self.components["animation"]
         anim_flags = anim.flags
         brain = self.components["brain"]
-        if brain.commands["arrow"] and not (anim_flags & spyg.Animation.ANIM_BOW):
+        if brain.commands["draw_bow"] and not (anim_flags & spyg.Animation.ANIM_BOW):
             self.play_animation("draw_bow")
             return True
-        elif not brain.commands["arrow"] and anim.animation == "hold_bow":
+        elif brain.commands["release_bow"]:
             self.play_animation("release_bow")
             self.stage.add_sprite(Arrow(self))
             return True
-        return brain.commands["arrow"] and (anim_flags & spyg.Animation.ANIM_BOW)
+        return False
 
 
 # define player: Erik the Swift
@@ -381,6 +416,13 @@ class Erik(Viking):
                                   "flags" : spyg.Animation.ANIM_PARALYZES},
         })
 
+        # add non-standard actions to our Brain
+        self.cmp_brain.add_translations([
+            ("space", "jump"),
+            #TODO: smash walls("d", "smash", ),
+        ])
+
+        # edit physics a little
         phys = self.components["physics"]
         phys.run_acceleration = 450
         phys.can_jump = True
@@ -452,8 +494,8 @@ class Olaf(Viking):
     def __init__(self, x, y):
         super().__init__(x, y, spyg.SpriteSheet("data/olaf.tsx"), {
             "default"          : "stand_shield_down",  # the default animation to play
-            "stand_shield_down": {"frames": [0], "loop": False, "flags": spyg.Animation.ANIM_PROHIBITS_STAND},
-            "stand_shield_up"  : {"frames": [14], "loop": False, "flags": spyg.Animation.ANIM_PROHIBITS_STAND},
+            "stand_shield_down": {"frames": [0], "loop": False},
+            "stand_shield_up"  : {"frames": [14], "loop": False},
             "be_bored"         : {"frames": [1, 2, 3, 2, 3, 2, 3, 4, 4, 3, 1], "rate": 1 / 3, "next": self.which_stand, "flags": spyg.Animation.ANIM_PROHIBITS_STAND},
             "climb"            : {"flags" : spyg.Animation.ANIM_SET_FRAMES_MANUALLY},
             "run_shield_down"  : {"frames": [5, 6, 7, 9, 10, 11, 12, 13], "rate": 1 / 8},
@@ -478,13 +520,38 @@ class Olaf(Viking):
                                   "flags" : spyg.Animation.ANIM_PARALYZES},
         })
 
-        phys = self.components["physics"]
-        phys.run_acceleration = 450
-        phys.can_jump = True
-        phys.vx_max = 175
-        phys.stops_abruptly_on_direction_change = False
+        # add non-standard actions to our Brain
+        self.cmp_brain.add_translations([
+            ("space", "switch_shield", spyg.KeyboardBrainTranslation.DOWN_ONE_TICK),  # shield up/down
+            # TODO: careful: if two keys write to the same command, the second key will always overwrite the first one
+            # ("d", "switch_shield", spyg.KeyboardBrainTranslation.DOWN_ONE_TICK),  # shield up/down
+        ])
+
+        phys = self.cmp_physics
+        phys.run_acceleration = 100
+        phys.vx_max = 110
+        self.max_fall_speed_shield_down = phys.max_fall_speed
+        self.max_fall_speed_shield_up = phys.max_fall_speed / 3
 
         self.is_shield_up = False  # whether Olaf has his shield currently up or down
+
+        # sneak shield handling into the parent's tick function
+        self.on_event("pre_physics", self, "check_switch_shield")
+
+    def check_switch_shield(self, game_loop):
+        # we are getting a switch shield command -> first switch the position of our shield
+        if self.cmp_brain.commands["switch_shield"]:
+            self.is_shield_up = (self.is_shield_up is False)  # toggle
+            # change our physics properties based on shield state
+            # - one-way-feature to Olaf (things can stand on top of him)
+            # - fall-speed
+            phys = self.cmp_physics
+            if self.is_shield_up:
+                phys.max_fall_speed = self.max_fall_speed_shield_up
+                self.type |= spyg.Sprite.get_type("one_way_platform")
+            else:
+                phys.max_fall_speed = self.max_fall_speed_shield_down
+                self.type &= ~spyg.Sprite.get_type("one_way_platform")
 
     def which_stand(self):
         return "stand_shield_up" if self.is_shield_up else "stand_shield_down"
@@ -912,15 +979,16 @@ class Scorpion(spyg.AnimatedSprite):
                 self.calm_down()
 
         # shooting?
-        if self.cmp_brain.commands["fire"]:
-            self.play_animation("shoot")
-            shot = Shot(0, 0, self.shot_sprite_sheet, shooter=self, animation_setup={})
-            shot.vx = 80
-            shot.vy = -100
-            shot.ay = 140
-            self.stage.insert(shot)
-            # moving in x direction
-        elif self.cmp_physics.vx != 0:
+        #if self.cmp_brain.commands["fire"]:
+        #    self.play_animation("shoot")
+        #    shot = Shot(0, 0, self.shot_sprite_sheet, shooter=self, animation_setup={})
+        #    shot.vx = 80
+        #    shot.vy = -100
+        #    shot.ay = 140
+        #    self.stage.insert(shot)
+        #    # moving in x direction
+        #el
+        if self.cmp_physics.vx != 0:
             self.check_running()
         # not moving in x direction
         # -> check whether we are allowed to play 'stand'

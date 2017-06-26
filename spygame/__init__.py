@@ -641,7 +641,7 @@ class Repeater(Sprite):
     a background 2D repeater that scrolls slower than the Viewport
     """
     def __init__(self, x, y, image_file, **kwargs):
-        super().__init__(x, y, image_file)
+        super().__init__(x, y, image_file=image_file)
         self.vx = kwargs.get("vx", 1.0)
         self.vy = kwargs.get("vy", 1.0)
         self.repeat_x = kwargs.get("repeat_x", True)
@@ -718,7 +718,7 @@ class Ladder(Sprite):
         # height += 1
         # y -= 1
 
-        super().__init__(x, y, (width, height))
+        super().__init__(x, y, width_height=(width, height))
 
         # collision types
         self.type = Sprite.get_type("ladder,one_way_platform")
@@ -750,7 +750,6 @@ class AnimatedSprite(Sprite):
         assert isinstance(sprite_sheet, SpriteSheet), "ERROR: AnimatedSprite needs a SpriteSheet in its c'tor!"
 
         super().__init__(x, y, sprite_sheet=sprite_sheet)  # assign the image/rect for the Sprite
-        self.register_event("post_tick")
         self.cmp_animation = self.add_component(Animation("animation"))
 
         Animation.register_settings(sprite_sheet.name, animation_setup, register_events_on=self)
@@ -1663,7 +1662,7 @@ class SlopedTileSprite(TileSprite):
         self.offset = tile_props.get("offset", None)  # the offset property of the tile in the tmx file (in px (b in y=mx+b))
         self.is_full = (self.slope == 0.0 and self.offset == 1.0)  # is this a full collision tile?
         self.max_x = self.pytmx_tiled_map.tilewidth
-        self.max_y = max(self.get_y(0.0), self.get_y(self.rect.width))  # store our highest y-value (height of this tile)
+        self.max_y = max(self.get_y(0), self.get_y(self.rect.width))  # store our highest y-value (height of this tile)
 
     def get_y(self, x):
         """
@@ -1685,7 +1684,7 @@ class SlopedTileSprite(TileSprite):
 
         :param Sprite sprite: the Sprite object that's moving on the slope
         """
-        if self.slope == 0:
+        if self.slope == 0 or not self.slope:
             return
         # the local x value for the Sprite on the tile's internal x-axis (0=left edge of tile)
         x_local = max(0, (sprite.rect.left if self.slope < 0 else sprite.rect.right) - self.rect.left)
@@ -1725,6 +1724,7 @@ class TiledObjectGroup(TmxLayer):
                     # a spritesheet (filename)
                     if key == "tsx":
                         kwargs["sprite_sheet"] = SpriteSheet("data/" + value + ".tsx")
+                    # an image_file
                     elif key == "img":
                         kwargs["image_file"] = "images/" + value + ".png"
                     # vanilla kwarg
@@ -1842,13 +1842,11 @@ class Brain(Component, metaclass=ABCMeta):
         super().__init__(name)
 
         self.is_active = True  # main switch: if False, we don't do anything
-        self.commands = { command: False for command in commands }  # the commands coming from the brain (e.g. `jump`, `sword`, `attack`, etc..)
+        self.commands = {command: False for command in commands}  # the commands coming from the brain (e.g. `jump`, `sword`, `attack`, etc..)
 
         self.game_obj_cmp_anim = None  # our GameObject's Animation Component (if any); needed for animation flags
 
     def added(self):
-        # call our own tick method when event "pre_tick" is triggered on our GameObject
-        self.game_object.on_event("pre_tick", self, "tick", register=True)
         # search for an Animation component
         self.game_obj_cmp_anim = self.game_object.components.get("animation")
 
@@ -1874,27 +1872,32 @@ class Brain(Component, metaclass=ABCMeta):
 
     @abstractmethod
     def tick(self, game_loop):
+        """
+        needs to be called by the GameObject at some point during the GameObject's `tick` method
+
+        :param GameLoop game_loop: the currently playing GameLoop object
+        """
         pass
 
 
 class KeyboardBrainTranslation(object):
     # key-to-command flags
-    NORMAL = 0x0  # normal: when key down -> command is True (this is essentially: DOWN_LEAVE_UP_LEAVE)
-    DOWN_ONE_TICK = 0x1  # when key down -> command is True for only one tick (after that, key needs to be released to fire another command)
-    DOWN_ONE_TICK_UP_ONE_TICK = 0x2  # when key down -> command is x for one frame; when key gets released -> command is y for one frame
-    DOWN_LEAVE_UP_ONE_TICK = 0x4  # when key down -> command is x (and stays x); when key gets released -> command is y for one frame
+    NORMAL = 0x1  # normal: when key down -> command is True (this is essentially: DOWN_LEAVE_UP_LEAVE)
+    DOWN_ONE_TICK = 0x2  # when key down -> command is True for only one tick (after that, key needs to be released to fire another command)
+    DOWN_ONE_TICK_UP_ONE_TICK = 0x4  # when key down -> command is x for one frame; when key gets released -> command is y for one frame
+    DOWN_LEAVE_UP_ONE_TICK = 0x8  # when key down -> command is x (and stays x); when key gets released -> command is y for one frame
 
-    def __init__(self, key, command, other_command=None, flags=0):
+    def __init__(self, key, command, flags=0, other_command=None):
         """
         :param str key: the key's description, e.g. `up` for K_UP
         :param str command: the `main` command's description; can be any string e.g. `fire`, `jump`
-        :param str other_command: a possible second command associated with the key (when key is released, e.g. `release_bow`)
         :param int flags: keyboard-command behavior flags
+        :param str other_command: a possible second command associated with the key (when key is released, e.g. `release_bow`)
         """
         self.key = key  # the
         self.command = command
-        self.other_command = other_command
         self.flags = flags
+        self.other_command = other_command
 
 
 class HumanPlayerBrain(Brain):
@@ -1908,48 +1911,52 @@ class HumanPlayerBrain(Brain):
         :param str name: the name of this component
         :param Union[list,None] key_brain_translations: list of KeyboardBrainTranslation objects or None
         """
-        commands = []
+        # now that command list is ready -> send everything to super
+        super().__init__(name, [])
+
         # build our key_brain_translation dict to translate key inputs into commands
         if key_brain_translations is None:
             key_brain_translations = []
 
         self.key_brain_translations = {}
-        for trans in key_brain_translations:
-            if isinstance(trans, str):
-                self.add_translation(KeyboardBrainTranslation(trans, trans))
-                commands.append(trans)
-            elif isinstance(trans, KeyboardBrainTranslation):
-                self.add_translation(trans)
-                commands.append(trans.command)
-                if trans.other_command:
-                    commands.append(trans.other_command)
-            elif isinstance(trans, tuple):
-                self.add_translation(KeyboardBrainTranslation(*trans))
-                commands.append(trans[1])
-                if trans[2]:
-                    commands.append(trans[2])
-            elif isinstance(trans, dict):
-                self.add_translation(KeyboardBrainTranslation(**trans))
-                commands.append(trans["command"])
-                if "other_command" in trans:
-                    commands.append(trans["other_command"])
-
-        # now that command list is ready -> send everything to super
-        super().__init__(name, commands)
+        self.add_translations(key_brain_translations)
 
         self.keyboard_prev = {}  # stores the values of the keyboard_inputs in the previous tick (to catch changes in the keyboard state)
 
         self.is_paralyzed = False  # is this brain paralyzed? (e.g. when agent is dizzy)
         self.paralyzed_exceptions = None  # keys that are still ok to be handled, even if paralyzed
 
-    def add_translation(self, key_brain_translation):
+    def add_translations(self, key_brain_translations):
         """
-        adds a single KeyboardBrainTranslation object to our dict
-        :param KeyboardBrainTranslation key_brain_translation: the translation to be added
+        adds a single or more KeyboardBrainTranslation object to our dict
+
+        :param Union[KeyboardBrainTranslation,str,dict,tuple] key_brain_translations: the keyboard-to-command translation to be added to this Brain
+        (can be represented in different ways; see code)
         """
-        assert key_brain_translation.key not in self.key_brain_translations, "ERROR: key {} already in key_brain_translations dict!".\
-            format(key_brain_translation.key)
-        self.key_brain_translations[key_brain_translation.key] = key_brain_translation
+        # list: re-call this method one-by-one
+        if isinstance(key_brain_translations, list):
+            for trans in key_brain_translations:
+                self.add_translations(trans)
+        # str: key = command
+        elif isinstance(key_brain_translations, str):
+            self.add_translations(KeyboardBrainTranslation(key_brain_translations, key_brain_translations))
+        # tuple: pass as positional args into c'tor (key,cmd,other_cmd,flags)
+        elif isinstance(key_brain_translations, tuple):
+            self.add_translations(KeyboardBrainTranslation(*key_brain_translations))
+        # dict: pass as kwargs into c'tor
+        elif isinstance(key_brain_translations, dict):
+            self.add_translations(KeyboardBrainTranslation(**key_brain_translations))
+        # KeyboardBrainTranslation: take as is and store
+        elif isinstance(key_brain_translations, KeyboardBrainTranslation):
+            assert key_brain_translations.key not in self.key_brain_translations, "ERROR: key {} already in key_brain_translations dict!". \
+                format(key_brain_translations.key)
+            self.key_brain_translations[key_brain_translations.key] = key_brain_translations
+            self.commands[key_brain_translations.command] = False
+            if key_brain_translations.other_command:
+                self.commands[key_brain_translations.other_command] = False
+        # not supported type
+        else:
+            raise Exception("ERROR: key_brain_translations parameter has wrong type; needs to be str, KeyboardBrainTranslation, tuple, or dict!")
 
     def remove_translation(self, key):
         """
@@ -1958,8 +1965,14 @@ class HumanPlayerBrain(Brain):
         """
         self.key_brain_translations.pop(key, None)
 
-    # for now, just translate keyboard_inputs from GameLoop object into our commands
     def tick(self, game_loop: GameLoop):
+        """
+        needs to be called by the GameObject at some point during the GameObject's `tick` method
+        - translates all keys from the GameLoops's KeyboardInputs object into our command dict
+
+        :param GameLoop game_loop: the currently playing GameLoop object
+        """
+
         # main switch is set to OFF
         if not self.is_active:
             return
@@ -1976,8 +1989,8 @@ class HumanPlayerBrain(Brain):
         for key_code, is_pressed in game_loop.keyboard_inputs.keyboard_registry.items():
             # look up the str description of the key
             desc = game_loop.keyboard_inputs.descriptions[key_code]
-            # we are either not paralyzed, or the key is in the exception list
-            if self.is_paralyzed and desc not in self.paralyzed_exceptions:
+            # not a known key to this Brain OR we are paralyzed and the key is not in the paralyzed-exception list
+            if desc not in self.key_brain_translations or (self.is_paralyzed and desc not in self.paralyzed_exceptions):
                 continue
             # look up the key-to-command translation rules
             rule = self.key_brain_translations[desc]
@@ -2017,7 +2030,11 @@ class AIBrain(Brain):
         self.game_object.on_event("bump.left", self, "toggle_direction", register=True)
 
     def tick(self, game_loop):
-        # dt = game_loop.dt
+        """
+        needs to be called by the GameObject at some point during the GameObject's `tick` method
+
+        :param GameLoop game_loop: the currently playing GameLoop object
+        """
         obj = self.game_object
 
         self.reset()
@@ -2125,8 +2142,6 @@ class Animation(Component):
         # make sure our GameObject is actually a Sprite
         assert isinstance(self.game_object, Sprite), "ERROR: Component Animation can only be added to a Sprite object!"
 
-        # call our own tick method when event "post_tick" is triggered on our GameObject
-        self.game_object.on_event("post_tick", self, self.tick)
         # tell our GameObject that we might trigger some "anim..." events on it
         self.game_object.register_event("anim", "anim_frame", "anim_loop", "anim_end")
 
@@ -2136,7 +2151,7 @@ class Animation(Component):
 
     def tick(self, game_loop):
         """
-        gets called when the GameObject triggers a "pre_tick" event
+        needs to be called by the GameObject at some point during the GameObject's `tick` method
 
         :param GameLoop game_loop: the GameLoop that's currently playing
         """
@@ -2442,8 +2457,8 @@ class PhysicsComponent(Component, metaclass=ABCMeta):
     def added(self):
         obj = self.game_object
 
-        obj.on_event("pre_tick", self, "tick", register=True)  # run this component's tick function after GameObject's one (so we can react to the GameObject's move)
-        obj.on_event("collision", self, "collision", register=True)  # handle collisions
+        # handle collisions
+        obj.on_event("collision", self, "collision", register=True)
 
         # flag the GameObject as "handles collisions itself"
         self.game_object.handles_own_collisions = True
@@ -2451,6 +2466,11 @@ class PhysicsComponent(Component, metaclass=ABCMeta):
     # may determine x/y-speeds and movements of the GameObject (gravity, etc..)
     @abstractmethod
     def tick(self, game_loop: GameLoop):
+        """
+        needs to be called by the GameObject at some point during the GameObject's `tick` method
+
+        :param GameLoop game_loop: the currently playing GameLoop object
+        """
         pass
 
     @abstractmethod
@@ -2476,9 +2496,6 @@ class ControlledPhysicsComponent(PhysicsComponent, metaclass=ABCMeta):
         self.game_obj_cmp_brain = self.game_object.components.get("brain", None)
         # if there is a 'brain' component in the GameObject it has to be of type HumanPlayerBrain
         assert not self.game_obj_cmp_brain or isinstance(self.game_obj_cmp_brain, Brain), "ERROR: GameObject's `brain` Component is not of type Brain!"
-
-        # run this component's tick function after GameObject's one (so we can react to the GameObject's move)
-        self.game_object.on_event("pre_tick", self, "tick", register=True)
 
 
 class TopDownPhysics(ControlledPhysicsComponent):
@@ -2517,6 +2534,11 @@ class TopDownPhysics(ControlledPhysicsComponent):
 
     # determines x/y-speeds and moves the GameObject
     def tick(self, game_loop: GameLoop):
+        """
+        needs to be called by the GameObject at some point during the GameObject's `tick` method
+
+        :param GameLoop game_loop: the currently playing GameLoop object
+        """
         dt = game_loop.dt
         dt_step = dt
         ax = 0
@@ -2779,12 +2801,12 @@ class PlatformerPhysics(ControlledPhysicsComponent):
 
     def tick(self, game_loop: GameLoop):
         """
-        determines x/y-speeds and moves the GameObject
+        needs to be called by the GameObject at some point during the GameObject's `tick` method
+        - determines x/y-speeds and moves the GameObject
 
-        :param GameLoop game_loop: the GameLoop that's currently playing
+        :param GameLoop game_loop: the currently playing GameLoop object
         """
         dt = game_loop.dt
-        dt_step = dt
         ax = 0
         obj = self.game_object
         dockable = obj.components["dockable"]
@@ -2853,7 +2875,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
                     self.lock_ladder()
             # jumping?
             elif self.can_jump:
-                jump = self.game_obj_cmp_brain.commands.get("space", False)
+                jump = self.game_obj_cmp_brain.commands.get("jump", False)
                 if not jump:
                     self.disable_jump = False
                 else:
@@ -2869,6 +2891,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
 
         # TODO: check the entity's magnitude of vx and vy,
         # reduce the max dt_step if necessary to prevent skipping through objects.
+        dt_step = dt
         while dt_step > 0:
             dt = min(1 / 30, dt_step)
 
