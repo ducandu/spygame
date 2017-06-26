@@ -23,8 +23,8 @@ class MyAgent(spyg.Sprite):
 
         # some custom settings
         self.handles_own_collisions = True  # our agent handles its own collisions (instead of letting the Stage do it for us)
-        # add a Brain for keyboard input handling
-        self.cmp_brain = self.add_component(spyg.Brain("brain", ["up", "down", "left", "right"]))
+        # add a HumanPlayerBrain for keyboard input handling
+        self.cmp_brain = self.add_component(spyg.HumanPlayerBrain("brain", ["up", "down", "left", "right"]))
         # add a physics component to physics handling (here we use: simple 2D top-down view and controls)
         self.cmp_physics = self.add_component(spyg.TopDownPhysics("physics"))
 

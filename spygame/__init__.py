@@ -251,7 +251,7 @@ class KeyboardInputs(EventObject):
         # - needs to be ticked in order to yield up-to-date information (this will be done by a GameLoop playing a Screen)
         self.keyboard_registry = {}
         self.descriptions = {}
-        self.desc_to_key = {}  # for reverse mapping from description (e.g. 'up') to int (e.g. pygame.K_UP)
+        #OBSOLETE: self.desc_to_key = {}  # for reverse mapping from description (e.g. 'up') to int (e.g. pygame.K_UP)
 
         if key_list is None:
             key_list = ["up", "down", "left", "right"]
@@ -267,13 +267,13 @@ class KeyboardInputs(EventObject):
         self.unregister_events()
         self.keyboard_registry.clear()
         self.descriptions.clear()
-        self.desc_to_key.clear()
+        #OBSOLETE: self.desc_to_key.clear()
         if new_key_list:
             for desc in new_key_list:
                 key = getattr(pygame, "K_" + (desc.upper() if len(desc) > 1 else desc))
                 self.keyboard_registry[key] = False
                 self.descriptions[key] = desc
-                self.desc_to_key[desc] = key
+                #OBSOLETE: self.desc_to_key[desc] = key
                 # signal that we might trigger the following events:
                 self.register_event("key_down." + desc, "key_up." + desc)
 
@@ -386,13 +386,14 @@ class SpriteSheet(object):
         try:
             tree = xml.etree.ElementTree.parse(file)
         except:
-            raise Exception("ERROR: could not open xml file: {}".format(file))
+            raise Exception("ERROR: could not open tsx(xml) file: {}".format(file))
 
         elem = tree.getroot()
         props = elem.attrib
         self.name = props["name"]
         self.tw = int(props["tilewidth"])
         self.th = int(props["tileheight"])
+        assert "tilecount" in props, "ERROR: no `tilecount` property in properties of tsx file: `{}`!".format(file)
         self.count = int(props["tilecount"])
         self.cols = int(props["columns"])
         self.tiles = []  # the list of all Surfaces
@@ -480,61 +481,77 @@ class Sprite(GameObject, pygame.sprite.Sprite):
     next_type = 0x200
 
     @staticmethod
-    def get_type(type) -> int:
+    def get_type(types):
         """
         returns the bitmap code for an already existing Sprite type or for a new type (the code will be created then)
         - types are usually used for collision masks
 
-        :param str type: the type, whose code should be returned
-        :return: the type as an int
+        :param str types: the type(s) (comma-separated), whose code(s) should be returned
+        :return: the type as an int; if many types are given, returns a bitmask with all those bits set that represent the given types
         :rtype: int
         """
-        if type not in Sprite.types:
-            Sprite.types[type] = Sprite.next_type
-            Sprite.next_type *= 2
-        return Sprite.types[type]
+        ret = 0
+        for type_ in types.split(","):
+            if type_ not in Sprite.types:
+                Sprite.types[type_] = Sprite.next_type
+                Sprite.next_type *= 2
+            ret |= Sprite.types[type_]
+        return ret
 
-    # TODO: change the signature to be more flexible with respect to image/spritesheet/width/height/etc..
-    def __init__(self, x: int, y: int, sheet_or_wh_or_file=None):
+    def __init__(self, x, y, **kwargs):
         """
         :param int x: the initial x position of this Sprite
         :param int y: the initial y position of this Sprite
-        :param Union[SpriteSheet,str,Tuple[int,int],None] sheet_or_wh_or_file: if SpriteSheet -> use that SpriteSheet (set initial image to first frame in the
-        SpriteSheet); if str -> use str as file name for a static image; if Tuple[int] -> empty image (no rendering) with a rect of given tuple sizes;
-        if None: no image, rect=1x1, no rendering
+        :param any **kwargs:
+        - sprite_sheet: a ready SpriteSheet object to use (set initial image to first frame in the SpriteSheet)
+        - image_file: use image_file (str) as a file name for a static image
+        - image_section: a tuple with 4 values: offset-x, offset-y, width, height defining a rect to use only a subsection of the given static image
+        - width_height: Tuple[int,int] -> empty image (no rendering) with a rect of the given width/height
         """
         pygame.sprite.Sprite.__init__(self)
         GameObject.__init__(self)
 
         self.do_render = True
 
-        # all sprites need to have a position
-        # - but support Sprites without SpriteSheets:
-        # -- some Rect without image
-        if isinstance(sheet_or_wh_or_file, tuple):
-            self.spritesheet = None
-            self.image = None  # pygame.Surface((sheet_or_wh_or_file[0], sheet_or_wh_or_file[1]))
-            # self.image.fill(pygame.Color(0, 0, 0, 255))  # all transparent image
-            self.rect = pygame.Rect(x, y, sheet_or_wh_or_file[0], sheet_or_wh_or_file[1])
-            self.do_render = True if DEBUG_FLAGS & DEBUG_RENDER_SPRITES_RECTS else False
-        # -- with SpriteSheet
-        elif isinstance(sheet_or_wh_or_file, SpriteSheet):
-            self.spritesheet = sheet_or_wh_or_file
+        # with SpriteSheet
+        if "sprite_sheet" in kwargs:
+            sheet = kwargs["sprite_sheet"]
+            assert isinstance(sheet, SpriteSheet), "ERROR: in Sprite's ctor: kwargs[`sprite_sheet`] must be of type `SpriteSheet`!"
+            self.spritesheet = sheet
             # TODO: make it possible to create a Sprite from more than one tile (e.g. for a platform/elevator). Either in x-direction or y-direction or both
-            self.image = sheet_or_wh_or_file.tiles[0]
+            self.image = sheet.tiles[0]
             self.rect = pygame.Rect(x, y, self.spritesheet.tw, self.spritesheet.th)
         # an image file -> fixed image -> store as Surface in self.image
-        elif isinstance(sheet_or_wh_or_file, str):
+        elif "image_file" in kwargs:
+            image = kwargs["image_file"]
+            assert isinstance(image, str), "ERROR: in Sprite's ctor: kwargs[`image_file`] must be of type str!"
             self.spritesheet = None
-            self.image = pygame.image.load(sheet_or_wh_or_file)
+            source = pygame.image.load(image)
+            if "image_section" in kwargs:
+                sec = kwargs["image_section"]
+                assert isinstance(sec, tuple) and len(sec) == 4,\
+                    "ERROR: in Sprite's ctor: kwargs[`image_section`] must be of type tuple and of len 4 (offset-x, offset-y, width, height)!"
+                self.image = pygame.Surface((sec[2], sec[3]))
+                self.image.blit(source, area=pygame.Rect(*sec))
+            else:
+                self.image = source
             self.rect = self.image.get_rect()
             # fix x/y (would be 0,0 otherwise)
             self.rect.x = x
             self.rect.y = y
-        # -- tiny-size rect (no image)
+        # empty image of some size
+        elif "width_height" in kwargs:
+            width_height = kwargs["width_height"]
+            assert isinstance(width_height, tuple) and len(width_height) == 2,\
+                "ERROR: in Sprite's ctor: kwargs[`width_height`] must be of type tuple and of len 2!"
+            self.spritesheet = None
+            self.image = None
+            self.rect = pygame.Rect(x, y, width_height[0], width_height[1])
+            self.do_render = True if DEBUG_FLAGS & DEBUG_RENDER_SPRITES_RECTS else False
+        # tiny-size rect (no image)
         else:
             self.spritesheet = None
-            self.image = None  # pygame.Surface((0, 0))
+            self.image = None
             self.rect = pygame.Rect(x, y, 1, 1)
             self.do_render = True if DEBUG_FLAGS & DEBUG_RENDER_SPRITES_RECTS else False
 
@@ -704,7 +721,7 @@ class Ladder(Sprite):
         super().__init__(x, y, (width, height))
 
         # collision types
-        self.type = Sprite.get_type("one_way_platform") | Sprite.get_type("ladder")
+        self.type = Sprite.get_type("ladder,one_way_platform")
         self.collision_mask = 0  # do not do any collisions
 
         # important to be able to start the 'top-of-ladder' animation sequence for agents that climb up the ladder
@@ -723,20 +740,20 @@ class AnimatedSprite(Sprite):
             be spritesheet.name)
     """
 
-    def __init__(self, x: int, y: int, spritesheet, animation_setup: dict):
+    def __init__(self, x, y, sprite_sheet, animation_setup):
         """
         :param int x: the initial x position of the AnimatedSprite
         :param int y: the initial y position of the AnimatedSprite
-        :param SpriteSheet spritesheet: the SpriteSheet to use for animamations
+        :param SpriteSheet sprite_sheet: the SpriteSheet to use for animations
         :param dict animation_setup: a dictionary with all the different animation name and their settings (animation speed, frames to use, etc..)
         """
-        assert isinstance(spritesheet, SpriteSheet), "ERROR: AnimatedSprite needs a SpriteSheet in its c'tor!"
+        assert isinstance(sprite_sheet, SpriteSheet), "ERROR: AnimatedSprite needs a SpriteSheet in its c'tor!"
 
-        super().__init__(x, y, spritesheet)  # assign the image/rect for the Sprite
+        super().__init__(x, y, sprite_sheet=sprite_sheet)  # assign the image/rect for the Sprite
         self.register_event("post_tick")
         self.cmp_animation = self.add_component(Animation("animation"))
 
-        Animation.register_settings(spritesheet.name, animation_setup, register_events_on=self)
+        Animation.register_settings(sprite_sheet.name, animation_setup, register_events_on=self)
         # play the default animation (now that we have added the Animation Component, we can call play_animation on ourselves)
         self.play_animation(animation_setup["default"])
 
@@ -960,14 +977,19 @@ class Stage(GameObject):
     max_stages = 10
     stages = [None for x in range(max_stages)]
     active_stage = 0  # the currently ticked/rendered Stage
+    locate_obj = Sprite(0, 0, width_height=(0, 0))  # used to do test collisions on a Stage
 
-    # the default game loop callback to use if none given when staging a Scene
-    # - clamps dt
-    # - ticks all stages
-    # - renders all stages
-    # - updates the pygame.display
     @staticmethod
     def stage_default_game_loop_callback(game_loop: GameLoop):
+        """
+        the default game loop callback to use if none given when staging a Scene
+        - clamps dt
+        - ticks all stages
+        - renders all stages
+        - updates the pygame.display
+
+        :param GameLoop game_loop: the currently playing (active) GameLoop
+        """
         # clamp dt
         if game_loop.dt < 0:
             game_loop.dt = 1.0 / 60
@@ -1005,13 +1027,21 @@ class Stage(GameObject):
             pygame.display.flip()
 
     @staticmethod
-    def clear_stage(idx: int):
+    def clear_stage(idx):
+        """
+        clears one of the Stage objects by index
+
+        :param int idx: the index of the Stage to clear (index==slot in static Stage.stages list)
+        """
         if Stage.stages[idx]:
             Stage.stages[idx].destroy()
             Stage.stages[idx] = None
 
     @staticmethod
     def clear_stages():
+        """
+        clears all our Stage objects
+        """
         for i in range(len(Stage.stages)):
             Stage.clear_stage(i)
 
@@ -1112,14 +1142,6 @@ class Stage(GameObject):
         self.invoke("debind_events")
         self.trigger_event("destroyed")
 
-    #OBSOLETE:
-    # executes our Scene by calling the Scene's function with self as only parameter
-    #def load_scene(self):
-    #    if self.scene:
-    #        self.scene.scene_func(self)
-
-    # TODO: loadAssets?
-
     # calls the callback function for each sprite, each time passing it the sprite and params
     def for_each(self, callback: callable, params=None):  # quintus: `each`
         if not params:
@@ -1127,23 +1149,73 @@ class Stage(GameObject):
         for sprite in self.sprites:
             callback(sprite, *params)
 
-    # calls a function on all of the GameObjects on this Stage
-    def invoke(self, func_name: str, params=None):
+    def invoke(self, func_name, params=None):
+        """
+        calls a function on all of the GameObjects on this Stage
+
+        :param str func_name: the function name to call on all our GameObjects using getattr
+        :param Union[list,None] params: the *args passed to that function
+        """
         if not params:
             params = []
         for sprite in self.sprites:
-            if hasattr(sprite, func_name):
-                func = getattr(sprite, func_name)
-                if callable(func):
-                    func(*params)
+            func = getattr(sprite, func_name, None)
+            if callable(func):
+                func(*params)
 
-    # returns the first GameObject in this Stage that - when passed to the detector function with params - returns True
-    def detect(self, detector: callable, params=None):
+    def detect(self, detector, params=None):
+        """
+        returns the first GameObject in this Stage that - when passed to the detector function with params - returns True
+
+        :param callable detector: a function that returns a bool
+        :param list params: the list of positional args that are passed to the detector
+        :return: the first GameObject in this Stage that - when passed to the detector function with params - returns True
+        :rtype: Union[Sprite,None]
+        """
         if not params:
             params = []
         for sprite in self.sprites:
             if detector(sprite, *params):
                 return sprite
+
+    def locate(self, x, y, w=1, h=1, type_=Sprite.get_type("default"), collision_mask=Sprite.get_type("default")):
+        """
+        returns the first Collision found by colliding the given measurements (Rect) against this Stage's objects
+        - starts with all TiledTileLayer objects, then all other Sprites
+
+        :param int x: the x-coordinate of the Rect to check
+        :param int y: the y-coordinate of the Rect to check
+        :param int w: the width of the Rect to check
+        :param int h: the height of the Rect to check
+        :param int type_: the type of the Rect (has to match collision_mask of Stage's objects)
+        :param int collision_mask: the collision mask of the Rect (only layers and Sprites that match this mask are checked)
+        :return: the first Collision encountered
+        :rtype: Union[Collision,None]
+        """
+        obj = self.locate_obj
+        obj.rect.x = x
+        obj.y = y
+        obj.width = w
+        obj.height = h
+        obj.type = type_
+        obj.collision_mask = collision_mask
+
+        # collide with all matching tile layers
+        for tile_layer in self.tiled_layers.values():
+            if obj.collision_mask & tile_layer.type:
+                col = tile_layer.collide(obj)
+                # don't solve -> just return
+                if col:
+                    return col
+
+        # collide with all Sprites (only if both collision masks match each others types)
+        for sprite in self.sprites:
+            if obj.collision_mask & sprite.type and sprite.collision_mask & obj.type:
+                col = self.options["physics_collision_detector"](obj, sprite)
+                if col:
+                    return col
+        # nothing found
+        return None
 
     def add_tiled_layer(self, pytmx_layer, pytmx_tiled_map):
         """
@@ -1498,72 +1570,7 @@ class TiledTileLayer(TmxLayer):
         r.height = display.surface.get_height()
         display.surface.blit(self.pygame_sprite.image, dest=(0, 0), area=r)
 
-    # OBSOLETE: now fully handled by Physics Components
-    def collide(self, sprite: Sprite, direction='x', direction_veloc=1.0, original_pos=None):
-        """
-        solves collisions between this tile layer and any Sprite (depends on the velocity of the Sprite)
-
-        :param Sprite sprite: the Sprite to test
-        :param str direction: the direction in which to check for collision ('x' or 'y')
-        :param float direction_veloc: the velocity of the Sprite in the given direction (can be negative)
-        :param Union[Tuple[int,int],None] original_pos: the position of the sprite before the move that caused this collision detection execution
-        :return: a Collision object with all details of the collision between the Sprite and this layer (None if there is no collision)
-        :rtype: Union[None,Collision]
-        """
-        assert False, "ERROR: obsolete method!"
-
-        # TODO: implement for PlatformerPhysics (smart slope processing (highest slopes first)) and TopDownPhysics (easy)
-        tiles = self.collision_tile_selector(self, sprite, direction, direction_veloc)
-
-        for i, tile_xy in enumerate(tiles):
-            tile_props = self.props_by_pos.get(tile_xy)
-
-            # empty tile OR no_collision property of this tile is set to 'true' -> skip
-            if tile_props is None or tile_props.get("no_collision"):
-                continue
-
-            # draw the currently analyzed tile (and make the old one greyed out)
-            if DEBUG_FLAGS & DEBUG_RENDER_ACTIVE_COLLISION_TILES:
-                display = GameLoop.active_loop.display
-                # grey out the previously drawn one
-                if i > 0:
-                    pygame.draw.rect(GameLoop.active_loop.display.surface, DEBUG_RENDER_ACTIVE_COLLISION_TILES_COLOR_GREYED_OUT,
-                                 pygame.Rect((tiles[i-1][0] * self.pytmx_tiled_map.tilewidth - display.offsets[0],
-                                              tiles[i-1][1] * self.pytmx_tiled_map.tileheight - display.offsets[1]),
-                                             (self.pytmx_tiled_map.tilewidth, self.pytmx_tiled_map.tileheight)), 1)
-                # paint the current one
-                pygame.draw.rect(GameLoop.active_loop.display.surface, DEBUG_RENDER_ACTIVE_COLLISION_TILES_COLOR,
-                                 pygame.Rect((tile_xy[0] * self.pytmx_tiled_map.tilewidth - display.offsets[0],
-                                              tile_xy[1] * self.pytmx_tiled_map.tileheight - display.offsets[1]),
-                                             (self.pytmx_tiled_map.tilewidth, self.pytmx_tiled_map.tileheight)), 1)
-                GameLoop.active_loop.display.debug_refresh()
-
-            # set up our TileSprite (a Sprite that represents a single tile) for the collision detector
-            self.tile_sprite.tile_x = tile_xy[0]
-            self.tile_sprite.tile_y = tile_xy[1]
-            self.tile_sprite.rect.x = tile_xy[0] * self.pytmx_tiled_map.tilewidth
-            self.tile_sprite.rect.y = tile_xy[1] * self.pytmx_tiled_map.tileheight
-            self.tile_sprite.tile_props = tile_props
-
-            # check the actual collision with our collision detector
-            col = self.collision_detector(sprite, self.tile_sprite, self.collision_objects,
-                                          direction=direction, direction_veloc=direction_veloc, original_pos=original_pos)
-
-            # we got a new collision with this tile -> post-process collision and - if still ok - return
-            if col and col.is_collided and col.magnitude > 0:
-                # post-process the collision depending on the given Physics engine's post-processor (e.g. to deal with slopes)
-                col = self.collision_postprocessor(col)
-                # collision is still ok (after post-processing) -> trigger collision event on Sprite
-                if col.is_collided:
-                    sprite.trigger_event("collision", col)
-                    # return after the first tile collided with Sprite
-                    return col
-                else:
-                    # keep looking for other tiles that might collide
-                    continue
-
-        return None  # no collision
-
+    # TODO: make ladder-capturing from background layer more generic (include waterfalls sprites, quicksand sprites, etc..)
     def capture_ladders(self):
         """
         captures all ladder objects in this layer and returns them in a list of Ladder objects
@@ -1626,7 +1633,7 @@ class TileSprite(Sprite):
         :param dict tile_props: the properties dict of this tile (values already translated into python types)
         :param Union[pygame.Rect,None] rect: the pygame.Rect representing the position and size of the tile
         """
-        super().__init__(rect.x, rect.y, (rect.width, rect.height))
+        super().__init__(rect.x, rect.y, width_height=(rect.width, rect.height))
         self.tiled_tile_layer = layer
         self.pytmx_tiled_map = pytmx_tiled_map
         self.tile = id_
@@ -1711,34 +1718,28 @@ class TiledObjectGroup(TmxLayer):
                 assert match_obj, "ERROR: type field ({}) of object in pytmx.pytmx.TiledObjectGroup does not match pattern!".format(obj.type)
                 _, module_, class_ = match_obj.groups(default="__main__")  # if no module given, assume a class defined in __main__
 
-                sheet_or_image = None
-                if "tsx" in obj_props:
-                    sheet_or_image = SpriteSheet("data/" + obj_props["tsx"] + ".tsx")
-                elif "img" in obj_props:
-                    sheet_or_image = "images/" + obj_props["img"] + ".png"
-
                 # get other kwargs for the Sprite's c'tor
                 kwargs = {}
-                if "kwargs" in obj_props:
-                    for kwarg in obj_props["kwargs"].split(","):
-                        match_obj = re.fullmatch('^(\w+)=(.+)$', kwarg)
-                        assert match_obj, "ERROR: kwarg {} of object {} in pytmx.pytmx.TiledObjectGroup does not match pattern!".format(class_, kwarg)
-                        key, value = match_obj.groups()
+                for key, value in obj_props.items():
+                    # special cases
+                    # a spritesheet (filename)
+                    if key == "tsx":
+                        kwargs["sprite_sheet"] = SpriteSheet("data/" + value + ".tsx")
+                    elif key == "img":
+                        kwargs["image_file"] = "images/" + value + ".png"
+                    # vanilla kwarg
+                    else:
                         kwargs[key] = convert_type(value)
 
                 # generate the Sprite
-                sprite = getattr(sys.modules[module_], class_)(obj.x, obj.y, sheet_or_image, **kwargs)
+                ctor = getattr(sys.modules[module_], class_, None)
+                assert ctor, "ERROR: python class `{}` for object in object-layer `{}` not defined!".format(class_, self.pytmx_layer.name)
+                sprite = ctor(obj.x, obj.y, **kwargs)
                 # add the do_render and render_order to the new instance
-                sprite.do_render = (obj_props.get("do_render", "false") == "true")
+                sprite.do_render = (obj_props.get("do_render", "true") == "true")  # the default for objects is true
                 if sprite.do_render:
-                    sprite.render_order = int(obj_props.get("render_order", 0))
+                    sprite.render_order = int(obj_props.get("render_order", 50))  # the default for objects is 50
                 self.sprite_group.add(sprite)
-
-    #def render(self, display):
-    #    # loop through each Sprite in the group and blit it to the Display's Surface
-    #    for sprite in self.sprite_group.sprites():
-    #        sprite.render(display)
-    #        # display.surface.blit(sprite.image, dest=(sprite.rect.x + display.offsets[0], sprite.rect.y + display.offsets[1]))
 
 
 class Collision(object):
@@ -1831,36 +1832,131 @@ class Component(GameObject, metaclass=ABCMeta):
         setattr(self.game_object, method.__name__, types.MethodType(method, self.game_object))
 
 
-class Brain(Component):
+class Brain(Component, metaclass=ABCMeta):
     """
-    a brain class that handles agent control (via the GameLoop´s keyboard registry)
-    - sets self.commands each tick depending on keyboard input
+    a generic Brain class that has a command dict for other classes to be able to look up what the brain currently wants
+    - also has a main-switch to activate/deactivate the Brain
+    - should implement `tick` method and set self.commands each tick
     """
-
-    def __init__(self, name: str, commands: Union[list, None]):
+    def __init__(self, name, commands):
         super().__init__(name)
-        if commands is None:
-            commands = []
-        self.commands = {command: False for command in commands}
-        self.game_obj_cmp_anim = None  # our GameObject's Animation Component (if any); needed for animation flags
 
         self.is_active = True  # main switch: if False, we don't do anything
+        self.commands = { command: False for command in commands }  # the commands coming from the brain (e.g. `jump`, `sword`, `attack`, etc..)
 
-        self.is_paralyzed = False  # is this brain paralyzed? (e.g. when agent is dizzy)
-        self.paralyzed_exceptions = None  # keys that are still ok to be handled, even if paralyzed
-
-    def reset(self):
-        """
-        sets all commands to False (makes this Brain inactive)
-        """
-        for key in self.commands:
-            self.commands[key] = False
+        self.game_obj_cmp_anim = None  # our GameObject's Animation Component (if any); needed for animation flags
 
     def added(self):
         # call our own tick method when event "pre_tick" is triggered on our GameObject
         self.game_object.on_event("pre_tick", self, "tick", register=True)
         # search for an Animation component
         self.game_obj_cmp_anim = self.game_object.components.get("animation")
+
+    def reset(self):
+        """
+        sets all commands to False
+        """
+        for key in self.commands:
+            self.commands[key] = False
+
+    def activate(self):
+        """
+        makes this Brain active: we will react to the GameLoop's keyboard events
+        """
+        self.is_active = True
+
+    def deactivate(self):
+        """
+        makes this Brain inactive: we will not(!) react to the GameLoop's keyboard events (no exceptions)
+        """
+        self.is_active = False
+        self.reset()  # set all commands to False
+
+    @abstractmethod
+    def tick(self, game_loop):
+        pass
+
+
+class KeyboardBrainTranslation(object):
+    # key-to-command flags
+    NORMAL = 0x0  # normal: when key down -> command is True (this is essentially: DOWN_LEAVE_UP_LEAVE)
+    DOWN_ONE_TICK = 0x1  # when key down -> command is True for only one tick (after that, key needs to be released to fire another command)
+    DOWN_ONE_TICK_UP_ONE_TICK = 0x2  # when key down -> command is x for one frame; when key gets released -> command is y for one frame
+    DOWN_LEAVE_UP_ONE_TICK = 0x4  # when key down -> command is x (and stays x); when key gets released -> command is y for one frame
+
+    def __init__(self, key, command, other_command=None, flags=0):
+        """
+        :param str key: the key's description, e.g. `up` for K_UP
+        :param str command: the `main` command's description; can be any string e.g. `fire`, `jump`
+        :param str other_command: a possible second command associated with the key (when key is released, e.g. `release_bow`)
+        :param int flags: keyboard-command behavior flags
+        """
+        self.key = key  # the
+        self.command = command
+        self.other_command = other_command
+        self.flags = flags
+
+
+class HumanPlayerBrain(Brain):
+    """
+    a Brain child class that handles agent control (via the GameLoop´s keyboard registry)
+    - supports special keyboard->command translations (e.g. key down -> command A for one tick; key up -> command B for one tick)
+    """
+
+    def __init__(self, name, key_brain_translations):
+        """
+        :param str name: the name of this component
+        :param Union[list,None] key_brain_translations: list of KeyboardBrainTranslation objects or None
+        """
+        commands = []
+        # build our key_brain_translation dict to translate key inputs into commands
+        if key_brain_translations is None:
+            key_brain_translations = []
+
+        self.key_brain_translations = {}
+        for trans in key_brain_translations:
+            if isinstance(trans, str):
+                self.add_translation(KeyboardBrainTranslation(trans, trans))
+                commands.append(trans)
+            elif isinstance(trans, KeyboardBrainTranslation):
+                self.add_translation(trans)
+                commands.append(trans.command)
+                if trans.other_command:
+                    commands.append(trans.other_command)
+            elif isinstance(trans, tuple):
+                self.add_translation(KeyboardBrainTranslation(*trans))
+                commands.append(trans[1])
+                if trans[2]:
+                    commands.append(trans[2])
+            elif isinstance(trans, dict):
+                self.add_translation(KeyboardBrainTranslation(**trans))
+                commands.append(trans["command"])
+                if "other_command" in trans:
+                    commands.append(trans["other_command"])
+
+        # now that command list is ready -> send everything to super
+        super().__init__(name, commands)
+
+        self.keyboard_prev = {}  # stores the values of the keyboard_inputs in the previous tick (to catch changes in the keyboard state)
+
+        self.is_paralyzed = False  # is this brain paralyzed? (e.g. when agent is dizzy)
+        self.paralyzed_exceptions = None  # keys that are still ok to be handled, even if paralyzed
+
+    def add_translation(self, key_brain_translation):
+        """
+        adds a single KeyboardBrainTranslation object to our dict
+        :param KeyboardBrainTranslation key_brain_translation: the translation to be added
+        """
+        assert key_brain_translation.key not in self.key_brain_translations, "ERROR: key {} already in key_brain_translations dict!".\
+            format(key_brain_translation.key)
+        self.key_brain_translations[key_brain_translation.key] = key_brain_translation
+
+    def remove_translation(self, key):
+        """
+        adds a single KeyboardBrainTranslation object to our dict
+        :param str key: the key (str) to be removed from our key-to-command translation dict
+        """
+        self.key_brain_translations.pop(key, None)
 
     # for now, just translate keyboard_inputs from GameLoop object into our commands
     def tick(self, game_loop: GameLoop):
@@ -1877,23 +1973,88 @@ class Brain(Component):
         self.reset()
 
         # current animation does not block: normal commands possible
-        for (key, value), desc in zip(game_loop.keyboard_inputs.keyboard_registry.items(), game_loop.keyboard_inputs.descriptions.values()):
+        for key_code, is_pressed in game_loop.keyboard_inputs.keyboard_registry.items():
+            # look up the str description of the key
+            desc = game_loop.keyboard_inputs.descriptions[key_code]
             # we are either not paralyzed, or the key is in the exception list
-            if not self.is_paralyzed or desc in self.paralyzed_exceptions:
-                self.commands[desc] = value
+            if self.is_paralyzed and desc not in self.paralyzed_exceptions:
+                continue
+            # look up the key-to-command translation rules
+            rule = self.key_brain_translations[desc]
+            # normal translation
+            if rule.flags == KeyboardBrainTranslation.NORMAL:
+                self.commands[rule.command] = is_pressed
+            # key is currently down
+            elif is_pressed:
+                # if we don't repeat the command -> check whether this press is new and only then set the command
+                if rule.flags & (KeyboardBrainTranslation.DOWN_ONE_TICK | KeyboardBrainTranslation.DOWN_ONE_TICK_UP_ONE_TICK):
+                    self.commands[rule.command] = (self.keyboard_prev[desc] is False)
+                    if rule.flags & KeyboardBrainTranslation.DOWN_ONE_TICK_UP_ONE_TICK:
+                        self.commands[rule.other_command] = False
+                else:
+                    self.commands[rule.command] = True
+            # key is currently up
+            else:
+                # we fire a single-tick other_command if the key has just been released
+                if rule.flags & KeyboardBrainTranslation.DOWN_ONE_TICK_UP_ONE_TICK:
+                    self.commands[rule.other_command] = (self.keyboard_prev[desc] is True)
+                else:
+                    self.commands[rule.command] = False
 
-    def activate(self):
-        """
-        makes this Brain active: we will react to the GameLoop's keyboard events
-        """
-        self.is_active = True
+            # update keyboard_prev dict
+            self.keyboard_prev[desc] = is_pressed
 
-    def deactivate(self):
-        """
-        makes this Brain inactive: we will not(!) react to the GameLoop's keyboard events (no exceptions)
-        """
-        self.is_active = False
-        self.reset()  # set all commands to False
+
+class AIBrain(Brain):
+    def __init__(self, name):
+        super().__init__(name, ["left", "right"])
+        self.flipped = False  # if True: character is turning left
+
+    def added(self):
+        super().added()
+
+        self.game_object.on_event("bump.right", self, "toggle_direction", register=True)
+        self.game_object.on_event("bump.left", self, "toggle_direction", register=True)
+
+    def tick(self, game_loop):
+        # dt = game_loop.dt
+        obj = self.game_object
+
+        self.reset()
+
+        if self.cmp_animation and self.cmp_animation.flags & Animation.ANIM_PARALYZES:
+            return
+
+        # look for edges ahead -> then change direction if one is detected
+        # - makes sure an enemy character does not fall off a cliff
+        if (not (game_loop.frame % 3) and self.check_cliff_ahead()) or obj.rect.x <= 0 or obj.rect.x >= obj.cmp_physics.x_max:
+            self.toggle_direction()
+
+        self.commands["left" if self.flipped else "right"] = True
+
+    def toggle_direction(self):
+        self.flipped = False if self.flipped else True
+
+    # checks whether there is a cliff ahead (returns true if yes)
+    def check_cliff_ahead(self):
+        obj = self.game_object
+        tile_h = obj.stage.screen.tmx_object.tile_h
+        # check below character (c=character sprite, _=locateObject (a stripe with x=x width=w-6 and height=3))
+        # ccc    -> walking direction
+        # ccc
+        #  _
+        col = obj.stage.locate(obj.rect.left if self.flipped else obj.rect.right,
+                               obj.rect.bottom + tile_h * 0.75,
+                               obj.rect.width - 6,
+                               tile_h * 1.5,
+                               Sprite.get_type("default,ladder"))
+        if not col:  # or (col.tileprops and col.tileprops['liquid']):
+            return True
+        return False
+
+    # checks whether an enemy is in sight
+    def check_enemy_ahead(self):
+        pass
 
 
 class Animation(Component):
@@ -2304,16 +2465,16 @@ class PhysicsComponent(Component, metaclass=ABCMeta):
 
 class ControlledPhysicsComponent(PhysicsComponent, metaclass=ABCMeta):
     """
-    when added to a GameObject, adds a Brain Component automatically to the GameObject
+    when added to a GameObject, adds a HumanPlayerBrain Component automatically to the GameObject
     """
     def __init__(self, name):
         super().__init__(name)
-        self.game_obj_cmp_brain = None  # the GameObject's Brain component (used by Physics for steering and action control within `tick` method)
+        self.game_obj_cmp_brain = None  # the GameObject's HumanPlayerBrain component (used by Physics for steering and action control within `tick` method)
 
     def added(self):
         super().added()
         self.game_obj_cmp_brain = self.game_object.components.get("brain", None)
-        # if there is a 'brain' component in the GameObject it has to be of type Brain
+        # if there is a 'brain' component in the GameObject it has to be of type HumanPlayerBrain
         assert not self.game_obj_cmp_brain or isinstance(self.game_obj_cmp_brain, Brain), "ERROR: GameObject's `brain` Component is not of type Brain!"
 
         # run this component's tick function after GameObject's one (so we can react to the GameObject's move)
@@ -2595,8 +2756,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
         self.game_obj_cmp_dockable = obj.add_component(Dockable("dockable"))
 
         # add default and ladder to the collision mask of our GameObject
-        obj.collision_mask |= Sprite.get_type("default")
-        obj.collision_mask |= Sprite.get_type("ladder")
+        obj.collision_mask |= Sprite.get_type("default,ladder")
 
     def lock_ladder(self):
         """
@@ -3047,8 +3207,11 @@ class PlatformerPhysics(ControlledPhysicsComponent):
         # TODO: if there is an obstacle on the other side of the pushee (e.g. a wall),
         # the pushee's collision detection method will trigger a collision event, in which case the pushee will
         # be moved back in which case
-        pusher.move(move_x, 0)
+
+
+        # first move rock, then do a x-collision detection of the rock, then fix that collision (if any) -> only then move the pusher
         pushee.move(move_x, 0)
+        pusher.move(move_x, 0)
         self.vx = math.copysign(pushee_phys.vx_max, col.direction_veloc)
 
         #else:

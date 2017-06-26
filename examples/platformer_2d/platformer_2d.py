@@ -23,13 +23,14 @@ import pygame
 import pygame.font
 
 import functools
+import math
 
 
 class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
     """
     a generic Viking class
     """
-    def __init__(self, x: int, y: int, spritesheet: spyg.SpriteSheet, animation_setup: dict):
+    def __init__(self, x, y, spritesheet, animation_setup):
         """
         :param int x: the start x position
         :param int y: the start y position
@@ -40,7 +41,7 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
         super().__init__(x, y, spritesheet, animation_setup)
 
         self.type = spyg.Sprite.get_type("friendly")
-        self.collision_mask |= spyg.Sprite.get_type("touch") | spyg.Sprite.get_type("one_way_platform")
+        self.collision_mask |= spyg.Sprite.get_type("touch,one_way_platform")
 
         self.life_points = 3
         self.ladder_frame = 0
@@ -49,11 +50,11 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
 
         # add components to this Viking
         # loop time line:
-        # - pre-tick: Brain (needs animation comp to check e.g., which commands are paralyzed), Physics (movement + collision resolution)
+        # - pre-tick: HumanPlayerBrain (needs animation comp to check e.g., which commands are paralyzed), Physics (movement + collision resolution)
         # - tick: chose animation to play
         # - post-tick: Animation
         self.register_event("pre_tick", "post_tick", "collision")
-        self.cmp_brain = self.add_component(spyg.Brain("brain", ["up", "down", "left", "right", "action1", "action2"]))  # type: spyg.Brain
+        self.cmp_brain = self.add_component(spyg.HumanPlayerBrain("brain", ["up", "down", "left", "right", "action1", "action2"]))  # type: spyg.HumanPlayerBrain
         phys = spyg.PlatformerPhysics("physics")
         phys.squeeze_speed = 0.5
         self.cmp_physics = self.add_component(phys)  # type: spyg.PlatformerPhysics
@@ -81,7 +82,7 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
     # sequence of this Sprite's tick-flow:
     # - tick gets called by the Stage
     # - pre_tick is triggered by this tick
-    # -- pre_tick calls tick of the Components (Animation, Brain (maps keyboard input to controls), Physics)
+    # -- pre_tick calls tick of the Components (Animation, HumanPlayerBrain (maps keyboard input to controls), Physics)
     # -- Physics Component tick method runs:
     # --- determines x/y speeds and moves according to s = v*dt
     # --- runs collision detection against all layers
@@ -265,8 +266,8 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
 
 # define player: Baleog
 class Baleog(Viking):
-    def __init__(self, x: int, y: int, spritesheet: spyg.SpriteSheet):
-        super().__init__(x, y, spritesheet, {
+    def __init__(self, x, y):
+        super().__init__(x, y, spyg.SpriteSheet("data/baleog.tsx"), {
             "default"          : "stand",  # the default animation to play
             "stand"            : {"frames": [0], "loop": False, "flags": spyg.Animation.ANIM_PROHIBITS_STAND},
             "be_bored1"        : {"frames": [1, 2, 2, 1, 1, 3, 4, 3, 4, 5, 6, 5, 6, 7, 8, 7, 8, 3, 4, 3, 4], "rate": 1 / 3, "loop": False, "next": "stand",
@@ -349,8 +350,8 @@ class Baleog(Viking):
 
 # define player: Erik the Swift
 class Erik(Viking):
-    def __init__(self, x: int, y: int, spritesheet: spyg.SpriteSheet):
-        super().__init__(x, y, spritesheet, {
+    def __init__(self, x, y):
+        super().__init__(x, y, spyg.SpriteSheet("data/erik.tsx"), {
             "default"          : "stand",  # the default animation to play
             "stand"            : {"frames": [0], "loop": False, "flags": spyg.Animation.ANIM_PROHIBITS_STAND},
             "be_bored1"        : {"frames": [1], "rate": 1 / 2, "next": 'stand', "flags": spyg.Animation.ANIM_PROHIBITS_STAND},
@@ -448,8 +449,8 @@ class Erik(Viking):
 
 # define player: Olaf the ???
 class Olaf(Viking):
-    def __init__(self, x: int, y: int, spritesheet: spyg.SpriteSheet):
-        super().__init__(x, y, spritesheet, {
+    def __init__(self, x, y):
+        super().__init__(x, y, spyg.SpriteSheet("data/olaf.tsx"), {
             "default"          : "stand_shield_down",  # the default animation to play
             "stand_shield_down": {"frames": [0], "loop": False, "flags": spyg.Animation.ANIM_PROHIBITS_STAND},
             "stand_shield_up"  : {"frames": [14], "loop": False, "flags": spyg.Animation.ANIM_PROHIBITS_STAND},
@@ -696,7 +697,7 @@ class VikingLevel(spyg.Level):
 
             # make the Stage follow the new Viking
             stage = spyg.Stage.get_stage(0)  # default stage
-            stage.follow_object_with_viewport(vikings[new_viking_idx])
+            stage.follow_object_with_viewport(vikings[new_viking_idx], max_speed=3)
             # make the new Viking blink for a while
             vikings[new_viking_idx].blink_animation(15, 1.5)  # 15/s for 1.5s
         # no one is active anymore -> switch 'em all off
@@ -711,12 +712,20 @@ class Shot(spyg.AnimatedSprite):
     - can be extended to do more complicated stuff
     """
 
-    def __init__(self, offset_x: int, offset_y: int, spritesheet: spyg.SpriteSheet, animation_setup: dict, shooter: spyg.GameObject):
+    def __init__(self, offset_x, offset_y, spritesheet, animation_setup, shooter):
+        """
+        a generic Shot object being spawned into the game usually by a Shooter object
+        :param int offset_x: the x-offset with respect to the Shooter's x position
+        :param int offset_y: the y-offset with respect to the Shooter's y position
+        :param spyg.SpriteSheet spritesheet:
+        :param dict animation_setup: the animation_setup dictionary that will be sent to the Animation component
+        :param spyg.Sprite shooter: the Shooter's (Sprite) object
+        """
         self.offset_x = offset_x
         self.offset_y = offset_y
         self.shooter = shooter
         self.flip = self.shooter.flip  # flip particle depending on shooter's flip
-        self.rect.x = self.shooter.rect.x + self.offset_x * (-1 if self.flip == 'x' else 1)
+        self.rect.x = self.shooter.rect.x + self.offset_x * (-1 if self.flip["x"] else 1)
         self.rect.y = self.shooter.rect.y + self.offset_y
 
         super().__init__(self.rect.x, self.rect.y, spritesheet, animation_setup)
@@ -730,7 +739,7 @@ class Shot(spyg.AnimatedSprite):
         self.hit_something = False
 
         self.type = spyg.Sprite.get_type("particle")
-        self.collision_mask = spyg.Sprite.get_type("default") | spyg.Sprite.get_type("friendly")
+        self.collision_mask = spyg.Sprite.get_type("default,friendly")
 
         self.frame = 0
         self.vx = -self.vx if self.flip == 'x' else self.vx
@@ -780,14 +789,13 @@ class Arrow(Shot):
             "fly"    : {"frames": [0, 1, 2, 3], "rate": 1 / 10},
         }, shooter)
 
-        self.type = spyg.Sprite.get_type("particle") | spyg.Sprite.get_type("arrow")
+        self.type = spyg.Sprite.get_type("arrow,particle")
         # simple physics, no extra component needed for that
         self.ax = -10
         self.ay = 40
         self.vx = 300
         self.vy = -15
-        self.collision_mask = spyg.Sprite.get_type("default") | spyg.Sprite.get_type("enemy") | \
-                              spyg.Sprite.get_type("friendly")
+        self.collision_mask = spyg.Sprite.get_type("default,enemy,friendly")
 
 
 class Fireball(Shot):
@@ -803,24 +811,19 @@ class Fireball(Shot):
         }, shooter)
 
         self.vx = 200
-        self.type = spyg.Sprite.get_type("particle") | spyg.Sprite.get_type("fireball")
-        self.collision_mask = spyg.Sprite.get_type("default") | spyg.Sprite.get_type("friendly")
+        self.type = spyg.Sprite.get_type("particle,fireball")
+        self.collision_mask = spyg.Sprite.get_type("default,friendly")
         self.damage = 2  # a fireball causes more damage
 
 
-class FireSpitter(spyg.GameObject):
+class FireSpitter(spyg.Sprite):
     """
-    a fire spitter can spit fireballs that kill the Vikings
+    a FireSpitter can spit fireballs that kill the Vikings
     """
 
     def __init__(self, x, y):
-        surf = pygame.Surface(1, 1)
-        rect = surf.get_rect()
-        rect.x = x
-        rect.y = y
-        super().__init__(surf, rect)
-
-        # Q._whTileToPix(p, _TILE_SIZE); // normalize some values (width and height given in tile-units, not pixels)
+        # fixed static image (a tile inside the png image)
+        super().__init__(x, y, image="images/egpt.png", image_section=(20*16,16,16,16))
 
         self.frequency = 1 / 3  # shooting frequency (in 1/s)
         self.last_shot_fired = 0.0  # keep track of last shot fired
@@ -838,11 +841,11 @@ class FireSpitter(spyg.GameObject):
 
 
 class MovableRock(spyg.Sprite):
-    def __init__(self, x, y, image):
-        super().__init__(x, y, image)
+    def __init__(self, x, y):
+        super().__init__(x, y, image_file="images/movable_rock.png")
 
         self.type = spyg.Sprite.get_type("default")
-        self.collision_mask = spyg.Sprite.get_type("friendly") | spyg.Sprite.get_type("default") | spyg.Sprite.get_type("enemy")
+        self.collision_mask = spyg.Sprite.get_type("default,friendly,enemy")
 
         # add Physics (and thus Dockable) components to this Rock
         # - pre-tick: Physics (movement + collision resolution)
@@ -864,9 +867,160 @@ class MovableRock(spyg.Sprite):
         self.stage.shake_viewport(1, 10)
 
 
+class Scorpion(spyg.AnimatedSprite):
+    # recyclable SpriteSheets
+    sprite_sheet = None
+    shot_sprite_sheet = None
+
+    def __init__(self, x, y):
+        # init our recyclable SpriteSheets
+        if not self.sprite_sheet:
+            self.sprite_sheet = spyg.SpriteSheet("data/scorpion.tsx")
+            self.shot_sprite_sheet = spyg.SpriteSheet("data/scorpion_shot.tsx")
+
+        super().__init__(x, y, self.sprite_sheet, {
+            "default": "stand",
+            "stand": {"frames": [0], "loop": False, "flags": spyg.Animation.ANIM_PROHIBITS_STAND},
+            "get_hurt": {"frames": [0], "rate": 1/3, "loop": False, "next": "stand", "flags": spyg.Animation.ANIM_PARALYZES},
+            "run": {"frames": [0,1,2,1], "rate": 1/4},
+            "shoot": {"frames": [4], "next": "stand", "rate": 1/2, "flags": (spyg.Animation.ANIM_PROHIBITS_STAND | spyg.Animation.ANIM_PARALYZES)}
+        })
+
+        self.type = spyg.Sprite.get_type("enemy")
+        self.collision_mask = spyg.Sprite.get_type("default,friendly")
+
+        self.is_mad = False  # when mad, moves with twice the speed
+        self.is_mad_since = 0.0
+
+        # add our Components
+        ai_brain = spyg.AIBrain("brain")
+        self.cmp_brain = self.add_component(ai_brain)  # type: spyg.AIBrain
+
+        phys = spyg.PlatformerPhysics("physics")
+        phys.run_acceleration = 0  # don't accelerate (always move at max-speed)
+        self.cmp_physics = self.add_component(phys)  # type: spyg.PlatformerPhysics
+
+        # register and setup our events
+        self.on_event("hit.particle", self, "hit_particle", register=True)
+
+    def tick(self, game_loop):
+        dt = game_loop.dt
+
+        if self.is_mad_since > 0.0:
+            self.is_mad_since += dt
+            if self.is_mad_since > 5.0:
+                self.calm_down()
+
+        # shooting?
+        if self.cmp_brain.commands["fire"]:
+            self.play_animation("shoot")
+            shot = Shot(0, 0, self.shot_sprite_sheet, shooter=self, animation_setup={})
+            shot.vx = 80
+            shot.vy = -100
+            shot.ay = 140
+            self.stage.insert(shot)
+            # moving in x direction
+        elif self.cmp_physics.vx != 0:
+            self.check_running()
+        # not moving in x direction
+        # -> check whether we are allowed to play 'stand'
+        elif not self.cmp_animation.flags & spyg.Animation.ANIM_PROHIBITS_STAND:
+            self.play_animation("stand")
+
+    # is running (called if x-speed != 0)
+    def check_running(self):
+        if self.cmp_brain.commands["left"] != self.cmp_brain.commands["right"] and self.cmp_animation.animation != "run":
+            self.play_animation("run")
+
+    # hit a flying particle (shot, arrow, etc..)
+    def hit_particle(self, col):
+        # sliding away from particle
+        self.cmp_physics.vx = math.copysign(100, col.normal_x)
+        self.play_animation("get_hurt", 1)
+        self.get_mad()
+
+    def get_mad(self):
+        if not self.is_mad:
+            self.is_mad_since = 0.0
+            self.cmp_physics.vx_max *= 2
+            self.is_mad = True
+
+    def calm_down(self):
+        if self.is_mad:
+            self.cmp_physics.vx_max /= 2
+            self.is_mad = False
+
+
+class Dinosaur(spyg.AnimatedSprite):
+    sprite_sheet = None
+
+    def __init__(self, x, y):
+        if not self.sprite_sheet:
+            self.sprite_sheet = spyg.SpriteSheet("images/dinosaur.png")
+
+        super().__init__(x, y, self.sprite_sheet, {
+            "default": "stand",
+            "stand": { "frames": [4], "loop": False, "flags": spyg.Animation.ANIM_PROHIBITS_STAND },
+            "get_hurt": { "frames": [9,10], "rate": 1/2, "loop": False, "next": "stand", "flags": spyg.Animation.ANIM_PARALYZES },
+            "run": { "frames": [0,1,2,3], "rate": 1/4 },
+            "bite": { "frames": [4,5,6,7,8], "next": 'stand', "rate": 1/4, "flags": (spyg.Animation.ANIM_PROHIBITS_STAND | spyg.Animation.ANIM_PARALYZES) },
+            "die": { "frames": [], "rate": 1/4, "trigger": "die", "flags": (spyg.Animation.ANIM_PROHIBITS_STAND | spyg.Animation.ANIM_PARALYZES) },
+        })
+
+        self.type = spyg.Sprite.get_type("enemy")
+        self.collision_mask = spyg.Sprite.get_type("default,friendly")
+
+        self.cmp_brain = self.add_component(spyg.Brain("brain", ["left", "right", "attack"]))  # type: spyg.HumanPlayerBrain
+        phys = spyg.PlatformerPhysics("physics")
+        phys.vx_max = 50
+        phys.run_acceleration = 0
+        self.cmp_physics = self.add_component(phys)  # type: spyg.PlatformerPhysics
+
+        self.life_energy = 3  # 0 -> die
+        self.is_mad_since = 0  # when mad, moves with twice the speed
+        self.on_event("hit.particle", self, "hit_particle")
+
+    def tick(self, game_loop):
+        dt = game_loop.dt
+
+        # shooting?
+        if self.cmp_brain.commands["attack"]:
+            self.play_animation("bite")
+        # moving in x direction
+        elif self.cmp_physics.vx != 0:
+            self.check_running()
+        # not moving in x direction
+        # -> check whether we are allowed to play 'stand'
+        elif not self.cmp_animation.flags & spyg.Animation.ANIM_PROHIBITS_STAND:
+            self.play_animation("stand")
+
+    # is running (called if x-speed != 0)
+    def check_running(self):
+        if self.cmp_brain.commands["left"] != self.cmp_brain.commands["right"] and self.cmp_animation.animation != "run":
+            self.play_animation("run")
+
+    # hit a flying particle (shot, arrow, etc..)
+    def hit_particle(self, col):
+        # sliding away from particle
+        #p.vx = 100*(col.normalX > 0 ? 1 : -1)
+        #p.ax = -2*(col.normalX > 0 ? 1 : -1)
+        #TODO: implement a push in the physicsEngine
+        arrow = col.sprite2
+        if isinstance(arrow, Arrow) and not arrow.hit_something:
+            self.life_energy -= arrow.damage
+            if self.life_energy <= 0:
+                self.die()
+                return
+            self.play_animation("get_hurt", 1)
+
+    def die(self):
+        self.trigger_event("dead", self)
+        self.play_animation("die")
+        self.destroy()
+
 # main program
 if __name__ == "__main__":
-    level = "LLM0"
+    level = "EGPT"
     # create a spyg.Game object
     game = spyg.Game(screens_and_levels=[
         # a level definition ("WRBC: We are back!")
@@ -877,7 +1031,7 @@ if __name__ == "__main__":
         # add more of your levels here
         # { ... },
 
-        ], width=400,height=400,
+        ], width=400,height=250,
         # spyg.DEBUG_RENDER_SPRITES_BEFORE_COLLISION_DETECTION
         title="The Lost Vikings - Return of the Heroes :)") #, debug_flags=(spyg.DEBUG_DONT_RENDER_TILED_TILE_LAYERS | spyg.DEBUG_RENDER_COLLISION_TILES | spyg.DEBUG_RENDER_SPRITES_RECTS | spyg.DEBUG_RENDER_ACTIVE_COLLISION_TILES))
 
