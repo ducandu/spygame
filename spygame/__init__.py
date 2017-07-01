@@ -214,7 +214,7 @@ class State(EventObject):
         # trigger an event that the value changed
         if trigger_event:
             old = self.dict[key] if key in self.dict else None
-            self.trigger_event("changed." + key, value, old)
+            self.trigger_event("changed." + key, value)
         # set to new value
         self.dict[key] = value
 
@@ -314,6 +314,9 @@ class GameObject(EventObject):
         self.id = GameObject.next_id
         GameObject.id_to_obj[self.id] = self
         GameObject.next_id += 1
+
+        # register events that need to trigger (later)
+        self.register_event("destroyed")
 
     def add_component(self, component):
         """
@@ -459,24 +462,24 @@ class SpriteSheet(object):
 class Sprite(GameObject, pygame.sprite.Sprite):
     """
     a Sprite can be added to a Stage; has a type and a collision mask for collision detection with other Sprites or TiledTileLayers also on the Stage
-    - Sprite objects inherit from pygame.sprite.Sprite, so a Sprite has an image and a position via rect
-    - each Sprite can have either a static image or hold a SpriteSheet object from which it can pull images for animation purposes; either way, the image
-    property is set that way
+    - Sprite objects inherit from pygame.sprite.Sprite, so a Sprite has an image and a position/collision rect via rect property (pygame.rect)
+    - each Sprite can have either a static image or hold a SpriteSheet object from which it can pull images for animation purposes; either way, the `image`
+    property holds the current image
+    - the image rect (property `image_rect`) can be different from the collision rect (property `rect`); usually one would want the collision rect to be
+    a little smaller than the actual image
     """
 
     # dict of Sprite types (by name) to bitmappable-int (1, 2, 4, 8, 16, etc..)
     # - this can be used to determine which Sprites collide with which other Sprites
     types = {
-        "none"          : 0x0,
-        "default"       : 0x1,
-        "default_ground": 0x2,
-        "default_wall"  : 0x4,
-        "particle"      : 0x8,
-        "friendly"      : 0x10,
-        "enemy"         : 0x20,
-        "character"     : 0x40,
-        "ui"            : 0x80,
-        "all"           : 0x100,
+        "none":             0x0,  # e.g. background Sprites (e.g. waterfalls)
+        "dockable":         0x1,  # if other objects would like to dock to this Sprite
+        "default":          0x2,  # e.g. collision layers (should normally also be dockable)
+        "one_way_platform": 0x4,  # objects can only collide with this Sprite when coming from the top (also no x-collisions) (should normally also be dockable)
+        "particle":         0x8,  # e.g. an arrow/shot/etc..
+        "friendly":         0x10,
+        "enemy":            0x20,
+        "all":              0xffff,
     }
     next_type = 0x200
 
@@ -505,23 +508,32 @@ class Sprite(GameObject, pygame.sprite.Sprite):
         :param any **kwargs:
         - sprite_sheet: a ready SpriteSheet object to use (set initial image to first frame in the SpriteSheet)
         - image_file: use image_file (str) as a file name for a static image
-        - image_section: a tuple with 4 values: offset-x, offset-y, width, height defining a rect to use only a subsection of the given static image
-        - width_height: Tuple[int,int] -> empty image (no rendering) with a rect of the given width/height
+        - image_section (Tuple[int,int,int,int]): offset-x, offset-y, width, height defining a rect to use only a subsection of the given static image
+        - width_height (Tuple[int,int]): the dimensions of the collision rect; if not given, we'll try to derive the collision rect from
+        the given image/spritesheet
+        - image_rect: a pygame.Rect defining the x/y offset and width/height of the Sprite's image with respect to the Sprite's rect (collision)
+        e.g. if the image is 32x32 but the collision rect should only be 16x32 (slim), the width_height kwarg should be (16, 32) and the image_rect kwarg
+        should be pygame.Rect(-8, 0, 32, 32)
         """
         pygame.sprite.Sprite.__init__(self)
         GameObject.__init__(self)
 
         self.do_render = True
 
-        # with SpriteSheet
+        # determine the image of this Sprite, its collision rect, and its image-offset-rect (where with respect to the collision rect do we draw the image?)
+        # - with SpriteSheet
         if "sprite_sheet" in kwargs:
             sheet = kwargs["sprite_sheet"]
             assert isinstance(sheet, SpriteSheet), "ERROR: in Sprite's ctor: kwargs[`sprite_sheet`] must be of type `SpriteSheet`!"
             self.spritesheet = sheet
             # TODO: make it possible to create a Sprite from more than one tile (e.g. for a platform/elevator). Either in x-direction or y-direction or both
             self.image = sheet.tiles[0]
-            self.rect = pygame.Rect(x, y, self.spritesheet.tw, self.spritesheet.th)
-        # an image file -> fixed image -> store as Surface in self.image
+            width_height = kwargs.get("width_height", (self.spritesheet.tw, self.spritesheet.th))
+            self.rect = pygame.Rect(x, y, width_height[0], width_height[1])  # collision rect
+            self.image_rect = kwargs.get("image_rect", pygame.Rect(width_height[0] / 2 - self.spritesheet.tw / 2,
+                                                                   width_height[1] / 2 - self.spritesheet.th / 2,
+                                                                   self.spritesheet.tw, self.spritesheet.th))
+        # - an image file -> fixed image -> store as Surface in self.image
         elif "image_file" in kwargs:
             image = kwargs["image_file"]
             assert isinstance(image, str), "ERROR: in Sprite's ctor: kwargs[`image_file`] must be of type str!"
@@ -532,14 +544,17 @@ class Sprite(GameObject, pygame.sprite.Sprite):
                 assert isinstance(sec, tuple) and len(sec) == 4,\
                     "ERROR: in Sprite's ctor: kwargs[`image_section`] must be of type tuple and of len 4 (offset-x, offset-y, width, height)!"
                 self.image = pygame.Surface((sec[2], sec[3]))
-                self.image.blit(source, area=pygame.Rect(*sec))
+                self.image.blit(source, dest=(0, 0), area=pygame.Rect(*sec))
             else:
                 self.image = source
-            self.rect = self.image.get_rect()
-            # fix x/y (would be 0,0 otherwise)
-            self.rect.x = x
-            self.rect.y = y
-        # empty image of some size
+            self.image_rect = self.image.get_rect()
+            width_height = kwargs.get("width_height", (self.image_rect.width, self.image_rect.height))
+            self.rect = pygame.Rect(x, y, width_height[0], width_height[1])  # collision
+            # fix image x/y (would be 0,0 otherwise)
+            self.image_rect = kwargs.get("image_rect", pygame.Rect(width_height[0] / 2 - self.image_rect.width / 2,
+                                                                   width_height[1] / 2 - self.image_rect.height / 2,
+                                                                   self.image_rect.width, self.image_rect.height))
+        # - empty image plus a collision rect of some size
         elif "width_height" in kwargs:
             width_height = kwargs["width_height"]
             assert isinstance(width_height, tuple) and len(width_height) == 2,\
@@ -547,16 +562,18 @@ class Sprite(GameObject, pygame.sprite.Sprite):
             self.spritesheet = None
             self.image = None
             self.rect = pygame.Rect(x, y, width_height[0], width_height[1])
+            self.image_rect = pygame.Rect(0, 0, width_height[0], width_height[1])
             self.do_render = True if DEBUG_FLAGS & DEBUG_RENDER_SPRITES_RECTS else False
-        # tiny-size rect (no image)
+        # - tiny-size rect (no image)
         else:
             self.spritesheet = None
             self.image = None
             self.rect = pygame.Rect(x, y, 1, 1)
+            self.image_rect = pygame.Rect(0, 0, 1, 1)
             self.do_render = True if DEBUG_FLAGS & DEBUG_RENDER_SPRITES_RECTS else False
 
         # GameObject specific stuff
-        self.type = Sprite.get_type("default")  # specifies the type of the GameObject (can be used e.g. for collision detection)
+        self.type = Sprite.get_type("default")  # specifies the type of the Sprite (can be used e.g. for collision detection)
         self.handles_own_collisions = False  # set to True if this object takes care of its own collision handling
         self.collision_mask = Sprite.get_type("default")  # set the bits here that we would like to collide with (all other types will be ignored)
 
@@ -585,14 +602,21 @@ class Sprite(GameObject, pygame.sprite.Sprite):
         #
         #    return False
 
-        if not absolute:
-            self.rect.x += x
-            self.rect.y += y
-        else:
+
+        # absolute coordinates given
+        if absolute:
             if x is not None:
                 self.rect.x = x
             if y is not None:
                 self.rect.y = y
+        # do a minimum of 1 pix (if larger 0.0)
+        else:
+            if 0 < x < 1:
+                x = 1
+            self.rect.x += x
+            if 0 < y < 1:
+                y = 1
+            self.rect.y += y
 
         # TODO: move the obj_to_follow into collide of stage (stage knows its borders best, then we don't need to define xmax/xmin, etc.. anymore)
         # TODO: maybe we could even build a default collision-frame around every stage when inserting the collision layer
@@ -630,10 +654,11 @@ class Sprite(GameObject, pygame.sprite.Sprite):
         :param Display display: the Display object to render on (Display has a pygame.Surface, on which we blit our image)
         """
         if self.image:
-            display.surface.blit(self.image, (self.rect.x - display.offsets[0], self.rect.y - display.offsets[1]))
+            display.surface.blit(self.image, (self.rect.x + self.image_rect.x - display.offsets[0], self.rect.y + self.image_rect.y - display.offsets[1]))
         if DEBUG_FLAGS & DEBUG_RENDER_SPRITES_RECTS:
-            pygame.draw.rect(display.surface, DEBUG_RENDER_SPRITES_RECTS_COLOR, \
-                             pygame.Rect((self.rect.x - display.offsets[0], self.rect.y - display.offsets[1]), (self.rect.w, self.rect.h)), 1)
+            pygame.draw.rect(display.surface, DEBUG_RENDER_SPRITES_RECTS_COLOR,
+                             pygame.Rect((self.rect.x - display.offsets[0], self.rect.y - display.offsets[1]),
+                                         (self.rect.w, self.rect.h)), 1)
 
 
 class Repeater(Sprite):
@@ -721,11 +746,11 @@ class Ladder(Sprite):
         super().__init__(x, y, width_height=(width, height))
 
         # collision types
-        self.type = Sprite.get_type("ladder,one_way_platform")
+        self.type = Sprite.get_type("ladder,dockable,one_way_platform")
         self.collision_mask = 0  # do not do any collisions
 
         # important to be able to start the 'top-of-ladder' animation sequence for agents that climb up the ladder
-        self.almost_top = self.rect.top + 12
+        #self.almost_top = self.rect.top + 12
 
 
 class AnimatedSprite(Sprite):
@@ -740,7 +765,7 @@ class AnimatedSprite(Sprite):
             be spritesheet.name)
     """
 
-    def __init__(self, x, y, sprite_sheet, animation_setup):
+    def __init__(self, x, y, sprite_sheet, animation_setup, **kwargs):
         """
         :param int x: the initial x position of the AnimatedSprite
         :param int y: the initial y position of the AnimatedSprite
@@ -749,7 +774,7 @@ class AnimatedSprite(Sprite):
         """
         assert isinstance(sprite_sheet, SpriteSheet), "ERROR: AnimatedSprite needs a SpriteSheet in its c'tor!"
 
-        super().__init__(x, y, sprite_sheet=sprite_sheet)  # assign the image/rect for the Sprite
+        super().__init__(x, y, sprite_sheet=sprite_sheet, **kwargs)
         self.cmp_animation = self.add_component(Animation("animation"))
 
         Animation.register_settings(sprite_sheet.name, animation_setup, register_events_on=self)
@@ -1200,9 +1225,9 @@ class Stage(GameObject):
         obj.collision_mask = collision_mask
 
         # collide with all matching tile layers
-        for tile_layer in self.tiled_layers.values():
-            if obj.collision_mask & tile_layer.type:
-                col = tile_layer.collide(obj)
+        for tiled_tile_layer in self.tiled_tile_layers.values():
+            if obj.collision_mask & tiled_tile_layer.type:
+                col = tiled_tile_layer.collide_simple_with_sprite(obj, self.options["physics_collision_detector"])
                 # don't solve -> just return
                 if col:
                     return col
@@ -1262,7 +1287,7 @@ class Stage(GameObject):
 
         # add the (already created) sprite-group to this stage under the name of the layer
         assert tiled_object_group.name not in self.sprite_groups, \
-            "ERROR: trying to add a TiledObjectGroup to a Stage, but the Stage already has a spritegroup with the name of that layer ({})". \
+            "ERROR: trying to add a TiledObjectGroup to a Stage, but the Stage already has a sprite_group with the name of that layer ({})". \
                 format(tiled_object_group.name)
         self.sprite_groups[tiled_object_group.name] = tiled_object_group.sprite_group
 
@@ -1374,10 +1399,10 @@ class Stage(GameObject):
             # if this game_object completely handles its own collisions within its tick -> ignore it
             if not sprite.handles_own_collisions and sprite.collision_mask > 0:
                 # collide with all matching tile layers
-                for tile_layer in self.tiled_layers.values():
+                for tiled_tile_layer in self.tiled_tile_layers.values():
                     # only collide, if one of the types of the layer matches one of the bits in the Sprite's collision_mask
-                    if sprite.collision_mask & tile_layer.type:
-                        col = tile_layer.collide(sprite)
+                    if sprite.collision_mask & tiled_tile_layer.type:
+                        col = tiled_tile_layer.collide_simple_with_sprite(sprite, self.options["physics_collision_detector"])
                         if col:
                             sprite.trigger_event("collision", col)
 
@@ -1617,6 +1642,55 @@ class TiledTileLayer(TmxLayer):
                                           w * self.pytmx_tiled_map.tilewidth, h * self.pytmx_tiled_map.tileheight))
         return ladders
 
+    def get_overlapping_tiles(self, sprite):
+        """
+        returns the tile boundaries (which tiles does the sprite overlap with?)
+        :param Sprite sprite: the sprite to test against
+        :return: a tuple of (start-x. end-x, start-y, end-y) tile-coordinates to consider as overlapping with the given Sprite
+        :rtype: tuple
+        """
+        tile_start_x = min(max(0, sprite.rect.left // self.pytmx_tiled_map.tilewidth), self.pytmx_tiled_map.width - 1)
+        tile_end_x = max(0, min(self.pytmx_tiled_map.width - 1, (sprite.rect.right - 1) // self.pytmx_tiled_map.tilewidth))
+        tile_start_y = min(max(0, sprite.rect.top // self.pytmx_tiled_map.tileheight), self.pytmx_tiled_map.height - 1)
+        tile_end_y = max(0, min(self.pytmx_tiled_map.height - 1, (sprite.rect.bottom - 1) // self.pytmx_tiled_map.tileheight))
+        return tile_start_x, tile_end_x, tile_start_y, tile_end_y
+
+    def collide_simple_with_sprite(self, sprite, collision_detector):
+        """
+        collides a Sprite (that only obeys simple physics rules) with a TiledTileLayer and solves all detected collisions
+        - the Sprite needs to have the properties vx and vy, which are interpreted as the Sprite's velocity
+        - ignores slopes
+
+        :param Sprite sprite: the Sprite to test for collisions against a TiledTileLayer
+        :param callable collision_detector: the collision detector method to use (this is set in the Sprite's Stage's options)
+        """
+        tile_start_x, tile_end_x, tile_start_y, tile_end_y = self.get_overlapping_tiles(sprite)
+
+        # require the Sprite to have a vx/vy (meaning handle its own physics)
+        if hasattr(sprite, "vx") and hasattr(sprite, "vy"):
+            if sprite.vx > sprite.vy:
+                xy = "x"
+                v = sprite.vx
+            else:
+                xy = "y"
+                v = sprite.vy
+        # if not, we assume 0.0 velocity
+        else:
+            xy = "y"
+            v = 0.0
+
+        # very simple algo: look through tile list (in no particular order) and return first tile that collides
+        # None if no colliding tile found
+        for tile_x in range(tile_start_x, tile_end_x + 1):
+            for tile_y in range(tile_start_y, tile_end_y + 1):
+                tile_sprite = self.tile_sprites[tile_x, tile_y]
+                if not tile_sprite:
+                    continue
+                col = collision_detector(sprite, tile_sprite, collision_objects=None,
+                                         direction=xy, direction_veloc=v, original_pos=(sprite.rect.x, sprite.rect.y))
+                if col:
+                    return col
+        return None
 
 class TileSprite(Sprite):
     """
@@ -1639,6 +1713,8 @@ class TileSprite(Sprite):
         self.tile_x = self.rect.x // self.pytmx_tiled_map.tilewidth
         self.tile_y = self.rect.y // self.pytmx_tiled_map.tileheight
         self.tile_props = tile_props
+        # add the `dockable` type to all tiles
+        self.type |= Sprite.get_type("dockable")
 
 
 class SlopedTileSprite(TileSprite):
@@ -1838,17 +1914,13 @@ class Brain(Component, metaclass=ABCMeta):
     - also has a main-switch to activate/deactivate the Brain
     - should implement `tick` method and set self.commands each tick
     """
-    def __init__(self, name, commands):
+    def __init__(self, name, commands=None):
         super().__init__(name)
 
         self.is_active = True  # main switch: if False, we don't do anything
+        if not commands:
+            commands = []
         self.commands = {command: False for command in commands}  # the commands coming from the brain (e.g. `jump`, `sword`, `attack`, etc..)
-
-        self.game_obj_cmp_anim = None  # our GameObject's Animation Component (if any); needed for animation flags
-
-    def added(self):
-        # search for an Animation component
-        self.game_obj_cmp_anim = self.game_object.components.get("animation")
 
     def reset(self):
         """
@@ -1882,25 +1954,62 @@ class Brain(Component, metaclass=ABCMeta):
 
 class KeyboardBrainTranslation(object):
     # key-to-command flags
-    NORMAL = 0x1  # normal: when key down -> command is True (this is essentially: DOWN_LEAVE_UP_LEAVE)
-    DOWN_ONE_TICK = 0x2  # when key down -> command is True for only one tick (after that, key needs to be released to fire another command)
-    DOWN_ONE_TICK_UP_ONE_TICK = 0x4  # when key down -> command is x for one frame; when key gets released -> command is y for one frame
-    DOWN_LEAVE_UP_ONE_TICK = 0x8  # when key down -> command is x (and stays x); when key gets released -> command is y for one frame
+    NORMAL = 0x0  # normal: when key down -> command is True (this is essentially: DOWN_LEAVE_UP_LEAVE)
+    DOWN_ONE_TICK = 0x1  # when key down -> command is True for only one tick (after that, key needs to be released to fire another command)
+    # DOWN_LEAVE = 0x2  # when key down -> command is x (and stays x as long as key is down)
+    UP_ONE_TICK = 0x2  # when key up -> command is y for one frame
 
-    def __init__(self, key, command, flags=0, other_command=None):
+    # can only execute command if an animation is currently not playing or just completed (e.g. swinging sword)
+    BLOCK_REPEAT_UNTIL_ANIM_COMPLETE = 0x4
+    # when key down -> command is x (and stays x); when key gets released -> command is y for one frame (BUT only after a certain animation has been completed)
+    BLOCK_OTHER_CMD_UNTIL_ANIM_COMPLETE = 0x8
+
+    # some flags needed to describe the state for the DOWN_LEAVE_UP_ONE_TICK_WAIT_FOR_ANIM type of key-command-translation
+    STATE_NONE = 0x0
+    STATE_CHARGING = 0x1  # we are currently charging after key-down (when fully charged, we are ready to execute upon other_command)
+    STATE_FULLY_CHARGED = 0x2  # if set, we are fully charged and we will execute other_command as soon as the key is released
+    STATE_CMD_RECEIVED = 0x4  # if set, the key for the other_command has already been released, but we are still waiting for the charging to be complete
+
+    def __init__(self, key, command, flags=0, other_command=None, animation_to_complete=None):
         """
         :param str key: the key's description, e.g. `up` for K_UP
         :param str command: the `main` command's description; can be any string e.g. `fire`, `jump`
         :param int flags: keyboard-command behavior flags
         :param str other_command: a possible second command associated with the key (when key is released, e.g. `release_bow`)
+        :param Union[list,str] animation_to_complete: animation(s) that needs to be completed in order for the other_command to be executable
         """
-        self.key = key  # the
+
+        self.key = key
         self.command = command
+
+        assert flags & (self.BLOCK_REPEAT_UNTIL_ANIM_COMPLETE | self.BLOCK_OTHER_CMD_UNTIL_ANIM_COMPLETE) == 0 or \
+            isinstance(animation_to_complete, str) or isinstance(animation_to_complete, set), "ERROR: animation_to_complete needs to be of type str or set!"
+
         self.flags = flags
         self.other_command = other_command
+        # this could be a set of anims (one of them has to be completed)
+        self.animation_to_complete = {animation_to_complete} if isinstance(animation_to_complete, str) else animation_to_complete
+        self.state_other_command = 0  # the current state for the other_command (charging, charged, cmd_received)
+
+        self.is_disabled = False  # set to True for temporarily blocking this translation
 
 
-class HumanPlayerBrain(Brain):
+class AnimationLinkedBrain(Brain, metaclass=ABCMeta):
+    """
+    a Brain that is linked to an Animation component and can thus subscribe to events triggered by that Component
+    """
+    def __init__(self, name, commands=None):
+        super().__init__(name, commands)
+        self.game_obj_cmp_anim = None  # our GameObject's Animation Component (if any); needed for animation flags
+
+    def added(self):
+        # search for an Animation component of our game_object
+        self.game_obj_cmp_anim = self.game_object.components.get("animation")
+        assert isinstance(self.game_obj_cmp_anim, Animation),\
+            "ERROR: {} needs its GameObject to also have a Component called `animation` that's of type Animation!".format(type(self).__name__)
+
+
+class HumanPlayerBrain(AnimationLinkedBrain):
     """
     a Brain child class that handles agent control (via the GameLoop´s keyboard registry)
     - supports special keyboard->command translations (e.g. key down -> command A for one tick; key up -> command B for one tick)
@@ -1911,8 +2020,10 @@ class HumanPlayerBrain(Brain):
         :param str name: the name of this component
         :param Union[list,None] key_brain_translations: list of KeyboardBrainTranslation objects or None
         """
-        # now that command list is ready -> send everything to super
-        super().__init__(name, [])
+        super().__init__(name)
+
+        # stores the values of the keyboard_inputs in the previous tick (to catch changes in the keyboard state)
+        self.keyboard_prev = {}
 
         # build our key_brain_translation dict to translate key inputs into commands
         if key_brain_translations is None:
@@ -1921,10 +2032,18 @@ class HumanPlayerBrain(Brain):
         self.key_brain_translations = {}
         self.add_translations(key_brain_translations)
 
-        self.keyboard_prev = {}  # stores the values of the keyboard_inputs in the previous tick (to catch changes in the keyboard state)
+        self.animation_prev = None
 
         self.is_paralyzed = False  # is this brain paralyzed? (e.g. when agent is dizzy)
-        self.paralyzed_exceptions = None  # keys that are still ok to be handled, even if paralyzed
+        self.paralyzes_exceptions = None  # keys that are still ok to be handled, even if paralyzed
+
+    def added(self):
+        super().added()
+        # subscribe to anim.ends events
+        self.game_obj_cmp_anim.on_event("anim.ends", self, "anim_ends", register=True)
+
+    def anim_ends(self, anim, anim_new):
+        pass
 
     def add_translations(self, key_brain_translations):
         """
@@ -1940,7 +2059,7 @@ class HumanPlayerBrain(Brain):
         # str: key = command
         elif isinstance(key_brain_translations, str):
             self.add_translations(KeyboardBrainTranslation(key_brain_translations, key_brain_translations))
-        # tuple: pass as positional args into c'tor (key,cmd,other_cmd,flags)
+        # tuple: pass as positional args into c'tor (key,cmd,flags,other_cmd,anim_to_be_completed)
         elif isinstance(key_brain_translations, tuple):
             self.add_translations(KeyboardBrainTranslation(*key_brain_translations))
         # dict: pass as kwargs into c'tor
@@ -1951,6 +2070,7 @@ class HumanPlayerBrain(Brain):
             assert key_brain_translations.key not in self.key_brain_translations, "ERROR: key {} already in key_brain_translations dict!". \
                 format(key_brain_translations.key)
             self.key_brain_translations[key_brain_translations.key] = key_brain_translations
+            self.keyboard_prev[key_brain_translations.key] = False  # create the entry for the key (for faster lookup later without [dict].get())
             self.commands[key_brain_translations.command] = False
             if key_brain_translations.other_command:
                 self.commands[key_brain_translations.other_command] = False
@@ -1965,6 +2085,16 @@ class HumanPlayerBrain(Brain):
         """
         self.key_brain_translations.pop(key, None)
 
+    def enable_translation(self, key):
+        trans = self.key_brain_translations.get(key)
+        if trans:
+            trans.is_disabled = False
+
+    def disable_translation(self, key):
+        trans = self.key_brain_translations.get(key)
+        if trans:
+            trans.is_disabled = True
+
     def tick(self, game_loop: GameLoop):
         """
         needs to be called by the GameObject at some point during the GameObject's `tick` method
@@ -1977,10 +2107,9 @@ class HumanPlayerBrain(Brain):
         if not self.is_active:
             return
 
-        # update current animation flags
-        if self.game_obj_cmp_anim:
-            self.is_paralyzed = bool(self.game_obj_cmp_anim.flags & Animation.ANIM_PARALYZES)
-            self.paralyzed_exceptions = self.game_obj_cmp_anim.paralyzed_exceptions
+        # support for `paralyzes` flag and `paralyzes_exceptions` is built into this class
+        self.is_paralyzed = bool(self.game_obj_cmp_anim.flags & Animation.get_flag("paralyzes"))
+        self.paralyzes_exceptions = self.game_obj_cmp_anim.properties.get("paralyzes_exceptions")
 
         # first reset everything to False
         self.reset()
@@ -1989,36 +2118,72 @@ class HumanPlayerBrain(Brain):
         for key_code, is_pressed in game_loop.keyboard_inputs.keyboard_registry.items():
             # look up the str description of the key
             desc = game_loop.keyboard_inputs.descriptions[key_code]
-            # not a known key to this Brain OR we are paralyzed and the key is not in the paralyzed-exception list
-            if desc not in self.key_brain_translations or (self.is_paralyzed and desc not in self.paralyzed_exceptions):
-                continue
             # look up the key-to-command translation rules
-            rule = self.key_brain_translations[desc]
+            trans = self.key_brain_translations.get(desc)  # type: KeyboardBrainTranslation
+            # not a known key to this Brain OR this translation is (temporarily) disabled
+            if not trans or trans.is_disabled or (self.is_paralyzed and (not self.paralyzes_exceptions or desc not in self.paralyzes_exceptions)):
+                continue
             # normal translation
-            if rule.flags == KeyboardBrainTranslation.NORMAL:
-                self.commands[rule.command] = is_pressed
+            if trans.flags == trans.NORMAL:
+                self.commands[trans.command] = is_pressed
             # key is currently down
             elif is_pressed:
                 # if we don't repeat the command -> check whether this press is new and only then set the command
-                if rule.flags & (KeyboardBrainTranslation.DOWN_ONE_TICK | KeyboardBrainTranslation.DOWN_ONE_TICK_UP_ONE_TICK):
-                    self.commands[rule.command] = (self.keyboard_prev[desc] is False)
-                    if rule.flags & KeyboardBrainTranslation.DOWN_ONE_TICK_UP_ONE_TICK:
-                        self.commands[rule.other_command] = False
+                if trans.flags & trans.DOWN_ONE_TICK:
+                    # key was previously up -> new press
+                    if self.keyboard_prev[desc] is False:
+                        # check for condition on the current anim (don't set command if a certain anim is currently playing)
+                        if (trans.flags & trans.BLOCK_REPEAT_UNTIL_ANIM_COMPLETE) == 0 or \
+                                self.game_obj_cmp_anim.animation not in trans.animation_to_complete:
+                            self.commands[trans.command] = True
+                # NORMAL: down -> leave command=True
                 else:
-                    self.commands[rule.command] = True
+                    self.commands[trans.command] = True
             # key is currently up
             else:
                 # we fire a single-tick other_command if the key has just been released
-                if rule.flags & KeyboardBrainTranslation.DOWN_ONE_TICK_UP_ONE_TICK:
-                    self.commands[rule.other_command] = (self.keyboard_prev[desc] is True)
-                else:
-                    self.commands[rule.command] = False
+                if trans.flags & trans.UP_ONE_TICK and self.keyboard_prev[desc] is True:
+                    # we have an anim condition on other_command
+                    if trans.flags & trans.BLOCK_OTHER_CMD_UNTIL_ANIM_COMPLETE:
+                        if trans.state_other_command & trans.STATE_FULLY_CHARGED:
+                            # fire command and reset all state flags
+                            self.commands[trans.other_command] = True
+                            trans.state_other_command = 0
+                        # set the STATE_CMD_RECEIVED flag and wait for the charging to be complete
+                        elif trans.state_other_command & trans.STATE_CHARGING:
+                            trans.state_other_command |= trans.STATE_CMD_RECEIVED
+                    # no anim condition
+                    else:
+                        self.commands[trans.other_command] = True
+                # if we are waiting for other_command to be charged -> check whether we have to keep the main command active (until charging is done)
+                elif trans.flags & trans.BLOCK_OTHER_CMD_UNTIL_ANIM_COMPLETE and trans.state_other_command & trans.STATE_CHARGING:
+                    self.commands[trans.command] = True
+
+            # check for other command dependency on animation and start charging (or reset state)
+            if trans.flags & trans.BLOCK_OTHER_CMD_UNTIL_ANIM_COMPLETE:
+                # we are currently charging (playing the animation)
+                if self.game_obj_cmp_anim.animation in trans.animation_to_complete:
+                    trans.state_other_command |= trans.STATE_CHARGING
+                    trans.state_other_command &= ~trans.STATE_FULLY_CHARGED
+                # we are just done with the animation -> set to fully charged
+                elif self.animation_prev in trans.animation_to_complete:
+                    # if we have already got the command -> fire it now
+                    if trans.state_other_command & trans.STATE_CMD_RECEIVED:
+                        self.commands[trans.command] = False
+                        self.commands[trans.other_command] = True
+                        trans.state_other_command = 0
+                    # otherwise, update the charging state and keep waiting for the key to be released
+                    else:
+                        trans.state_other_command |= trans.STATE_FULLY_CHARGED
+                        trans.state_other_command &= ~trans.STATE_CHARGING
 
             # update keyboard_prev dict
             self.keyboard_prev[desc] = is_pressed
+            # store previous animation
+            self.animation_prev = self.game_obj_cmp_anim.animation
 
 
-class AIBrain(Brain):
+class AIBrain(AnimationLinkedBrain):
     def __init__(self, name):
         super().__init__(name, ["left", "right"])
         self.flipped = False  # if True: character is turning left
@@ -2039,7 +2204,7 @@ class AIBrain(Brain):
 
         self.reset()
 
-        if self.cmp_animation and self.cmp_animation.flags & Animation.ANIM_PARALYZES:
+        if self.game_obj_cmp_anim and self.game_obj_cmp_anim.flags & Animation.get_flag("paralyzes"):
             return
 
         # look for edges ahead -> then change direction if one is detected
@@ -2049,13 +2214,13 @@ class AIBrain(Brain):
 
         self.commands["left" if self.flipped else "right"] = True
 
-    def toggle_direction(self):
-        self.flipped = False if self.flipped else True
+    def toggle_direction(self, *args):
+        self.flipped = self.flipped is False
 
     # checks whether there is a cliff ahead (returns true if yes)
     def check_cliff_ahead(self):
         obj = self.game_object
-        tile_h = obj.stage.screen.tmx_object.tile_h
+        tile_h = obj.stage.screen.tmx_obj.tileheight
         # check below character (c=character sprite, _=locateObject (a stripe with x=x width=w-6 and height=3))
         # ccc    -> walking direction
         # ccc
@@ -2080,16 +2245,32 @@ class Animation(Component):
     animation_settings = {}
 
     # some flags
-    # TODO: make these less Viking-dependent (implement similar 'type'-registry as for Sprites' collisions)
-    ANIM_NONE = 0x0
-    ANIM_SWING_SWORD = 0x1
-    ANIM_PARALYZES = 0x2
-    ANIM_PROHIBITS_STAND = 0x4  # anims that should never be overwritten by 'stand'(even though player might not x - move)
-    ANIM_BOW = 0x8
-    # if set: this animation does not change the Sprite's image depending on time, but they have to be set manually via the
-    # frame property of the Animation component (which gives the SpriteSheet's frame, not the anim_settings frame-slot)
-    ANIM_SET_FRAMES_MANUALLY = 0x10
+    animation_flags = {
+        "none":   0x0,
+        # if set: this animation does not change the Sprite's image depending on time, but they have to be set manually via the
+        # frame property of the Animation component (which gives the SpriteSheet's frame, not the anim_settings frame-slot)
+        "manual": 0x1,
+        "all":    0xffff,
+    }
+    next_flag = 0x2
 
+    @staticmethod
+    def get_flag(flags):
+        """
+        returns the bitmap code for an already existing Animation flag or for a new flag (the code will be created then)
+        - flags are usually used to tell a Brain Component or the character directly what effects the animation has
+
+        :param str flags: the flag(s) (comma-separated), whose code(s) should be returned
+        :return: the flag as an int; if many flags are given, returns a bitmask with all those bits set that represent the given flags
+        :rtype: int
+        """
+        ret = 0
+        for flag in flags.split(","):
+            if flag not in Animation.animation_flags:
+                Animation.animation_flags[flag] = Animation.next_flag
+                Animation.next_flag *= 2
+            ret |= Animation.animation_flags[flag]
+        return ret
 
     @staticmethod
     def register_settings(settings_name, settings, register_events_on=None):
@@ -2099,17 +2280,18 @@ class Animation(Component):
             for anim in settings:
                 if anim != "default":
                     defaults(settings[anim], {
-                        "rate"         : 1 / 3,  # the rate with which to play this animation in 1/s
-                        "frames"       : [0, 1],  # the frames to play from our spritesheet (starts with 0)
-                        "priority"     : -1,  # which priority to use for next if next is given
-                        "flags"        : Animation.ANIM_NONE,
+                        "rate":          1 / 3,  # the rate with which to play this animation in 1/s
+                        "frames":        [0, 1],  # the frames to play from our spritesheet (starts with 0)
+                        "priority":      0,  # which priority to use for next if next is given
                         # flags bitmap that determines the behavior of the animation (e.g. block controls during animation play, etc..)
-                        "loop"         : True,  # whether to loop the animation when done
-                        "next"         : None,  # which animation to play next (str or callable returning a str)
-                        "next_priority": -1,  # which priority to use for next if next is given
-                        "trigger"      : None,  # which events to trigger on the game_object that plays this animation
-                        "trigger_data" : None,  # data to pass to the event handler if trigger is given
-                        "paralyzed_exceptions" : set(),  # ??? can override DISABLE_MOVEMENT setting only for certain keys
+                        "flags":         0,
+                        "callbacks":     None,
+                        "loop":          True,  # whether to loop the animation when done
+                        "next":          None,  # which animation to play next (str or callable returning a str)
+                        "next_priority": 0,  # which priority to use for next if next is given
+                        "trigger":       None,  # which events to trigger on the game_object that plays this animation
+                        "trigger_data":  [],  # *args data to pass to the event handler if trigger is given
+                        "properties":    {},    # some custom properties of this anim
                     })
             Animation.animation_settings[settings_name] = settings
 
@@ -2123,7 +2305,7 @@ class Animation(Component):
             return None
         return Animation.animation_settings[spritesheet_name][anim_setting]
 
-    def __init__(self, name: str):
+    def __init__(self, name):
         super().__init__(name)
         self.animation = None  # str: we are playing this animation; None: we are undefined -> waiting for the next anim setup
         self.rate = 1 / 3  # default rate in s
@@ -2132,7 +2314,7 @@ class Animation(Component):
         self.frame = 0  # the current frame in the animation 'frames' list OR: if self.animation is None: this is the actual frame from the SpriteSheet
         self.time = 0  # the current time after starting the animation in s
         self.flags = 0
-        self.paralyzed_exceptions = set()  # set of key descriptors (e.g. "up", "down") for which an animation's paralyzed-flag does not count
+        self.properties = {}  # custome properties of this Animation object
         self.blink_rate = 3.0
         self.blink_duration = 0
         self.blink_time = 0
@@ -2143,7 +2325,7 @@ class Animation(Component):
         assert isinstance(self.game_object, Sprite), "ERROR: Component Animation can only be added to a Sprite object!"
 
         # tell our GameObject that we might trigger some "anim..." events on it
-        self.game_object.register_event("anim", "anim_frame", "anim_loop", "anim_end")
+        self.game_object.register_event("anim.start", "anim.frame", "anim.loop", "anim.end")
 
         # extend some methods directly onto the GameObject
         self.extend(self.play_animation)
@@ -2169,7 +2351,8 @@ class Animation(Component):
                 self.is_hidden = True if frame % 2 == 0 else False
 
         # animation stuff?
-        if self.animation and not self.flags & Animation.ANIM_SET_FRAMES_MANUALLY:
+        anim_settings = None
+        if self.animation and not self.flags & Animation.get_flag("manual"):
             anim_settings = Animation.get_settings(obj.spritesheet.name, self.animation)
             rate = anim_settings["rate"] or self.rate
             stepped = 0
@@ -2189,23 +2372,22 @@ class Animation(Component):
                     # this animation ends
                     if anim_settings["loop"] is False or anim_settings["next"]:
                         self.frame = len(anim_settings["frames"]) - 1
-                        obj.trigger_event("anim_end")
-                        obj.trigger_event("anim_end." + self.animation)
+                        obj.trigger_event("anim.end", self)
                         self.priority = -1
                         if anim_settings["trigger"]:
-                            obj.trigger_event(anim_settings["trigger"], anim_settings["trigger_data"])
+                            obj.trigger_event(anim_settings["trigger"], *anim_settings["trigger_data"])
                         # `next` could be a callable as well returning a str to use as animation setting
                         if anim_settings["next"]:
+                            #print("playing next animation {}\n".format(anim_settings["next"]))
                             self.play_animation(obj, (anim_settings["next"]() if callable(anim_settings["next"]) else anim_settings["next"]),
                                                 anim_settings["next_priority"])
                         return
                     # this animation loops
                     else:
-                        obj.trigger_event("anim_loop")
-                        obj.trigger_event("anim_loop." + self.animation)
+                        obj.trigger_event("anim.loop", self)
                         self.frame %= len(anim_settings["frames"])
 
-                obj.trigger_event("anim_frame")
+                obj.trigger_event("anim.frame", self)
 
         # assign the correct image to the `image` field of the GameObject (already correctly x/y-flipped)
         # hidden: no image
@@ -2222,13 +2404,13 @@ class Animation(Component):
             elif obj.flip["y"]:
                 tiles_dict = obj.spritesheet.tiles_flipped_y
             # manual animation -> frame in SpriteSheet directly set manually
-            if self.flags & Animation.ANIM_SET_FRAMES_MANUALLY:
+            if self.flags & Animation.get_flag("manual"):
                 obj.image = tiles_dict[int(self.frame)]
             # automatic animation: self.frame is the slot in the animation's frame list (not the SpriteSheet's!)
-            else:
+            elif anim_settings:
                 obj.image = tiles_dict[anim_settings["frames"][int(self.frame)]]
 
-    def play_animation(comp, game_object, name, priority=0):
+    def play_animation(self, game_object, name, priority=0):
         """
         plays an animation on our GameObject
 
@@ -2237,25 +2419,25 @@ class Animation(Component):
         :param str name: the name of the animation to play
         :param int priority: the priority with which to play this animation (if this method is called multiple times, it will pick the higher one)
         """
-        if name and name != comp.animation and priority >= comp.priority:
+        if name and name != self.animation:
             # look up animation in list
             anim_settings = Animation.get_settings(game_object.spritesheet.name, name)
             assert anim_settings, "ERROR: animation-to-play (`{}`) not found in spritesheet settings `{}`!".format(name, game_object.spritesheet.name)
 
-            comp.animation = name
-            comp.has_changed = True
-            comp.time = 0
-            comp.frame = 0  # start each animation from 0
-            comp.priority = priority
+            priority = priority or anim_settings["priority"]
+            if priority >= self.priority:
+                self.animation = name
+                self.has_changed = True
+                self.time = 0
+                self.frame = 0  # start each animation from 0
+                self.priority = priority
+                # set flags to sprite's properties
+                self.flags = anim_settings["flags"]
+                self.properties = anim_settings["properties"]
 
-            # set flags to sprite's properties
-            comp.flags = anim_settings["flags"]
-            comp.paralyzed_exceptions = anim_settings["paralyzed_exceptions"]
+                game_object.trigger_event("anim.start", self)
 
-            game_object.trigger_event("anim")
-            game_object.trigger_event("anim." + comp.animation)
-
-    def blink_animation(comp, game_object, rate=3.0, duration=3.0):
+    def blink_animation(self, game_object, rate=3.0, duration=3.0):
         """
         blinks the GameObject with the given parameters
 
@@ -2263,9 +2445,51 @@ class Animation(Component):
         :param float rate: the rate with which to blink (in 1/s)
         :param float duration: the duration of the blinking (in s); after the duration, the blinking stops
         """
-        comp.blink_rate = rate
-        comp.blink_duration = duration
-        comp.blink_time = 0
+        self.blink_rate = rate
+        self.blink_duration = duration
+        self.blink_time = 0
+
+
+class Elevator(Sprite):
+    """
+    a simple elevator class
+    """
+    def __init__(self, x, y, direction="y", initial_veloc=50, max_pos=500, min_pos=0):
+        super().__init__(x, y, image_file="images/elevator.png")
+        self.direction = direction
+        self.vx = initial_veloc if direction == "x" else 0.0
+        self.vy = initial_veloc if direction == "y" else 0.0
+        self.max_pos = max_pos
+        self.min_pos = min_pos
+
+        # add Dockable component
+        self.cmp_dockable = self.add_component(Dockable("dockable"))
+
+        # adjust the type
+        self.type |= Sprite.get_type("dockable,one_way_platform")
+        self.collision_mask = 0  # don't do any collisions for this elevator (only other Sprites vs Elevator)
+
+    def tick(self, game_loop):
+        """
+        moving elevator up and down OR left and right
+        """
+        dt = game_loop.dt
+
+        self.move(self.vx * dt, self.vy * dt)
+        if self.direction == "x":
+            if self.rect.x < self.min_pos:
+                self.vx = abs(self.vx)
+                self.move(self.min_pos, None, absolute=True)
+            elif self.rect.x > self.max_pos:
+                self.vx = -abs(self.vx)
+                self.move(self.max_pos, None, absolute=True)
+        else:
+            if self.rect.y < self.min_pos:
+                self.vy = abs(self.vy)
+                self.move(None, self.min_pos, absolute=True)
+            elif self.rect.y > self.max_pos:
+                self.vy = -abs(self.vy)
+                self.move(None, self.max_pos, absolute=True)
 
 
 class Dockable(Component):
@@ -2364,19 +2588,22 @@ class Dockable(Component):
     def dock_to(self, mother_ship):
         """
         a sprite lands on an elevator -> couple the elevator to the sprite so that when the elevator moves, the sprite moves along with it
-        - only possible to dock to "default" objects
+        - only possible to dock to `dockable`-type objects
 
         :param Sprite mother_ship: the Sprite to dock to (Sprite needs to have a dockable component)
         """
         prev = self.is_docked()
         obj = self.game_object
-        if mother_ship.type & Sprite.get_type("default"):
+        # can only dock to dockable-type objects
+        if mother_ship.type & Sprite.get_type("dockable"):
             self.docking_state = Dockable.DEFINITELY_DOCKED
             if prev:
                 self.docking_state |= Dockable.PREVIOUSLY_DOCKED
             self.docked_to = mother_ship
-            if hasattr(mother_ship, "docked_objects"):
-                mother_ship.docked_objects[obj.id] = self
+            # add docked obj to mothership docked-obj-list (if present)
+            if self.docked_to and "dockable" in self.docked_to.components:
+                #print("adding {} (id {}) to mothership {}".format(type(obj).__name__, obj.id, type(self.docked_to).__name__))
+                self.docked_to.components["dockable"].docked_sprites.add(obj)
 
     def undock(self):
         """
@@ -2389,8 +2616,8 @@ class Dockable(Component):
             self.docking_state |= Dockable.PREVIOUSLY_DOCKED
         # remove docked obj from mothership docked-obj-list (if present)
         if self.docked_to and "dockable" in self.docked_to.components:
-            print("removing {} (id {}) from mothership {}".format(type(obj).__name__, obj.id, type(self.docked_to).__name__))
-            self.docked_to.components["dockable"].docked_sprites.discard(obj.id)
+            #print("removing {} (id {}) from mothership {}".format(type(obj).__name__, obj.id, type(self.docked_to).__name__))
+            self.docked_to.components["dockable"].docked_sprites.discard(obj)
         self.docked_to = None
 
     def to_determine(self):
@@ -2456,10 +2683,8 @@ class PhysicsComponent(Component, metaclass=ABCMeta):
     # probably needs to be extended further by child classes
     def added(self):
         obj = self.game_object
-
         # handle collisions
         obj.on_event("collision", self, "collision", register=True)
-
         # flag the GameObject as "handles collisions itself"
         self.game_object.handles_own_collisions = True
 
@@ -2485,7 +2710,7 @@ class PhysicsComponent(Component, metaclass=ABCMeta):
 
 class ControlledPhysicsComponent(PhysicsComponent, metaclass=ABCMeta):
     """
-    when added to a GameObject, adds a HumanPlayerBrain Component automatically to the GameObject
+    when added to a GameObject, checks for an existing Brain Component and creates a property (self.game_obj_cmp_brain) for easy access
     """
     def __init__(self, name):
         super().__init__(name)
@@ -2494,8 +2719,9 @@ class ControlledPhysicsComponent(PhysicsComponent, metaclass=ABCMeta):
     def added(self):
         super().added()
         self.game_obj_cmp_brain = self.game_object.components.get("brain", None)
-        # if there is a 'brain' component in the GameObject it has to be of type HumanPlayerBrain
-        assert not self.game_obj_cmp_brain or isinstance(self.game_obj_cmp_brain, Brain), "ERROR: GameObject's `brain` Component is not of type Brain!"
+        # if there is a Component named `brain` in the GameObject it has to be of type Brain
+        assert not self.game_obj_cmp_brain or isinstance(self.game_obj_cmp_brain, Brain),\
+            "ERROR: {}'s `brain` Component is not of type Brain!".format(type(self.game_object).__name__)
 
 
 class TopDownPhysics(ControlledPhysicsComponent):
@@ -2504,7 +2730,7 @@ class TopDownPhysics(ControlledPhysicsComponent):
     - to be addable to any character (player or enemy)
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name):
         super().__init__(name)
         # velocities/physics stuff
         self.vx = 0
@@ -2533,14 +2759,14 @@ class TopDownPhysics(ControlledPhysicsComponent):
         obj.register_event("bump.top", "bump.bottom", "bump.left", "bump.right")  # we will trigger these as well -> register them
 
     # determines x/y-speeds and moves the GameObject
-    def tick(self, game_loop: GameLoop):
+    def tick(self, game_loop):
         """
         needs to be called by the GameObject at some point during the GameObject's `tick` method
 
         :param GameLoop game_loop: the currently playing GameLoop object
         """
         dt = game_loop.dt
-        dt_step = dt
+        # accelerations
         ax = 0
         ay = 0
         obj = self.game_object
@@ -2557,7 +2783,7 @@ class TopDownPhysics(ControlledPhysicsComponent):
                     if self.stops_abruptly_on_direction_change and self.vx > 0:
                         self.vx = 0  # stop first if still walking in other direction
                     ax = -self.run_acceleration  # accelerate left
-                    obj.flip['x'] = True  # mirror sprite
+                    obj.flip["x"] = True  # mirror sprite
                 # user presses both keys (left and right) -> just stop
                 else:
                     self.vx = 0
@@ -2566,7 +2792,7 @@ class TopDownPhysics(ControlledPhysicsComponent):
                 if self.stops_abruptly_on_direction_change and self.vx < 0:
                     self.vx = 0  # stop first if still walking in other direction
                 ax = self.run_acceleration  # accelerate right
-                obj.flip['x'] = False
+                obj.flip["x"] = False
             # stop immediately (vx=0; don't accelerate negatively)
             else:
                 self.vx = 0
@@ -2599,6 +2825,7 @@ class TopDownPhysics(ControlledPhysicsComponent):
 
         # TODO: check the entity's magnitude of vx and vy,
         # reduce the max dt_step if necessary to prevent skipping through objects.
+        dt_step = dt
         while dt_step > 0:
             dt = min(1 / 30, dt_step)
 
@@ -2656,26 +2883,19 @@ class TopDownPhysics(ControlledPhysicsComponent):
                 obj.stage.options["screen_obj"].trigger_event("reached_exit", obj)  # let the level know
                 return
 
-        # move away from the collision (back to where we were before)
+        # solve collision
         obj.rect.x += col.separate[0]
         obj.rect.y += col.separate[1]
 
-        # bottom collision
-        if col.normal_y < -0.3:
-            if self.vy > 0:
+        # top/bottom collisions
+        if abs(col.normal_y) > 0.3:
+            if self.vy * col.normal_y < 0:  # if normal_y < 0 -> vy is > 0 -> set to 0; if normal_x > 0 -> vy is < 0 -> set to 0
                 self.vy = 0
-            obj.trigger_event("bump.bottom", col)
-
-        # top collision
-        if col.normal_y > 0.3:
-            if self.vy < 0:
-                self.vy = 0
-            obj.trigger_event("bump.top", col)
+            obj.trigger_event("bump." + ("bottom" if col.normal_y < 0 else "top"), col)
 
         # left/right collisions
         if abs(col.normal_x) > 0.3:
-            # we hit a fixed wall
-            if self.vx * col.normal_x < 0:  # if normalX < 0 -> vx is > 0 -> set to 0; if normalX > 0 -> vx is < 0 -> set to 0
+            if self.vx * col.normal_x < 0:  # if normal_y < 0 -> vx is > 0 -> set to 0; if normal_y > 0 -> vx is < 0 -> set to 0
                 self.vx = 0
                 obj.trigger_event("bump." + ("right" if col.normal_x < 0 else "left"), col)
 
@@ -2761,8 +2981,8 @@ class PlatformerPhysics(ControlledPhysicsComponent):
         # self.touching = 0  # bitmap with those bits set that the entity is currently touching (colliding with)
         self.at_exit = False
         self.at_wall = False
-        self.on_ladder = 0  # 0 if GameObject is not locked into a ladder; y-pos of obj, if obj is currently locked into a ladder (in climbing position)
-        self.touched_ladder = None  # holds the ladder Sprite, if player is currently touching a ladder sprite, otherwise: 0
+        self.on_ladder = None  # None if GameObject is not locked into a ladder; Ladder obj if obj is currently locked into a ladder (in climbing position)
+        self.touched_ladder = None  # holds the ladder Sprite, if player is currently touching a Ladder (not locked in!), otherwise: None
         self.climb_frame_value = 0  # int([climb_frame_value]) determines the frame to use to display climbing position
 
         self.game_obj_cmp_dockable = None  # type: Dockable; the GameObject's Dockable component (that we will add to the GameObject ourselves)
@@ -2780,12 +3000,15 @@ class PlatformerPhysics(ControlledPhysicsComponent):
         # add default and ladder to the collision mask of our GameObject
         obj.collision_mask |= Sprite.get_type("default,ladder")
 
+        # register events that we may trigger directly on the game_object
+        obj.register_event("hit.particle", "hit.liquid_ground", "squeezed.top", "bump.top", "bump.bottom", "bump.left", "bump.right")
+
     def lock_ladder(self):
         """
         locks the GameObject into a ladder
         """
         obj = self.game_object
-        self.on_ladder = obj.rect.y
+        self.on_ladder = self.touched_ladder
         # switch off gravity
         self.gravity = False
         # lock obj to center of ladder (touched_ladder is always set to the one we are touching right now)
@@ -2796,8 +3019,9 @@ class PlatformerPhysics(ControlledPhysicsComponent):
         """
         frees the GameObject from a ladder
         """
-        self.on_ladder = 0
-        self.gravity = True
+        if self.on_ladder:
+            self.on_ladder = None
+            self.gravity = True
 
     def tick(self, game_loop: GameLoop):
         """
@@ -2825,8 +3049,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
                     obj.flip['x'] = True  # mirror other_sprite
 
                     # user is pressing left or right -> leave on_ladder state
-                    if self.on_ladder > 0:
-                        self.unlock_ladder()
+                    self.unlock_ladder()
                 # user presses both keys (left and right) -> just stop
                 else:
                     self.vx = 0
@@ -2839,8 +3062,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
                 obj.flip['x'] = False
 
                 # user is pressing left or right -> leave on_ladder state
-                if self.on_ladder > 0:
-                    self.unlock_ladder()
+                self.unlock_ladder()
             # stop immediately (vx=0; don't accelerate negatively)
             else:
                 # ax = 0; // already initalized to 0
@@ -2848,12 +3070,12 @@ class PlatformerPhysics(ControlledPhysicsComponent):
 
             # determine y speed
             # -----------------
-            if self.on_ladder > 0:
+            if self.on_ladder:
                 self.vy = 0
             # user is pressing 'up' (ladder?)
-            if self.game_obj_cmp_brain.commands["up"]:
+            if self.game_obj_cmp_brain.commands.get("up", False):
                 # obj is currently on ladder
-                if self.on_ladder > 0:
+                if self.on_ladder:
                     # reached the top of the ladder -> lock out of ladder
                     if obj.rect.bottom <= self.touched_ladder.rect.top:
                         self.unlock_ladder()
@@ -2863,8 +3085,8 @@ class PlatformerPhysics(ControlledPhysicsComponent):
                 elif self.touched_ladder and self.touched_ladder.rect.bottom >= obj.rect.bottom > self.touched_ladder.rect.top:
                     self.lock_ladder()
             # user is pressing only 'down' (ladder?)
-            elif self.game_obj_cmp_brain.commands["down"]:
-                if self.on_ladder > 0:
+            elif self.game_obj_cmp_brain.commands.get("down", False):
+                if self.on_ladder:
                     # we reached the bottom of the ladder -> lock out of ladder
                     if obj.rect.bottom >= self.touched_ladder.rect.bottom:
                         self.unlock_ladder()
@@ -2879,9 +3101,8 @@ class PlatformerPhysics(ControlledPhysicsComponent):
                 if not jump:
                     self.disable_jump = False
                 else:
-                    if (self.on_ladder > 0 or dockable.is_docked()) and not self.disable_jump:
-                        if self.on_ladder > 0:
-                            self.unlock_ladder()
+                    if (self.on_ladder or dockable.is_docked()) and not self.disable_jump:
+                        self.unlock_ladder()
                         self.vy = -self.jump_speed
                         dockable.undock()
                     self.disable_jump = True
@@ -2904,10 +3125,13 @@ class PlatformerPhysics(ControlledPhysicsComponent):
             if abs(self.vy) > self.max_fall_speed:
                 self.vy = math.copysign(self.max_fall_speed, self.vy)
 
+            #if type(obj).__name__ == "Baleog":
+            #    print("y={} vy={}".format(obj.rect.y, self.vy))
+
             # reset all touch flags before doing all the collision analysis
             if self.vx != 0.0 or self.vy != 0.0:
                 # self.slope_up_down = 0
-                if self.on_ladder == 0:
+                if self.on_ladder is None:
                     self.touched_ladder = None
                 self.at_wall = False
                 self.at_exit = False
@@ -2986,10 +3210,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
         :param Tuple[int,int] original_pos: the position of the sprite before the move that caused this collision test to be executed
         """
         # determine the tile boundaries (which tiles does the sprite overlap with?)
-        tile_start_x = max(0, sprite.rect.left // layer.pytmx_tiled_map.tilewidth)
-        tile_end_x = min(layer.pytmx_tiled_map.width - 1, (sprite.rect.right - 1) // layer.pytmx_tiled_map.tilewidth)
-        tile_start_y = max(0, sprite.rect.top // layer.pytmx_tiled_map.tileheight)
-        tile_end_y = min(layer.pytmx_tiled_map.height - 1, (sprite.rect.bottom - 1) // layer.pytmx_tiled_map.tileheight)
+        tile_start_x, tile_end_x, tile_start_y, tile_end_y = layer.get_overlapping_tiles(sprite)
 
         # if sprite is moving in +/-x-direction:
         # 1) move in columns from left to right (right to left) to look for full collision tiles
@@ -3105,7 +3326,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
                 obj.trigger_event("hit.particle", col)
                 # for particles, force the reciprocal collisions (otherwise, the character that got shot could be gone (dead) before any collisions on the
                 # particle could get triggered (-> e.g. arrow will fly through a dying enemy without ever actually touching the enemy))
-                other_obj.trigger_event("hit", obj)
+                other_obj.trigger_event("collision", col)
             return
 
         # colliding with a one-way-platform: can only collide when coming from the top
@@ -3116,21 +3337,28 @@ class PlatformerPhysics(ControlledPhysicsComponent):
                 # set touched_ladder to the ladder
                 self.touched_ladder = other_obj
                 # we are locked into a ladder
-                if self.on_ladder > 0:
+                if self.on_ladder:
                     return
-            # we are x-colliding with the one-way-platform OR y-colliding but not(!) with the top of the one-way-platform -> return
-            if col.direction == "x" or (col.direction_veloc > 0 and (col.original_pos[1] + obj.rect.height) > other_obj.rect.top):
+            # we are x-colliding with the one-way-platform OR y-colliding in up direction OR y-colliding in down direction but not(!)
+            # with the top of the one-way-platform -> ignore collision and return
+            if col.direction == "x" or col.direction_veloc < 0 or (col.original_pos[1] + obj.rect.height) > other_obj.rect.top:
                 return
 
         # a collision layer
         if isinstance(other_obj, TileSprite):
             tile_props = other_obj.tile_props
+            type_ = tile_props.get("type")
             # quicksand or water
-            if tile_props.get("liquid"):
-                obj.trigger_event("hit.liquid_ground", tile_props["liquid"])
+            if type_ in ["quicksand", "water"]:
+                # just on first collision: pull up a little again, then slowly sink in (no more gravity)
+                obj.collision_mask = 0
+                obj.rect.y += col.separate[1]
+                self.vy = 0.01
+                self.gravity = False
+                obj.trigger_event("hit.liquid_ground", type_)
                 return
             # colliding with an exit
-            elif tile_props.get("exit"):
+            elif type_ == "exit":
                 self.at_exit = True
                 obj.stage.screen.trigger_event("reached_exit", obj)  # let the level know
                 return
@@ -3210,111 +3438,28 @@ class PlatformerPhysics(ControlledPhysicsComponent):
         :param col: the Collision object (that caused the push) returned by the collision detector method
         """
 
-        pushee = col.sprite2  # correct? or does it need to be sprite1?
-        ## what if normal_x is 1/-1 BUT: impact_x is 0 (yes, this can happen!!)
-        ## for now: don't push, then
-        #if col.impact > 0:
-
+        pushee = col.sprite2  # the object being pushed
+        orig_x = pushee.rect.x
         pushee_phys = pushee.components["physics"]
+        # calculate the amount to move in x-direction based on vx_max and the collision-separation
         move_x = - col.separate[0] * abs(pushee_phys.vx_max / col.direction_veloc)
-
-        # console.log("pushing Object: move_x="+move_x);
-        # do a locate on the other side of the - already moved - pushable object
-        # var testcol = pusher.stage.locate(pushee_p.x+move_x+(pushee_p.cx+1)*(p.flip ==   'x' ? -1 : 1), pushee_p.y, (Q._SPRITE_DEFAULT | Q._SPRITE_FRIENDLY | Q._SPRITE_ENEMY));
-        # if (testcol && (! (testcol.tileprops && testcol.tileprops.slope))) {
-        #	p.vx = 0; // don't move player, don't move pushable object
-        # }
-        # else {
-        # move obj (plus all its docked objects) and move pusher along
-
-        # TODO: if there is an obstacle on the other side of the pushee (e.g. a wall),
-        # the pushee's collision detection method will trigger a collision event, in which case the pushee will
-        # be moved back in which case
-
+        # adjust x-speed based on vx_max
+        self.vx = math.copysign(pushee_phys.vx_max, col.direction_veloc)
 
         # first move rock, then do a x-collision detection of the rock, then fix that collision (if any) -> only then move the pusher
         pushee.move(move_x, 0)
-        pusher.move(move_x, 0)
-        self.vx = math.copysign(pushee_phys.vx_max, col.direction_veloc)
+        # TODO: be careful not to overwrite the col object that's currently still being used by this method's caller
+        # right now it's being overridden by the below call -> it's not a problem yet because this collision object is only used further via the normal_x
+        # property, which should stay the same
+        self.collide_in_one_direction(pushee, "x", self.vx, (orig_x, pushee.rect.y))
+        # re-align pusher with edge of pushee
+        if self.vx < 0:
+            x_delta = pushee.rect.right - pusher.rect.left
+        else:
+            x_delta = pushee.rect.left - pusher.rect.right
+        # and we are done
+        pusher.move(x_delta, 0)
 
-        #else:
-        #    self.vx = 0
-
-    """OBSOLETE:
-    @staticmethod
-    def tile_layer_physics_collision_postprocessor(col):
-        ""
-        this postprocessor takes a detected collision and does slope checks on it
-        - it them stores the results in the given PlatformerCollision object for further handling by the physics Component
-
-        :param PlatformerCollision col: the collision object detected by the Layer
-        :return: a post-processed collision object (adds slope-related calculations to the Collision object)
-        :rtype: PlatformerCollision
-        ""
-
-        assert col.direction in ["x", "y"], "ERROR: col.direction must be either 'x' or 'y'!"
-
-        sprite = col.sprite1  # this must have a dockable
-        assert "dockable" in sprite.components and isinstance(sprite.components["dockable"], Dockable), \
-            "ERROR: cannot postprocess collision without the sprite having a Dockable Component!"
-        tile = col.sprite2  # this must be a TileSprite
-        assert isinstance(tile, TileSprite), "ERROR: sprite2 in PlatformerCollision passed to handler must be of type TileSprite (is actually of type {})!".\
-            format(type(tile).__name__)
-
-        # check for slopes
-        # approach similar to: Rodrigo Monteiro (http://higherorderfun.com/blog/2012/05/20/the-guide-to-implementing-2d-platformers/)
-        # reset slope/collision flags
-        col.is_collided = True
-        col.slope = False
-        #col.slope_up_down = 0
-        col.slope_y_pull = 0  # amount of y that Sprite has to move up (negative) or down (positive)
-
-        # calculate y-pull based on pixels we are "in" the slope
-        slope = tile.tile_props.get("slope", 0)  # -3, -2, -1, 1, 2, 3: negative=down, positive=up (1==45 degree slope, 3=15 degree slope)
-        if slope != 0:
-            offset = tile.tile_props.get("offset", 1)  # 1=first tile of the slope (when walking uphill), 2=second tile of the slope (when walking uphill), etc
-            # calculate x-amount of intrusion by the sprite into the tile (this is always positive and between 0 and tile_w)
-            if col.direction == "x":
-                # moving up hill
-                if col.direction_veloc > 0.0 and slope > 0:
-                    x_in = sprite.rect.right - tile.rect.left
-                # moving up hill
-                elif col.direction_veloc < 0.0 and slope < 0:
-                    x_in = tile.rect.right - sprite.rect.left
-                # moving down hill
-                else:
-                    if col.direction_veloc > 0.0:
-                        x_in = tile.rect.right - sprite.rect.left
-                    else:
-                        x_in = sprite.rect.right - tile.rect.left
-            # y-direction (we are not moving left or right) -> calc x_in depending on up or down slope
-            else:
-                if slope > 0:
-                    x_in = sprite.rect.right - tile.rect.left
-                else:
-                    x_in = tile.rect.right - sprite.rect.left
-
-            # clamp x_in to tile_w
-            x_in = min(x_in, tile.tile_w)
-
-            # the wanted y-position for the bottom of the sprite (iff we are docked to the ground)
-            abs_slope = abs(slope)
-            y_grounded = tile.rect.bottom - ((1 / abs_slope) * x_in + ((offset - 1) / abs_slope) * tile.tile_h)
-            # print("tile.rect.bottom={} abs_slope={} x_in={} offset={} y_grounded={}".format(tile.rect.bottom, abs_slope, x_in, offset, y_grounded))
-            slope_y_pull = y_grounded - sprite.rect.bottom  # can be positive (pull towards slop surface) or negative (push from inside slope to slope surface)
-
-            # we are in the air -> only apply y-pull if the y-pull is negative (up push)
-            # - otherwise -> keep falling (no collision)
-            if not sprite.components["dockable"].is_docked() and slope_y_pull > 0:
-                col.is_collided = False  # this will cause the detected collision (with the tile rect) to be ignored for now
-            # we are on the slope (not falling or having fallen into the slope already) -> pull us up or down
-            else:
-                col.slope = slope
-                #col.slope_up_down = math.copysign(1, slope)
-                col.slope_y_pull = slope_y_pull
-
-        return col
-    """
 
 class Viewport(Component):
     """
@@ -3844,7 +3989,7 @@ class AABBCollision(CollisionAlgorithm):
         :return: the populated Collision object
         :rtype: Collision
         """
-        assert direction == 'x' or direction == 'y', "ERROR: parameter direction needs to be either 'x' or 'y'!"
+        assert direction == "x" or direction == "y", "ERROR: parameter direction needs to be either 'x' or 'y'!"
 
         # reset the recycled collision object
         collision_obj.is_collided = False
@@ -3859,7 +4004,7 @@ class AABBCollision(CollisionAlgorithm):
             collision_obj.sprite1 = o1
             collision_obj.sprite2 = o2
             collision_obj.is_collided = True
-            if direction == 'x':
+            if direction == "x":
                 if direction_veloc > 0:
                     collision_obj.distance = -(o1.rect.right - o2.rect.left)
                     collision_obj.normal_x = -1.0

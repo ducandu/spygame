@@ -84,4 +84,9 @@
    <property name="slope" type="float" value="-0.33333"/>
   </properties>
  </tile>
+ <tile id="43">
+  <properties>
+   <property name="type" value="quicksand"/>
+  </properties>
+ </tile>
 </tileset>
