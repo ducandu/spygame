@@ -27,6 +27,9 @@ import math
 
 
 class KeyLock(spyg.Sprite):
+    """
+    Test documentation
+    """
     def __init__(self, x, y, color="yellow"):
         super().__init__(x, y, image_file="images/generic.png", image_section=(2*16, 1*16, 16, 16))
         self.color = color
