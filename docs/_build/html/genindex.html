@@ -96,6 +96,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.AABBCollision">AABBCollision (class in spygame)</a>
 </li>
+      <li><a href="spygame.html#spygame.Brain.activate">activate() (spygame.Brain method)</a>
+</li>
       <li><a href="spygame.html#spygame.GameLoop.active_loop">active_loop (spygame.GameLoop attribute)</a>
 </li>
       <li><a href="spygame.html#spygame.Stage.active_stage">active_stage (spygame.Stage attribute)</a>
@@ -110,14 +112,22 @@
 </li>
       <li><a href="spygame.html#spygame.Stage.add_tiled_tile_layer">add_tiled_tile_layer() (spygame.Stage method)</a>
 </li>
-      <li><a href="spygame.html#spygame.Animation.added">added() (spygame.Animation method)</a>
+      <li><a href="spygame.html#spygame.HumanPlayerBrain.add_translations">add_translations() (spygame.HumanPlayerBrain method)</a>
+</li>
+      <li><a href="spygame.html#spygame.AIBrain.added">added() (spygame.AIBrain method)</a>
 
       <ul>
-        <li><a href="spygame.html#spygame.Brain.added">(spygame.HumanPlayerBrain method)</a>
+        <li><a href="spygame.html#spygame.Animation.added">(spygame.Animation method)</a>
+</li>
+        <li><a href="spygame.html#spygame.AnimationLinkedBrain.added">(spygame.AnimationLinkedBrain method)</a>
 </li>
         <li><a href="spygame.html#spygame.Component.added">(spygame.Component method)</a>
 </li>
+        <li><a href="spygame.html#spygame.ControlledPhysicsComponent.added">(spygame.ControlledPhysicsComponent method)</a>
+</li>
         <li><a href="spygame.html#spygame.Dockable.added">(spygame.Dockable method)</a>
+</li>
+        <li><a href="spygame.html#spygame.HumanPlayerBrain.added">(spygame.HumanPlayerBrain method)</a>
 </li>
         <li><a href="spygame.html#spygame.PhysicsComponent.added">(spygame.PhysicsComponent method)</a>
 </li>
@@ -130,21 +140,19 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="spygame.html#spygame.Animation.ANIM_BOW">ANIM_BOW (spygame.Animation attribute)</a>
+      <li><a href="spygame.html#spygame.AIBrain">AIBrain (class in spygame)</a>
 </li>
-      <li><a href="spygame.html#spygame.Animation.ANIM_DISABLES_CONTROL">ANIM_DISABLES_CONTROL (spygame.Animation attribute)</a>
-</li>
-      <li><a href="spygame.html#spygame.Animation.ANIM_NONE">ANIM_NONE (spygame.Animation attribute)</a>
-</li>
-      <li><a href="spygame.html#spygame.Animation.ANIM_PROHIBITS_STAND">ANIM_PROHIBITS_STAND (spygame.Animation attribute)</a>
-</li>
-      <li><a href="spygame.html#spygame.Animation.ANIM_SWING_SWORD">ANIM_SWING_SWORD (spygame.Animation attribute)</a>
+      <li><a href="spygame.html#spygame.HumanPlayerBrain.anim_ends">anim_ends() (spygame.HumanPlayerBrain method)</a>
 </li>
       <li><a href="spygame.html#spygame.AnimatedSprite">AnimatedSprite (class in spygame)</a>
 </li>
       <li><a href="spygame.html#spygame.Animation">Animation (class in spygame)</a>
 </li>
+      <li><a href="spygame.html#spygame.Animation.animation_flags">animation_flags (spygame.Animation attribute)</a>
+</li>
       <li><a href="spygame.html#spygame.Animation.animation_settings">animation_settings (spygame.Animation attribute)</a>
+</li>
+      <li><a href="spygame.html#spygame.AnimationLinkedBrain">AnimationLinkedBrain (class in spygame)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -154,9 +162,15 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.Animation.blink_animation">blink_animation() (spygame.Animation method)</a>
 </li>
+      <li><a href="spygame.html#spygame.KeyboardBrainTranslation.BLOCK_OTHER_CMD_UNTIL_ANIM_COMPLETE">BLOCK_OTHER_CMD_UNTIL_ANIM_COMPLETE (spygame.KeyboardBrainTranslation attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="spygame.html#spygame.Brain">HumanPlayerBrain (class in spygame)</a>
+      <li><a href="spygame.html#spygame.KeyboardBrainTranslation.BLOCK_REPEAT_UNTIL_ANIM_COMPLETE">BLOCK_REPEAT_UNTIL_ANIM_COMPLETE (spygame.KeyboardBrainTranslation attribute)</a>
+</li>
+      <li><a href="spygame.html#spygame.Brain">Brain (class in spygame)</a>
+</li>
+      <li><a href="spygame.html#spygame.TiledTileLayer.build_sprite_surface">build_sprite_surface() (spygame.TiledTileLayer method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -166,11 +180,17 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.SATCollision.calculate_normal">calculate_normal() (spygame.SATCollision static method)</a>
 </li>
+      <li><a href="spygame.html#spygame.TiledTileLayer.capture_ladders">capture_ladders() (spygame.TiledTileLayer method)</a>
+</li>
       <li><a href="spygame.html#spygame.Viewport.center_on">center_on() (spygame.Viewport method)</a>
 </li>
       <li><a href="spygame.html#spygame.Viewport.center_on_xy_with_viewport">center_on_xy_with_viewport() (spygame.Viewport method)</a>
 </li>
       <li><a href="spygame.html#spygame.Display.change_dims">change_dims() (spygame.Display method)</a>
+</li>
+      <li><a href="spygame.html#spygame.AIBrain.check_cliff_ahead">check_cliff_ahead() (spygame.AIBrain method)</a>
+</li>
+      <li><a href="spygame.html#spygame.AIBrain.check_enemy_ahead">check_enemy_ahead() (spygame.AIBrain method)</a>
 </li>
       <li><a href="spygame.html#spygame.EventObject.check_event">check_event() (spygame.EventObject method)</a>
 </li>
@@ -185,11 +205,15 @@
 </li>
         <li><a href="spygame.html#spygame.SATCollision.collide">(spygame.SATCollision static method)</a>
 </li>
-        <li><a href="spygame.html#spygame.TiledTileLayer.collide">(spygame.TiledTileLayer method)</a>
-</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spygame.html#spygame.PlatformerPhysics.collide_in_one_direction">collide_in_one_direction() (spygame.PlatformerPhysics method)</a>
+</li>
+      <li><a href="spygame.html#spygame.TiledTileLayer.collide_simple_with_sprite">collide_simple_with_sprite() (spygame.TiledTileLayer method)</a>
+</li>
+      <li><a href="spygame.html#spygame.PlatformerPhysics.collide_with_collision_layer">collide_with_collision_layer() (spygame.PlatformerPhysics method)</a>
+</li>
       <li><a href="spygame.html#spygame.Collision">Collision (class in spygame)</a>
 </li>
       <li><a href="spygame.html#spygame.PhysicsComponent.collision">collision() (spygame.PhysicsComponent method)</a>
@@ -200,9 +224,15 @@
         <li><a href="spygame.html#spygame.TopDownPhysics.collision">(spygame.TopDownPhysics method)</a>
 </li>
       </ul></li>
+      <li><a href="spygame.html#spygame.PlatformerPhysics.collision_objects">collision_objects (spygame.PlatformerPhysics attribute)</a>
+</li>
       <li><a href="spygame.html#spygame.CollisionAlgorithm">CollisionAlgorithm (class in spygame)</a>
 </li>
       <li><a href="spygame.html#spygame.Component">Component (class in spygame)</a>
+</li>
+      <li><a href="spygame.html#spygame.ControlledPhysicsComponent">ControlledPhysicsComponent (class in spygame)</a>
+</li>
+      <li><a href="spygame.html#spygame.convert_type">convert_type() (in module spygame)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -210,6 +240,8 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spygame.html#spygame.Brain.deactivate">deactivate() (spygame.Brain method)</a>
+</li>
       <li><a href="spygame.html#spygame.EventObject.debind_events">debind_events() (spygame.EventObject method)</a>
 </li>
       <li><a href="spygame.html#spygame.Display.debug_refresh">debug_refresh() (spygame.Display method)</a>
@@ -252,12 +284,16 @@
       </ul></li>
       <li><a href="spygame.html#spygame.SATCollision.dot_product_against_normal">dot_product_against_normal() (spygame.SATCollision static method)</a>
 </li>
+      <li><a href="spygame.html#spygame.KeyboardBrainTranslation.DOWN_ONE_TICK">DOWN_ONE_TICK (spygame.KeyboardBrainTranslation attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spygame.html#spygame.Elevator">Elevator (class in spygame)</a>
+</li>
       <li><a href="spygame.html#spygame.EventObject">EventObject (class in spygame)</a>
 </li>
   </ul></td>
@@ -298,15 +334,23 @@
 </li>
       <li><a href="spygame.html#spygame.State.get">get() (spygame.State method)</a>
 </li>
+      <li><a href="spygame.html#spygame.Animation.get_flag">get_flag() (spygame.Animation static method)</a>
+</li>
+      <li><a href="spygame.html#spygame.PlatformerPhysics.get_highest_tile">get_highest_tile() (spygame.PlatformerPhysics static method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.Game.get_next_level">get_next_level() (spygame.Game method)</a>
+</li>
+      <li><a href="spygame.html#spygame.TiledTileLayer.get_overlapping_tiles">get_overlapping_tiles() (spygame.TiledTileLayer method)</a>
 </li>
       <li><a href="spygame.html#spygame.Animation.get_settings">get_settings() (spygame.Animation static method)</a>
 </li>
       <li><a href="spygame.html#spygame.Stage.get_stage">get_stage() (spygame.Stage static method)</a>
 </li>
       <li><a href="spygame.html#spygame.Sprite.get_type">get_type() (spygame.Sprite static method)</a>
+</li>
+      <li><a href="spygame.html#spygame.SlopedTileSprite.get_y">get_y() (spygame.SlopedTileSprite method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -315,6 +359,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.Stage.hide">hide() (spygame.Stage method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spygame.html#spygame.HumanPlayerBrain">HumanPlayerBrain (class in spygame)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -334,6 +382,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spygame.html#spygame.Collision.invert">invert() (spygame.Collision method)</a>
+</li>
       <li><a href="spygame.html#spygame.Stage.invoke">invoke() (spygame.Stage method)</a>
 </li>
       <li><a href="spygame.html#spygame.Dockable.is_docked">is_docked() (spygame.Dockable method)</a>
@@ -344,6 +394,10 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spygame.html#spygame.KeyboardBrainTranslation">KeyboardBrainTranslation (class in spygame)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.KeyboardInputs">KeyboardInputs (class in spygame)</a>
 </li>
   </ul></td>
@@ -352,15 +406,21 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spygame.html#spygame.Ladder">Ladder (class in spygame)</a>
+</li>
       <li><a href="spygame.html#spygame.Level">Level (class in spygame)</a>
 </li>
       <li><a href="spygame.html#spygame.Game.level_aborted">level_aborted() (spygame.Game method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.Game.level_lost">level_lost() (spygame.Game method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.Game.level_mastered">level_mastered() (spygame.Game method)</a>
+</li>
+      <li><a href="spygame.html#spygame.Stage.locate">locate() (spygame.Stage method)</a>
+</li>
+      <li><a href="spygame.html#spygame.Stage.locate_obj">locate_obj (spygame.Stage attribute)</a>
 </li>
       <li><a href="spygame.html#spygame.PlatformerPhysics.lock_ladder">lock_ladder() (spygame.PlatformerPhysics method)</a>
 </li>
@@ -390,11 +450,15 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spygame.html#spygame.Animation.next_flag">next_flag (spygame.Animation attribute)</a>
+</li>
       <li><a href="spygame.html#spygame.GameObject.next_id">next_id (spygame.GameObject attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.Sprite.next_type">next_type (spygame.Sprite attribute)</a>
+</li>
+      <li><a href="spygame.html#spygame.KeyboardBrainTranslation.NORMAL">NORMAL (spygame.KeyboardBrainTranslation attribute)</a>
 </li>
       <li><a href="spygame.html#spygame.SATCollision.normal">normal (spygame.SATCollision attribute)</a>
 </li>
@@ -464,8 +528,12 @@
 </li>
       <li><a href="spygame.html#spygame.Stage.remove_sprite">remove_sprite() (spygame.Stage method)</a>
 </li>
+      <li><a href="spygame.html#spygame.HumanPlayerBrain.remove_translation">remove_translation() (spygame.HumanPlayerBrain method)</a>
+</li>
       <li><a href="spygame.html#spygame.Component.removed">removed() (spygame.Component method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.Repeater.render">render() (spygame.Repeater method)</a>
 
       <ul>
@@ -473,20 +541,14 @@
 </li>
         <li><a href="spygame.html#spygame.Stage.render">(spygame.Stage method)</a>
 </li>
-        <li><a href="spygame.html#spygame.TiledObjectGroup.render">(spygame.TiledObjectGroup method)</a>
-</li>
         <li><a href="spygame.html#spygame.TiledTileLayer.render">(spygame.TiledTileLayer method)</a>
 </li>
-        <li><a href="spygame.html#spygame.TmxLayer.render">(spygame.TmxLayer method)</a>
-</li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.Stage.render_stages">render_stages() (spygame.Stage static method)</a>
 </li>
       <li><a href="spygame.html#spygame.Repeater">Repeater (class in spygame)</a>
 </li>
-      <li><a href="spygame.html#spygame.Brain.reset">reset() (spygame.HumanPlayerBrain method)</a>
+      <li><a href="spygame.html#spygame.Brain.reset">reset() (spygame.Brain method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -506,9 +568,15 @@
       </ul></li>
       <li><a href="spygame.html#spygame.State.set">set() (spygame.State method)</a>
 </li>
+      <li><a href="spygame.html#spygame.Viewport.shake_viewport">shake_viewport() (spygame.Viewport method)</a>
+</li>
       <li><a href="spygame.html#spygame.Stage.show">show() (spygame.Stage method)</a>
 </li>
       <li><a href="spygame.html#spygame.SimpleScreen">SimpleScreen (class in spygame)</a>
+</li>
+      <li><a href="spygame.html#spygame.SlopedTileSprite.sloped_xy_pull">sloped_xy_pull() (spygame.SlopedTileSprite method)</a>
+</li>
+      <li><a href="spygame.html#spygame.SlopedTileSprite">SlopedTileSprite (class in spygame)</a>
 </li>
       <li><a href="spygame.html#spygame.Viewport.soft_center_on">soft_center_on() (spygame.Viewport method)</a>
 </li>
@@ -516,10 +584,10 @@
 </li>
       <li><a href="spygame.html#spygame.Sprite">Sprite (class in spygame)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.SpriteSheet">SpriteSheet (class in spygame)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#module-spygame">spygame (module)</a>
 </li>
       <li><a href="spygame.html#spygame.Stage">Stage (class in spygame)</a>
@@ -534,6 +602,16 @@
 </li>
       <li><a href="spygame.html#spygame.State">State (class in spygame)</a>
 </li>
+      <li><a href="spygame.html#spygame.KeyboardBrainTranslation.STATE_CHARGING">STATE_CHARGING (spygame.KeyboardBrainTranslation attribute)</a>
+</li>
+      <li><a href="spygame.html#spygame.KeyboardBrainTranslation.STATE_CMD_RECEIVED">STATE_CMD_RECEIVED (spygame.KeyboardBrainTranslation attribute)</a>
+</li>
+      <li><a href="spygame.html#spygame.KeyboardBrainTranslation.STATE_FULLY_CHARGED">STATE_FULLY_CHARGED (spygame.KeyboardBrainTranslation attribute)</a>
+</li>
+      <li><a href="spygame.html#spygame.KeyboardBrainTranslation.STATE_NONE">STATE_NONE (spygame.KeyboardBrainTranslation attribute)</a>
+</li>
+      <li><a href="spygame.html#spygame.Dockable.state_unsure">state_unsure() (spygame.Dockable method)</a>
+</li>
       <li><a href="spygame.html#spygame.GameLoop.step">step() (spygame.GameLoop method)</a>
 </li>
       <li><a href="spygame.html#spygame.Stage.stop">stop() (spygame.Stage method)</a>
@@ -544,14 +622,20 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="spygame.html#spygame.Animation.tick">tick() (spygame.Animation method)</a>
+      <li><a href="spygame.html#spygame.AIBrain.tick">tick() (spygame.AIBrain method)</a>
 
       <ul>
-        <li><a href="spygame.html#spygame.Brain.tick">(spygame.HumanPlayerBrain method)</a>
+        <li><a href="spygame.html#spygame.Animation.tick">(spygame.Animation method)</a>
+</li>
+        <li><a href="spygame.html#spygame.Brain.tick">(spygame.Brain method)</a>
+</li>
+        <li><a href="spygame.html#spygame.Elevator.tick">(spygame.Elevator method)</a>
 </li>
         <li><a href="spygame.html#spygame.GameLoop.tick">(spygame.GameLoop method)</a>
 </li>
         <li><a href="spygame.html#spygame.GameObject.tick">(spygame.GameObject method)</a>
+</li>
+        <li><a href="spygame.html#spygame.HumanPlayerBrain.tick">(spygame.HumanPlayerBrain method)</a>
 </li>
         <li><a href="spygame.html#spygame.KeyboardInputs.tick">(spygame.KeyboardInputs method)</a>
 </li>
@@ -563,15 +647,13 @@
 </li>
         <li><a href="spygame.html#spygame.TopDownPhysics.tick">(spygame.TopDownPhysics method)</a>
 </li>
-      </ul></li>
-      <li><a href="spygame.html#spygame.PhysicsComponent.tile_layer_physics_collision_postprocessor">tile_layer_physics_collision_postprocessor() (spygame.PhysicsComponent static method)</a>
-
-      <ul>
-        <li><a href="spygame.html#spygame.PlatformerPhysics.tile_layer_physics_collision_postprocessor">(spygame.PlatformerPhysics static method)</a>
+        <li><a href="spygame.html#spygame.Viewport.tick">(spygame.Viewport method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spygame.html#spygame.PhysicsComponent.tile_sprite_handler">tile_sprite_handler() (spygame.PhysicsComponent static method)</a>
+</li>
       <li><a href="spygame.html#spygame.TiledObjectGroup">TiledObjectGroup (class in spygame)</a>
 </li>
       <li><a href="spygame.html#spygame.TiledTileLayer">TiledTileLayer (class in spygame)</a>
@@ -583,6 +665,8 @@
       <li><a href="spygame.html#spygame.Dockable.TO_BE_DETERMINED">TO_BE_DETERMINED (spygame.Dockable attribute)</a>
 </li>
       <li><a href="spygame.html#spygame.Dockable.to_determine">to_determine() (spygame.Dockable method)</a>
+</li>
+      <li><a href="spygame.html#spygame.AIBrain.toggle_direction">toggle_direction() (spygame.AIBrain method)</a>
 </li>
       <li><a href="spygame.html#spygame.TopDownPhysics">TopDownPhysics (class in spygame)</a>
 </li>
@@ -608,13 +692,15 @@
 </li>
       <li><a href="spygame.html#spygame.PlatformerPhysics.unlock_ladder">unlock_ladder() (spygame.PlatformerPhysics method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.Stage.unpause">unpause() (spygame.Stage method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spygame.html#spygame.EventObject.unregister_event">unregister_event() (spygame.EventObject method)</a>
 </li>
       <li><a href="spygame.html#spygame.EventObject.unregister_events">unregister_events() (spygame.EventObject method)</a>
+</li>
+      <li><a href="spygame.html#spygame.KeyboardBrainTranslation.UP_ONE_TICK">UP_ONE_TICK (spygame.KeyboardBrainTranslation attribute)</a>
 </li>
       <li><a href="spygame.html#spygame.KeyboardInputs.update_keys">update_keys() (spygame.KeyboardInputs method)</a>
 </li>

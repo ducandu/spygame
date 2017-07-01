@@ -10,6 +10,7 @@ Welcome to spygame's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   intro.rst
    spygame.rst
    modules.rst
    
