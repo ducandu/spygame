@@ -18,7 +18,7 @@ Get started
 -----------
 - write a simple game against the engine:
 
-.. code-block::
+.. highlight:: python
     :linenos:
 
     import spygame as spyg
