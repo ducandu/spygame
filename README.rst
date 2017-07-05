@@ -91,13 +91,14 @@ Level objects.
 Contribute to spygame
 ---------------------
 If you would like to contribute to the spygame library, the following items are currently open:
-* add audio/sound support
-* create more example games
-* create more "Lost Vikings" levels
-* create more physics components (apart from the existing top-down and platformer)
-* create support for GUI elements (label, buttons, tick-boxes, etc..). This is an open Pygame problem and should probably be solved on the Pygame level.
-* help out with integrating spygame into openAI-gym and openAI-rllab repos
+
+- add audio/sound support
+- create more example games
+- create more "Lost Vikings" levels
+- create more physics components (apart from the existing top-down and platformer)
+- create support for GUI elements (label, buttons, tick-boxes, etc..). This is an open Pygame problem and should probably be solved on the Pygame level.
+- help out with integrating spygame into openAI-gym and openAI-rllab repos
 
 .. image:: https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen1.png
     :alt: Lost Vikings - Sample spygame Level
-<br /><sub>All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)</sub>
+*All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)*
