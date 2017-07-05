@@ -18,8 +18,10 @@ Get started
 -----------
 - write a simple game against the engine:
 
-::
+.. highlight:: python
     :linenos:
+
+::
 
     import spygame as spyg
 
