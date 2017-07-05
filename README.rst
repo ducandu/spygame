@@ -20,43 +20,42 @@ Get started
 
 .. highlight:: python
     :linenos:
-import spygame as spyg
+    import spygame as spyg
 
 
-class MyAgent(spyg.Sprite):
-    def __init__(self, x, y):
-        super().__init__(x, y, sprite_sheet=spyg.SpriteSheet("data/erik.tsx"), tile=0)
+    class MyAgent(spyg.Sprite):
+        def __init__(self, x, y):
+            super().__init__(x, y, sprite_sheet=spyg.SpriteSheet("data/erik.tsx"), tile=0)
 
-        # some custom settings
-        self.handles_own_collisions = True  # our agent handles its own collisions (instead of letting the Stage do it for us)
-        # add a HumanPlayerBrain for keyboard input handling
-        self.cmp_brain = self.add_component(spyg.SimpleHumanBrain("brain", ["up", "down", "left", "right"]))
-        # add a physics component to physics handling (here we use: simple 2D top-down view and controls)
-        self.cmp_physics = self.add_component(spyg.TopDownPhysics("physics"))
+            # some custom settings
+            self.handles_own_collisions = True  # our agent handles its own collisions (instead of letting the Stage do it for us)
+            # add a HumanPlayerBrain for keyboard input handling
+            self.cmp_brain = self.add_component(spyg.SimpleHumanBrain("brain", ["up", "down", "left", "right"]))
+            # add a physics component to physics handling (here we use: simple 2D top-down view and controls)
+            self.cmp_physics = self.add_component(spyg.TopDownPhysics("physics"))
 
-    # plain spyg.Sprite objects do not implement the `tick` function, so nothing ever happens with them
-    # - we need to implement it here to add the pre-tick event (this will trigger the brain and physics components to act)
-    def tick(self, game_loop):
-        self.cmp_brain.tick(game_loop)
-        self.cmp_physics.tick(game_loop)
+        # plain spyg.Sprite objects do not implement the `tick` function, so nothing ever happens with them
+        # - we need to implement it here to add the pre-tick event (this will trigger the brain and physics components to act)
+        def tick(self, game_loop):
+            self.cmp_brain.tick(game_loop)
+            self.cmp_physics.tick(game_loop)
 
 
-if __name__ == "__main__":
-    # create a spyg.Game object
-    game = spyg.Game(screens_and_levels=[
-        # the only level
-        {
-            "class": spyg.Level, "name": "MAZE", "id": 1, # <- this will read the data/maze.tmx file for the level's layout and setup data
-        },
+    if __name__ == "__main__":
+        # create a spyg.Game object
+        game = spyg.Game(screens_and_levels=[
+            # the only level
+            {
+                "class": spyg.Level, "name": "MAZE", "id": 1, # <- this will read the data/maze.tmx file for the level's layout and setup data
+            },
 
-        # add more of your levels here
-        # { ... },
+            # add more of your levels here
+            # { ... },
 
-    ], title="The Maze Runner - An A-maze-ing Game :)")
+        ], title="The Maze Runner - An A-maze-ing Game :)")
 
-    # that's it, play one of the levels -> this will enter an endless game loop
-    game.levels_by_name["MAZE"].play()
-.. highlight::
+        # that's it, play one of the levels -> this will enter an endless game loop
+        game.levels_by_name["MAZE"].play()
 
 All you need in order to run this game is the above code in a directory, and the additional subdirectories data/ and images/, which can
 be found `here <www.github.com/sven1977/spygame/tree/master/examples/maze_runner>`_. These directories contain the necessary SpriteSheets,
