@@ -18,7 +18,8 @@ Get started
 -----------
 - write a simple game against the engine:
 
-```python
+.. highlight:: python
+    :linenos:
 import spygame as spyg
 
 
@@ -55,7 +56,7 @@ if __name__ == "__main__":
 
     # that's it, play one of the levels -> this will enter an endless game loop
     game.levels_by_name["MAZE"].play()
-```
+.. highlight::
 
 All you need in order to run this game is the above code in a directory, and the additional subdirectories data/ and images/, which can
 be found `here <www.github.com/sven1977/spygame/tree/master/examples/maze_runner>`_. These directories contain the necessary SpriteSheets,
