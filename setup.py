@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 import os
 
 
@@ -9,14 +9,18 @@ import os
 def read(file_name):
     return open(os.path.join(os.path.dirname(__file__), file_name)).read()
 
+_VERSION = '0.1.2'
+
 setup(
-    name='spygame',
-    version='0.1.0',
-    packages=['spygame'],
-    url='http://www.github.com/sven1977/spygame',
-    license='MIT',
-    author='Sven Mika',
-    author_email='sven.mika@ducandu.com',
-    description='2D game engine based on pygame and level-tmx files (fully openAI gym integrated)',
-    long_description=read('README.md')
+    name="spygame",
+    version=_VERSION,
+    packages=["spygame"],
+    url="http://www.github.com/sven1977/spygame",
+    download_url="https://www.github.com/sven1977/spygame/archive/spygame-"+_VERSION+".zip",
+    license="MIT",
+    author="Sven Mika",
+    author_email="sven.mika@ducandu.com",
+    description="2D game engine based on pygame and level-tmx files (soon to be: fully openAI gym integrated)",
+    long_description=read("README.rst"),
+    install_requires=["pygame", "pytmx", "numpy"]
 )

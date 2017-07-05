@@ -18,21 +18,21 @@ import spygame as spyg
 
 
 class MyAgent(spyg.Sprite):
-    def __init__(self, x, y, spritesheet):
-        super().__init__(x, y, spritesheet)
+    def __init__(self, x, y):
+        super().__init__(x, y, sprite_sheet=spyg.SpriteSheet("data/erik.tsx"), tile=0)
 
         # some custom settings
         self.handles_own_collisions = True  # our agent handles its own collisions (instead of letting the Stage do it for us)
         # add a HumanPlayerBrain for keyboard input handling
-        self.cmp_brain = self.add_component(spyg.HumanPlayerBrain("brain", ["up", "down", "left", "right"]))
+        self.cmp_brain = self.add_component(spyg.SimpleHumanBrain("brain", ["up", "down", "left", "right"]))
         # add a physics component to physics handling (here we use: simple 2D top-down view and controls)
         self.cmp_physics = self.add_component(spyg.TopDownPhysics("physics"))
 
     # plain spyg.Sprite objects do not implement the `tick` function, so nothing ever happens with them
     # - we need to implement it here to add the pre-tick event (this will trigger the brain and physics components to act)
     def tick(self, game_loop):
-        # tell our subscribers (e.g. Components) that we are ticking
-        self.trigger_event("pre_tick", game_loop)
+        self.cmp_brain.tick(game_loop)
+        self.cmp_physics.tick(game_loop)
 
 
 if __name__ == "__main__":
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     game = spyg.Game(screens_and_levels=[
         # the only level
         {
-            "class": spyg.Level, "id": 1, "name": "MAZE",  # <- this will read the data/maze.tmx file for the level's layout and setup data
+            "class": spyg.Level, "name": "MAZE", "id": 1, # <- this will read the data/maze.tmx file for the level's layout and setup data
         },
 
         # add more of your levels here
