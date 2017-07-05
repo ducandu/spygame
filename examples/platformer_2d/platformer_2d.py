@@ -15,7 +15,7 @@
 """
 
 import spygame as spyg
-import lost_vikings as vik
+import spygame.examples.vikings as vik
 
 
 # main program

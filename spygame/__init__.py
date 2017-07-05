@@ -613,7 +613,6 @@ class Sprite(GameObject, pygame.sprite.Sprite):
         #
         #    return False
 
-
         # absolute coordinates given
         if absolute:
             if x is not None:
@@ -628,23 +627,6 @@ class Sprite(GameObject, pygame.sprite.Sprite):
             if 0 < y < 1:
                 y = 1
             self.rect.y += y
-
-        # TODO: move the obj_to_follow into collide of stage (stage knows its borders best, then we don't need to define xmax/xmin, etc.. anymore)
-        # TODO: maybe we could even build a default collision-frame around every stage when inserting the collision layer
-        """
-        if sprite.rect.x < self.x_min:
-            sprite.rect.x = self.x_min
-            self.vx = 0
-        elif sprite.rect.x > self.x_max:
-            sprite.rect.x = self.x_max
-            self.vx = 0
-        if sprite.rect.y < self.y_min:
-            sprite.rect.y = self.y_min
-            self.vy = 0
-        elif sprite.rect.y > self.y_max:
-            sprite.rect.y = self.y_max
-            self.vy = 0
-        """
 
     # @override(GameObject)
     def destroy(self):
@@ -3199,8 +3181,8 @@ class PlatformerPhysics(ControlledPhysicsComponent):
         super().added()
 
         obj = self.game_object
-        self.x_max -= obj.rect.width
-        self.y_max -= obj.rect.height
+        # update our border values
+        obj.on_event("added_to_stage", self, "added_to_stage")
 
         # add the Dockable Component to our GameObject (we need it this for us to work properly)
         self.game_obj_cmp_dockable = obj.add_component(Dockable("dockable"))
@@ -3210,6 +3192,14 @@ class PlatformerPhysics(ControlledPhysicsComponent):
 
         # register events that we may trigger directly on the game_object
         obj.register_event("hit.particle", "hit.liquid_ground", "squeezed.top", "bump.top", "bump.bottom", "bump.left", "bump.right")
+
+    def added_to_stage(self, stage):
+        """
+        updates our max-x/y values based on the Stage that our GameObject was added to
+        :param Stage stage: the Stage object that our GameObject was just added to
+        """
+        self.x_max = stage.screen.width - self.game_object.rect.width
+        self.y_max = stage.screen.height - self.game_object.rect.height
 
     def lock_ladder(self):
         """

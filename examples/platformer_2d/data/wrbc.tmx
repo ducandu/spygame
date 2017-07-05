@@ -6937,13 +6937,13 @@
   </data>
  </layer>
  <objectgroup name="objects">
-  <object id="1" name="erik" type="lost_vikings.Erik" gid="1" x="896.333" y="240" width="32" height="32"/>
-  <object id="27" name="dino1" type="lost_vikings.Dinosaur" gid="3477" x="1375" y="272" width="32" height="32">
+  <object id="1" name="erik" type="spygame.examples.vikings.Erik" gid="1" x="896.333" y="240" width="32" height="32"/>
+  <object id="27" name="dino1" type="spygame.examples.vikings.Dinosaur" gid="3477" x="1375" y="272" width="32" height="32">
    <properties>
     <property name="color" value="white"/>
    </properties>
   </object>
-  <object id="28" name="dino2" type="lost_vikings.Dinosaur" gid="3477" x="480" y="336" width="32" height="32">
+  <object id="28" name="dino2" type="spygame.examples.vikings.Dinosaur" gid="3477" x="480" y="336" width="32" height="32">
    <properties>
     <property name="color" value="white"/>
    </properties>
