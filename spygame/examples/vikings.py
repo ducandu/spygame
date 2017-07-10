@@ -1,9 +1,10 @@
 """
  -------------------------------------------------------------------------
- spygame -
- lost_vikings
+ spygame - examples/lost_vikings
 
- !!TODO: add file description here!!
+ Lost Vikings extension for spygame.
+ This module contains classes like `Erik`, `Fireball`, etc.. that are
+ needed to recreate Lost Viking spygame.Level objects.
 
  created: 2017/07/03 in PyCharm
  (c) 2017 Sven - ducandu GmbH
@@ -13,9 +14,6 @@
 import spygame as spyg
 import random
 from abc import ABCMeta, abstractmethod
-
-import pygame
-import pygame.font
 
 import functools
 import math
@@ -233,11 +231,7 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
 
     # hit a flying particle (shot, arrow, etc..)
     def hit_particle(self, col):
-        # sliding away from arrow
-        # TODO: if we set the speed here, it will be overwritten (to 0) by step func in gamePhysics component
-        # we need to have something like an external force that will be applied on top of the player's/scorpion's own movements
-        # p.vx = 100*(col.normalX > 0 ? 1 : -1);
-        # p.gravityX = -2*(col.normalX > 0 ? 1 : -1);
+        self.cmp_physics.unlock_ladder()  # if we are on a ladder -> remove us from it
         self.play_animation("get_hurt", 1)
 
     # called when this object gets squeezed from top by a heavy object
@@ -564,6 +558,8 @@ class Olaf(Viking):
             else:
                 phys.max_fall_speed = self.max_fall_speed_shield_down
                 self.type &= ~(spyg.Sprite.get_type("dockable,one_way_platform"))
+                # undock all our currently docked objects (that are standing on top of us)
+                self.cmp_physics.game_obj_cmp_dockable.undock_all_docked_objects()
 
     def which_stand(self):
         return "stand_shield_up" if self.is_shield_up else "stand_shield_down"
@@ -874,12 +870,13 @@ class Arrow(Shot):
         }, shooter)
 
         self.type = spyg.Sprite.get_type("arrow,particle")
+        self.collision_mask = spyg.Sprite.get_type("default,enemy,friendly,coconut")
+
         # simple physics, no extra component needed for that
         self.ax = -10
         self.ay = 40
         self.vx = 300
         self.vy = -5
-        self.collision_mask = spyg.Sprite.get_type("default,enemy,friendly")
 
 
 class Fireball(Shot):
@@ -939,15 +936,15 @@ class Scorpion(spyg.AnimatedSprite):
             self.sprite_sheet = spyg.SpriteSheet("data/enemies.tsx")
 
         super().__init__(x, y, self.sprite_sheet, {
-            "default" : "stand",
-            "stand"   : {"frames": [72], "loop": False, "priority": 0},
+            "default":  "stand",
+            "stand":    {"frames": [72], "loop": False, "priority": 0},
             "get_hurt": {"frames": [72], "rate": 1 / 3, "loop": False, "next": "stand", "flags": spyg.Animation.get_flag("paralyzes"), "priority": 5},
-            "run"     : {"frames": [72, 73, 74, 75, 76], "rate": 1 / 4, "priority": 1},
-            "shoot"   : {"frames": [78, 79, 80, 81, 82, 83, 84], "next": "stand", "rate": 1 / 5, "flags": spyg.Animation.get_flag("paralyzes"), "priority": 2}
-        })
+            "run":      {"frames": [72, 73, 74, 75, 76], "rate": 1 / 4, "priority": 1},
+            "shoot":    {"frames": [78, 79, 80, 81, 82, 83, 84], "next": "stand", "rate": 1 / 5, "flags": spyg.Animation.get_flag("paralyzes"), "priority": 2}
+        }, anim_settings_name="scorpion")
 
         self.type = spyg.Sprite.get_type("enemy")
-        self.collision_mask = spyg.Sprite.get_type("default,friendly")
+        self.collision_mask = spyg.Sprite.get_type("default,friendly,particle")
 
         self.is_mad = False  # when mad, moves with twice the speed
         self.is_mad_since = 0.0
@@ -1031,18 +1028,18 @@ class Dinosaur(spyg.AnimatedSprite):
         self.frame_offset = 0 if self.color == "blue" else 24 if self.color == "red" else 12
 
         super().__init__(x, y, self.sprite_sheet, {
-            "default" : "stand",
-            "stand"   : {"frames": [4 + self.frame_offset], "loop": False, "priority": 0},
+            "default":  "stand",
+            "stand":    {"frames": [4 + self.frame_offset], "loop": False, "priority": 0},
             "get_hurt": {"frames": [9 + self.frame_offset, 10 + self.frame_offset], "rate": 1 / 2, "loop": False,
-                         "next"  : "stand", "flags": spyg.Animation.get_flag("paralyzes")},
-            "run"     : {"frames": [0 + self.frame_offset, 1 + self.frame_offset, 2 + self.frame_offset, 3 + self.frame_offset], "rate": 1 / 4},
-            "bite"    : {"frames": [4 + self.frame_offset, 5 + self.frame_offset, 6 + self.frame_offset, 7 + self.frame_offset, 8 + self.frame_offset],
-                         "next"  : "stand", "rate": 1 / 4},
-            "die"     : {"frames": [], "rate": 1 / 4, "trigger": "die", "flags": spyg.Animation.get_flag("paralyzes")},
-        }, width_height=(24, 32))
+                         "next": "stand", "flags": spyg.Animation.get_flag("paralyzes")},
+            "run":      {"frames": [0 + self.frame_offset, 1 + self.frame_offset, 2 + self.frame_offset, 3 + self.frame_offset], "rate": 1 / 4},
+            "bite":     {"frames": [4 + self.frame_offset, 5 + self.frame_offset, 6 + self.frame_offset, 7 + self.frame_offset, 8 + self.frame_offset],
+                         "next": "stand", "rate": 1 / 4},
+            "die":      {"frames": [], "rate": 1 / 4, "trigger": "die", "flags": spyg.Animation.get_flag("paralyzes")},
+        }, width_height=(24, 32), anim_settings_name="dinosaur")
 
         self.type = spyg.Sprite.get_type("enemy")
-        self.collision_mask = spyg.Sprite.get_type("default,friendly")
+        self.collision_mask = spyg.Sprite.get_type("default,friendly,particle")
 
         # TODO: give all Sprites a `touching` list of Sprite's of type
 
@@ -1084,12 +1081,12 @@ class Dinosaur(spyg.AnimatedSprite):
         if self.cmp_brain.commands["left"] != self.cmp_brain.commands["right"] and self.cmp_animation.animation != "run":
             self.play_animation("run")
 
-    # hit a flying particle (shot, arrow, etc..)
     def hit_particle(self, col):
-        # sliding away from particle
-        # p.vx = 100*(col.normalX > 0 ? 1 : -1)
-        # p.ax = -2*(col.normalX > 0 ? 1 : -1)
-        # TODO: implement a push in the physicsEngine
+        """
+        Called when hit by a particle type object.
+
+        :param Collision col: the Collision object describing the collision
+        """
         arrow = col.sprite2
         if isinstance(arrow, Arrow) and not arrow.hit_something:
             self.life_energy -= arrow.damage
@@ -1118,3 +1115,73 @@ class DinosaurBrain(spyg.AIBrain):
             self.toggle_direction()
 
 
+class Coconut(spyg.AnimatedSprite):
+    def __init__(self, x, y, **kwargs):
+        super().__init__(x, y, spyg.SpriteSheet("data/coconut.tsx"), {
+            "default": "stand",
+            "stand": {"frames": [0]},
+            "roll": {"frames": [0, 1, 2, 3], "rate": 1 / 5, "loop": True},
+        }, **kwargs)
+
+        self.type = spyg.Sprite.get_type("coconut")
+        # only react to arrows
+        self.collision_mask = spyg.Sprite.get_type("arrow")
+
+        self.start_location = (x, y)
+        self.is_damaged = False  # True if has been hit already once by an arrow
+        # simple state flags
+        self.is_falling = False
+        self.hit_ground = False
+        self.reached_end_position = False
+        # simple physics
+        self.vx = 0
+        self.vy = 0
+        # register and subscribe to collision events
+        self.on_event("collision", register=True)
+
+    def tick(self, game_loop):
+        dt = game_loop.dt
+
+        # we have already reached the end position: do nothing
+        if self.reached_end_position:
+            pass
+        # we already hit the ground
+        elif self.hit_ground:
+            pass
+        # we are still falling
+        elif self.is_falling:
+            self.vy += 10  # accelerate
+        else:
+            pass
+
+        self.rect.x += self.vx
+        self.rect.y += self.vy
+
+    def collision(self, col):
+        """
+        our collision resolver (triggered by the Stage)
+        :param Collision col: the Collision object describing the collision
+        """
+        other_obj = col.sprite2
+        # got hit by arrow
+        if isinstance(other_obj, Arrow):
+            # we are already damaged -> fall
+            if self.is_damaged:
+                self.is_falling = True
+            else:
+                self.is_damaged = True
+                self.shake()
+
+        # hit the ground -> stop falling and start rolling to side
+        if isinstance(other_obj, spyg.TileSprite):
+            self.collision_mask &= ~spyg.Sprite.get_type("arrow")
+            self.is_falling = False
+            self.hit_ground = True
+            self.vy = 0
+            self.vx = -10  # constant side-ways speed
+
+    def shake(self):
+        """
+        shakes the coconut for a while back and forth (after being hit by arrow)
+        """
+        self.shake_time = 2  # seconds

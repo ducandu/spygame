@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="30" height="30" tilewidth="16" tileheight="16" nextobjectid="4">
+ <properties>
+  <property name="keyboard_inputs" value="up,down,left,right,space"/>
+ </properties>
+ <tileset firstgid="1" source="generic.tsx"/>
+ <tileset firstgid="1601" source="movable_rock.tsx"/>
+ <tileset firstgid="1602" name="erik" tilewidth="32" tileheight="32" tilecount="162" columns="9">
+  <image source="../images/erik.png" width="294" height="599"/>
+ </tileset>
+ <tileset firstgid="1764" name="olaf" tilewidth="32" tileheight="32" tilecount="162" columns="9">
+  <image source="../images/olaf.png" width="294" height="592"/>
+ </tileset>
+ <layer name="collision" width="30" height="30">
+  <properties>
+   <property name="do_render" type="bool" value="false"/>
+   <property name="type" value="default"/>
+  </properties>
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,7,8,0,0,0,0,0,0,0,0,
+0,0,7,0,0,0,0,0,6,2,0,0,0,3,2,10,11,0,3,0,0,0,0,0,0,0,0,0,0,0,
+2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,2,2,2,2,2,2,2,2,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,6,7,8,10,11,0,0,0,0,0,0,0,0,0,3,12,13,14,0,0,
+0,0,0,0,0,2,2,2,2,2,0,0,0,0,0,2,2,2,2,2,2,2,2,2,0,0,0,0,2,2,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,2,9,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,
+0,0,0,0,4,5,10,11,0,0,0,0,6,7,8,12,13,14,0,0,0,0,0,3,0,0,0,0,0,0,
+2,2,2,2,0,0,0,0,2,2,2,2,0,0,0,0,0,0,2,2,2,2,2,0,0,2,2,2,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,9,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,3,9,0,0,3,2,9,0,0,0,3,0,0,0,0,9,0,4,5,2,0,0,3,9,3,9,0,0,
+2,2,0,0,2,2,0,0,0,2,2,2,0,0,0,0,0,0,2,0,0,0,2,2,0,0,0,0,2,2
+</data>
+ </layer>
+ <objectgroup name="objects">
+  <object id="1" name="erik" type="Erik" gid="1602" x="47" y="59" width="32" height="32">
+   <properties>
+    <property name="do_render" type="bool" value="true"/>
+    <property name="render_order" type="int" value="50"/>
+    <property name="tsx" value="erik"/>
+   </properties>
+  </object>
+  <object id="2" name="movable_rock" type="MovableRock" gid="1601" x="93" y="69" width="32" height="32">
+   <properties>
+    <property name="do_render" type="bool" value="true"/>
+    <property name="img" value="movable_rock"/>
+    <property name="render_order" type="int" value="49"/>
+   </properties>
+  </object>
+  <object id="3" name="olaf" type="Olaf" gid="1764" x="98" y="166" width="32" height="32">
+   <properties>
+    <property name="do_render" type="bool" value="true"/>
+    <property name="render_order" type="int" value="51"/>
+    <property name="tsx" value="olaf"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

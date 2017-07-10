@@ -1,6 +1,6 @@
-#######
-spygame
-#######
+########################
+Quick Setup Instructions
+########################
 
 .. image:: https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen2.png
     :alt: The Lost Vikings - Sample spygame Level
@@ -12,7 +12,8 @@ spygame
 
 Get the code
 ------------
-- Git the `spygame <www.github.com/sven1977/spygame>`_ code or do a `pip install spygame`
+- You may need a pygame version that matches your python version. E.g. for Windows 10 64bit + python3.6, you can download `pygame‑1.9.3‑cp36‑cp36m‑win_amd64.whl from here <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pygame>`_ and then do a ``pip install [path to downloaded wheel]``
+- Git the `spygame <www.github.com/sven1977/spygame>`_ code or do a ``pip install spygame``
 
 Get started
 -----------
@@ -20,7 +21,6 @@ Get started
 
 .. highlight:: python
     :linenos:
-
 ::
 
     import spygame as spyg
@@ -60,8 +60,9 @@ Get started
         # that's it, play one of the levels -> this will enter an endless game loop
         game.levels_by_name["MAZE"].play()
 
+
 All you need in order to run this game is the above code in a directory, and the additional subdirectories data/ and images/, which can
-be found `here <www.github.com/sven1977/spygame/tree/master/examples/maze_runner>`_. These directories contain the necessary SpriteSheets,
+be found `here <http://github.com/sven1977/spygame/tree/master/examples/maze_runner>`_. These directories contain the necessary SpriteSheets,
 level background images and level setup (collision layers, background images, position and class of the player, etc..).
 
 This should give you a level like this:
@@ -80,7 +81,7 @@ Next steps
 ----------
 
 If you would like to create more complex levels (or entire Games with many Screens and Levels), read the spygame documentation, in which we'll
-create a full-blown 2D platformer Level.
+create a full-blown 2D platformer Level (sorry, documentation is still very WIP!).
 
 AI (Reinforcement Learning) with spygame
 ----------------------------------------

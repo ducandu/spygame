@@ -7,10 +7,12 @@ Welcome to spygame's documentation!
 ===================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
+   readme_link.rst
    intro.rst
+   how_to_build_a_platformer.rst
    spygame.rst
    modules.rst
    

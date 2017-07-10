@@ -1,0 +1,4 @@
+- make Animation setting not dependent on SpriteSheet's name (some SpriteSheets contain many Anim settings , e.g. enemies.tsx)
+- include water, quicksand, waterfall, etc.. in the ladder-processing algo run on the background layer (if build_ladders=true)
+- create shootable coconuts that end up in the quicksand for Baleog to be able to cross
+- create key items that can be picked up by the Vikings

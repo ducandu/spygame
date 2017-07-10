@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 import os
 
 
@@ -9,12 +9,12 @@ import os
 def read(file_name):
     return open(os.path.join(os.path.dirname(__file__), file_name)).read()
 
-_VERSION = '0.1a5'
+_VERSION = '0.1a8'
 
 setup(
     name="spygame",
     version=_VERSION,
-    packages=["spygame"],
+    packages=find_packages(),
     url="http://www.github.com/sven1977/spygame",
     download_url="https://github.com/sven1977/spygame/archive/spygame-"+_VERSION+".zip",
     license="MIT",

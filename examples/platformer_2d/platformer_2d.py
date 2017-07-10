@@ -21,7 +21,7 @@ import spygame.examples.vikings as vik
 # main program
 if __name__ == "__main__":
 
-    level = "LLM0"  # make this match your tmx file (tmx-file's name in all upper case and without the .tmx extension)
+    level = "EGPT"  # make this match your tmx file (tmx-file's name in all upper case and without the .tmx extension)
 
     # create a spyg.Game object
     game = spyg.Game(screens_and_levels=[
