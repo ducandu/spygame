@@ -8,7 +8,7 @@ if "%SPHINXBUILD%" == "" (
 	set SPHINXBUILD=python -msphinx
 )
 set SOURCEDIR=.
-set BUILDDIR=_build
+set BUILDDIR=..
 set SPHINXPROJ=spygame
 
 if "%1" == "" goto help
@@ -33,4 +33,14 @@ goto end
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
 
 :end
+
+cd ..
+rmdir docs\_images /s /q
+rmdir docs\_static /s /q
+rmdir docs\_modules /s /q
+rmdir docs\_sources /s /q
+mv html/* docs/.
+rmdir html /s /q
+
 popd
+

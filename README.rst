@@ -1,11 +1,10 @@
-########################
 Quick Setup Instructions
-########################
+========================
 
-.. image:: https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen2.png
+.. figure:: https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen2.png
     :alt: The Lost Vikings - Sample spygame Level
 
-*All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)*
+    The Lost Vikings - Sample spygame Level - *All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)*
 
 
 Get the code
@@ -64,10 +63,10 @@ level background images and level setup (collision layers, background images, po
 
 This should give you a level like this:
 
-.. image:: https://raw.githubusercontent.com/sven1977/spygame/master/examples/maze_runner/screen1.png
+.. figure:: https://raw.githubusercontent.com/sven1977/spygame/master/examples/maze_runner/screen1.png
     :alt: The Maze Runner - An A-maze-ing Game :)
 
-*All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)*
+    The Maze Runner - An A-maze-ing Game :) - *All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)*
 
 You can now control the Agent via the four arrow keys (up, down, left, right).
 
@@ -77,8 +76,9 @@ Please only use these (in your own projects and repos) for demonstration purpose
 Next steps
 ----------
 
-If you would like to create more complex levels (or entire Games with many Screens and Levels), read the spygame documentation, in which we'll
-create a full-blown 2D platformer Level (sorry, documentation is still very WIP!).
+If you would like to create more complex levels (or entire Games with many Screens and Levels), read the
+`spygame documentation <https://sven1977.github.io/spygame/>`_, in which we'll create a full-blown 2D platformer Level
+(sorry, documentation is still very WIP!).
 
 AI (Reinforcement Learning) with spygame
 ----------------------------------------
@@ -97,9 +97,9 @@ If you would like to contribute to the spygame library, the following items are 
 - create support for GUI elements (label, buttons, tick-boxes, etc..). This is an open Pygame problem and should probably be solved on the Pygame level.
 - help out with integrating spygame into openAI-gym and openAI-rllab repos
 
-.. image:: https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen1.png
+.. figure:: https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen1.png
     :alt: Lost Vikings - Sample spygame Level
 
-*All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)*
+    Lost Vikings - Sample spygame Level - *All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)*
 
 

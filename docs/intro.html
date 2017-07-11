@@ -1,0 +1,156 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction to spygame &#8212; spygame 0.1a8 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1a8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="How to build a Platformer" href="how_to_build_a_platformer.html" />
+    <link rel="prev" title="Quick Setup Instructions" href="readme_link.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="how_to_build_a_platformer.html" title="How to build a Platformer"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="readme_link.html" title="Quick Setup Instructions"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">spygame 0.1a8 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction to spygame</a><ul>
+<li><a class="reference internal" href="#what-is-spygame">What is spygame?</a></li>
+<li><a class="reference internal" href="#main-features">Main Features</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="readme_link.html"
+                        title="previous chapter">Quick Setup Instructions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="how_to_build_a_platformer.html"
+                        title="next chapter">How to build a Platformer</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/intro.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="introduction-to-spygame">
+<h1>Introduction to spygame<a class="headerlink" href="#introduction-to-spygame" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="what-is-spygame">
+<h2>What is spygame?<a class="headerlink" href="#what-is-spygame" title="Permalink to this headline">¶</a></h2>
+<p>Spygame is a lightweight 2D game engine written in python3 using the pygame library. It’s purpose
+is to:</p>
+<ol class="arabic simple">
+<li>allow python enthusiasts to reverse engineer their favourite 2D classic games in python</li>
+<li>support recent AI developments via integration into the openAI toolbox (gym and rllab) and thus
+allow researchers to test their reinforcement learning algorithms on complex and “reward-sparse” environments.</li>
+<li>have fun developing new games and game genres using just python</li>
+</ol>
+</div>
+<div class="section" id="main-features">
+<h2>Main Features<a class="headerlink" href="#main-features" title="Permalink to this headline">¶</a></h2>
+<p>Spygame’s is very lightweight. It comes as a single python module that can be installed on your machine
+via a simple <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">spygame</span></code>.</p>
+<p>Spygame uses so called level-tmx files to allow developers to create complex game worlds using the open-source
+<a class="reference external" href="http://www.mapeditor.org">Tiled Editor</a>. You can build a rather complex level from scratch only needing a few
+background images and sprite-sheets as prerequisites.</p>
+<p>Spygame offers built-in complex platformer physics supporting the following features:
+- tiles with arbitrary slopes (including stairs options)
+- jumping
+- full support for ladders
+- pushable heavy objects
+- elevators and moving platforms that one can stand on
+- built-in game AIs (cliff- and character-detection mechanisms)</p>
+<p>Spygame comes with lots of fully playable example levels, mostly reverse-engineered from “The Lost Vikings” Game (c) 1992 Blizzard Entertainment Inc.</p>
+<p>WIP: Spygame will be fully integrated into the openAI gym and rllab toolsets. One of the core purposes of spygame is to run allow running
+reinforcement learning (AI) algorithms on different computer games in order to help the AI community to test and improve their algorithms.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="how_to_build_a_platformer.html" title="How to build a Platformer"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="readme_link.html" title="Quick Setup Instructions"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">spygame 0.1a8 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, ducandu GmbH.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>
