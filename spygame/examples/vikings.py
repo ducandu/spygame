@@ -1,15 +1,16 @@
-"""
- -------------------------------------------------------------------------
- spygame - examples/lost_vikings
+# --------------------------------------------------------------
+#
+#  spygame - examples/lost_vikings
+#
+# Lost Vikings extension for spygame.
+# This module contains classes like `Erik`, `Fireball`, etc.. that are
+# needed to recreate Lost Viking spygame.Level objects.
+#
+# created: 2017/07/03 in PyCharm
+# (c) 2017 Sven - ducandu GmbH
+#
+# --------------------------------------------------------------
 
- Lost Vikings extension for spygame.
- This module contains classes like `Erik`, `Fireball`, etc.. that are
- needed to recreate Lost Viking spygame.Level objects.
-
- created: 2017/07/03 in PyCharm
- (c) 2017 Sven - ducandu GmbH
- -------------------------------------------------------------------------
-"""
 
 import spygame as spyg
 import random

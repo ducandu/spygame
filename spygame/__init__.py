@@ -1,11 +1,11 @@
-"""
- -------------------------------------------------------------------------
- spygame (pygame based 2D game engine for the openAI gym)
- -------------------------------------------------------------------------
-
- created: 2017/04/04 in PyCharm
- (c) 2017 Sven Mika - ducandu GmbH
-"""
+# --------------------------------------------------------------
+#
+# spygame (pygame based 2D game engine for the openAI gym)
+#
+# created: 2017/04/04 in PyCharm
+# (c) 2017 Sven Mika - ducandu GmbH
+#
+# --------------------------------------------------------------
 
 from abc import ABCMeta, abstractmethod
 import xml.etree.ElementTree
@@ -21,8 +21,8 @@ import re
 import numpy as np
 import functools
 
-import examples
-
+VERSION_ = '0.1'
+RELEASE_ = '0.1a8'
 
 # some debug flags that we can set to switch on debug rendering, collision handling, etc..
 DEBUG_NONE = 0x0  # no debugging

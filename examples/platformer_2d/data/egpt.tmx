@@ -5232,7 +5232,7 @@
    <properties>
     <property name="direction" value="y"/>
     <property name="initial_veloc" type="int" value="-10"/>
-    <property name="max_pos" type="int" value="250"/>
+    <property name="max_pos" type="int" value="300"/>
     <property name="min_pos" type="int" value="50"/>
    </properties>
   </object>

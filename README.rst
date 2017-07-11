@@ -7,21 +7,18 @@ Quick Setup Instructions
 
 *All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)*
 
-2D game engine based on Pygame and level-tmx files
-++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Get the code
 ------------
 - You may need a pygame version that matches your python version. E.g. for Windows 10 64bit + python3.6, you can download `pygame‑1.9.3‑cp36‑cp36m‑win_amd64.whl from here <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pygame>`_ and then do a ``pip install [path to downloaded wheel]``
-- Git the `spygame <www.github.com/sven1977/spygame>`_ code or do a ``pip install spygame``
+- Git the `spygame <http://github.com/sven1977/spygame>`_ code or do a ``pip install spygame``
 
 Get started
 -----------
 - write a simple game against the engine:
 
-.. highlight:: python
+.. code-block:: python
     :linenos:
-::
 
     import spygame as spyg
 
@@ -102,4 +99,7 @@ If you would like to contribute to the spygame library, the following items are 
 
 .. image:: https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen1.png
     :alt: Lost Vikings - Sample spygame Level
+
 *All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)*
+
+

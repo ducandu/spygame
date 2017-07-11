@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 import os
+import spygame as spyg
 
 
 # Utility function to read the README file.
@@ -9,14 +10,12 @@ import os
 def read(file_name):
     return open(os.path.join(os.path.dirname(__file__), file_name)).read()
 
-_VERSION = '0.1a8'
-
 setup(
     name="spygame",
-    version=_VERSION,
+    version=spyg.RELEASE_,
     packages=find_packages(),
     url="http://www.github.com/sven1977/spygame",
-    download_url="https://github.com/sven1977/spygame/archive/spygame-"+_VERSION+".zip",
+    download_url="https://github.com/sven1977/spygame/archive/spygame-"+spyg.VERSION_+".zip",
     license="MIT",
     author="Sven Mika",
     author_email="sven.mika@ducandu.com",
