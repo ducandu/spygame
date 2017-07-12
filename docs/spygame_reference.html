@@ -327,6 +327,14 @@ of the SpriteSheet of the GameObject</li>
 </dd></dl>
 
 <dl class="class">
+<dt id="spygame.Autobuild">
+<em class="property">class </em><code class="descclassname">spygame.</code><code class="descname">Autobuild</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>w</em>, <em>h</em>, <em>tile_w</em>, <em>tile_h</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Autobuild"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Autobuild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Mix-in class to force x, y, width, height structure of ctors. All autobuild objects (objects that are built automatically by a TiledTileLayer with
+the property autobuild_objects=true) will have to abode to this ctor parameter structure.</p>
+</dd></dl>
+
+<dl class="class">
 <dt id="spygame.Brain">
 <em class="property">class </em><code class="descclassname">spygame.</code><code class="descname">Brain</code><span class="sig-paren">(</span><em>name=’brain’</em>, <em>commands=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Brain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Brain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#spygame.Component" title="spygame.Component"><code class="xref py py-class docutils literal"><span class="pre">spygame.Component</span></code></a></p>
@@ -787,7 +795,20 @@ Also keeps a Display object (and determines its size), which is used for renderi
 <dl class="method">
 <dt id="spygame.Game.get_next_level">
 <code class="descname">get_next_level</code><span class="sig-paren">(</span><em>level</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Game.get_next_level"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Game.get_next_level" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>returns the next level (if exists) as object; None if no next level</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>level</strong> (<a class="reference internal" href="#spygame.Level" title="spygame.Level"><em>Level</em></a>) – the Level, whose next Level we would like to get</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the next Level after level; None if no next Level exists</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Union[<a class="reference internal" href="#spygame.Level" title="spygame.Level">Level</a>,<a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)">None</a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="spygame.Game.instantiated">
@@ -797,17 +818,44 @@ Also keeps a Display object (and determines its size), which is used for renderi
 <dl class="method">
 <dt id="spygame.Game.level_aborted">
 <code class="descname">level_aborted</code><span class="sig-paren">(</span><em>level</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Game.level_aborted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Game.level_aborted" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>aborts the level and tries to play the “start” screen</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>level</strong> (<a class="reference internal" href="#spygame.Level" title="spygame.Level"><em>Level</em></a>) – the Level object that has been aborted</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="spygame.Game.level_lost">
 <code class="descname">level_lost</code><span class="sig-paren">(</span><em>level</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Game.level_lost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Game.level_lost" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>a level has been lost</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>level</strong> (<a class="reference internal" href="#spygame.Level" title="spygame.Level"><em>Level</em></a>) – the Level object in which the loss happened</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="spygame.Game.level_mastered">
 <code class="descname">level_mastered</code><span class="sig-paren">(</span><em>level</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Game.level_mastered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Game.level_mastered" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>a level has been successfully finished -&gt; play next one</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>level</strong> (<a class="reference internal" href="#spygame.Level" title="spygame.Level"><em>Level</em></a>) – the Level object that has been mastered</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
@@ -1124,8 +1172,8 @@ where desc is the lowercase string after <cite>pygame.K_</cite>… (e.g. ‘down
 
 <dl class="class">
 <dt id="spygame.Ladder">
-<em class="property">class </em><code class="descclassname">spygame.</code><code class="descname">Ladder</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>width=32</em>, <em>height=80</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Ladder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Ladder" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#spygame.Sprite" title="spygame.Sprite"><code class="xref py py-class docutils literal"><span class="pre">spygame.Sprite</span></code></a></p>
+<em class="property">class </em><code class="descclassname">spygame.</code><code class="descname">Ladder</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>w</em>, <em>h</em>, <em>tile_w</em>, <em>tile_h</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Ladder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Ladder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spygame.Sprite" title="spygame.Sprite"><code class="xref py py-class docutils literal"><span class="pre">spygame.Sprite</span></code></a>, <a class="reference internal" href="#spygame.Autobuild" title="spygame.Autobuild"><code class="xref py py-class docutils literal"><span class="pre">spygame.Autobuild</span></code></a></p>
 <p>A Ladder object that actors can climb on.
 One-way-platform type: one cannot fall through the top of the ladder but does not collide with the rest (e.g. from below) of the ladder.
 A Ladder object does not have an image and is thus not(!) being rendered; the image of the ladder has to be integrated into a rendered TiledTileLayer.
@@ -1166,6 +1214,13 @@ Child Level classes only need to do these three things: a) stage a screen, b) re
 </table>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="spygame.LiquidBody">
+<em class="property">class </em><code class="descclassname">spygame.</code><code class="descname">LiquidBody</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>w</em>, <em>h</em>, <em>tile_w</em>, <em>tile_h</em>, <em>description=’quicksand’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#LiquidBody"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.LiquidBody" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spygame.Sprite" title="spygame.Sprite"><code class="xref py py-class docutils literal"><span class="pre">spygame.Sprite</span></code></a>, <a class="reference internal" href="#spygame.Autobuild" title="spygame.Autobuild"><code class="xref py py-class docutils literal"><span class="pre">spygame.Autobuild</span></code></a></p>
+<p>A LiquidBody object (quicksand, water, etc..) that an actor will sink into and die. The AIBrain of enemies will avoid stepping into such an object.</p>
 </dd></dl>
 
 <dl class="class">
@@ -2160,18 +2215,18 @@ Implements <cite>render</cite>.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="spygame.TiledTileLayer.capture_ladders">
-<code class="descname">capture_ladders</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#TiledTileLayer.capture_ladders"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.TiledTileLayer.capture_ladders" title="Permalink to this definition">¶</a></dt>
-<dd><p>Captures all ladder objects in this layer and returns them in a list of Ladder objects.
-Once a ladder tile is found: searches neighboring tiles (starting to move right and down) for the same property and thus measures the ladder width
-and height (in tiles).</p>
+<dt id="spygame.TiledTileLayer.capture_autobuilds">
+<code class="descname">capture_autobuilds</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#TiledTileLayer.capture_autobuilds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.TiledTileLayer.capture_autobuilds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Captures all autobuild objects in this layer and returns them in a list of objects.
+Once an autobuild tile is found: searches neighboring tiles (starting to move right and down) for the same property and thus measures the object’s
+width and height (in tiles).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list of generated Ladder objects</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list of generated autobuild objects</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">List[<a class="reference internal" href="#spygame.Ladder" title="spygame.Ladder">Ladder</a>]</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">List[<a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)">object</a>]</td>
 </tr>
 </tbody>
 </table>
@@ -2524,7 +2579,7 @@ Called when the Stage triggers Event ‘post_tick’ (passes GameLoop into it wh
 
 <dl class="function">
 <dt id="spygame.convert_type">
-<code class="descclassname">spygame.</code><code class="descname">convert_type</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#convert_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.convert_type" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">spygame.</code><code class="descname">convert_type</code><span class="sig-paren">(</span><em>value</em>, <em>force_class=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#convert_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.convert_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts the given value from a string (or other) type into the most likely type.
 E.g.
 ‘some text’ -&gt; ‘some text’ (str)
@@ -2533,16 +2588,23 @@ E.g.
 ‘0.1’ -&gt; 0.1 (float)
 ‘true’ -&gt; True (bool)
 ‘False’ -&gt; False (bool)
-[1, 2, 3] -&gt; [1, 2, 3] (list)</p>
+[1, 2, 3] -&gt; [1, 2, 3] (list)
+spygame.Ladder -&gt; &lt;type spygame.Ladder&gt; (a python class object; can be used as a ctor to construct objects of that class)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#any" title="(in Python v2.7)"><em>any</em></a>) – the given value to be converted to the most-likely python type</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>value</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#any" title="(in Python v2.7)"><em>any</em></a>) – the given value to be converted to the most-likely python type</li>
+<li><strong>force_class</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, we will interpret even simple strings (starting with upper case but without any dots) as class names (e.g. Ladder)</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the converted value</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the converted value</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#any" title="(in Python v2.7)">any</a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#any" title="(in Python v2.7)">any</a></p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -2944,8 +3006,8 @@ E.g.
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="spygame.examples.vikings.Viking.hit_liquid_ground">
-<code class="descname">hit_liquid_ground</code><span class="sig-paren">(</span><em>what</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#Viking.hit_liquid_ground"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.Viking.hit_liquid_ground" title="Permalink to this definition">¶</a></dt>
+<dt id="spygame.examples.vikings.Viking.hit_liquid">
+<code class="descname">hit_liquid</code><span class="sig-paren">(</span><em>description</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#Viking.hit_liquid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.Viking.hit_liquid" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">

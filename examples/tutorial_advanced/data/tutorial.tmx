@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="24" height="24" tilewidth="16" tileheight="16" nextobjectid="2">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="24" height="24" tilewidth="16" tileheight="16" nextobjectid="3">
  <properties>
-  <property name="keyboard_inputs" value="up,down,left,right,space"/>
+  <property name="keyboard_inputs" value="up,down,left,right,space,rctrl,lctrl,d"/>
  </properties>
  <tileset firstgid="1" name="generic" tilewidth="16" tileheight="16" tilecount="1600" columns="40">
   <image source="../../platformer_2d/images/generic.png" width="640" height="640"/>
@@ -365,6 +365,7 @@
   </tile>
  </tileset>
  <tileset firstgid="3201" source="erik.tsx"/>
+ <tileset firstgid="3363" source="baleog.tsx"/>
  <layer name="background" width="24" height="24">
   <properties>
    <property name="autobuild_objects" type="bool" value="true"/>
@@ -431,6 +432,7 @@
  </layer>
  <objectgroup name="objects">
   <object id="1" name="erik" type="spygame.examples.vikings.Erik" gid="3201" x="32" y="32" width="32" height="32"/>
+  <object id="2" type="spygame.examples.vikings.Baleog" gid="3363" x="249" y="219" width="32" height="32"/>
  </objectgroup>
  <layer name="collision" width="24" height="24" visible="0">
   <properties>

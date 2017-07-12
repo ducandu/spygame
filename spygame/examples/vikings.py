@@ -289,6 +289,7 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
 
 
 # define player: Baleog the Fierce
+# TODO make arrow spritesheet part of baleog.tsx
 class Baleog(Viking):
     def __init__(self, x, y):
         super().__init__(x, y, spyg.SpriteSheet("data/baleog.tsx"), {

@@ -147,7 +147,7 @@
         <span class="c1"># subscribe/register to some events</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;bump.bottom&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;land&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;squeezed.top&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;get_squeezed&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;hit.liquid_ground&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;hit_liquid_ground&quot;</span><span class="p">)</span>  <span class="c1"># player stepped into liquid ground</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;hit.liquid&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;hit_liquid&quot;</span><span class="p">)</span>  <span class="c1"># player stepped into liquid ground</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;hit.particle&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;hit_particle&quot;</span><span class="p">)</span>  <span class="c1"># player hits a particle</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;die&quot;</span><span class="p">,</span> <span class="n">register</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># some animations trigger &#39;die&#39; when done</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">register_event</span><span class="p">(</span><span class="s2">&quot;dead&quot;</span><span class="p">)</span>
@@ -293,8 +293,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">play_animation</span><span class="p">(</span><span class="s2">&quot;be_dizzy&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
 
     <span class="c1"># quicksand or water</span>
-<div class="viewcode-block" id="Viking.hit_liquid_ground"><a class="viewcode-back" href="../../../spygame_reference.html#spygame.examples.vikings.Viking.hit_liquid_ground">[docs]</a>    <span class="k">def</span> <span class="nf">hit_liquid_ground</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">what</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">play_animation</span><span class="p">(</span><span class="s2">&quot;sink_in_&quot;</span> <span class="o">+</span> <span class="n">what</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Viking.hit_liquid"><a class="viewcode-back" href="../../../spygame_reference.html#spygame.examples.vikings.Viking.hit_liquid">[docs]</a>    <span class="k">def</span> <span class="nf">hit_liquid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play_animation</span><span class="p">(</span><span class="s2">&quot;sink_in_&quot;</span> <span class="o">+</span> <span class="n">description</span><span class="p">)</span></div>
 
     <span class="c1"># hit a flying particle (shot, arrow, etc..)</span>
 <div class="viewcode-block" id="Viking.hit_particle"><a class="viewcode-back" href="../../../spygame_reference.html#spygame.examples.vikings.Viking.hit_particle">[docs]</a>    <span class="k">def</span> <span class="nf">hit_particle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
@@ -355,6 +355,7 @@
 
 
 <span class="c1"># define player: Baleog the Fierce</span>
+<span class="c1"># TODO make arrow spritesheet part of baleog.tsx</span>
 <div class="viewcode-block" id="Baleog"><a class="viewcode-back" href="../../../spygame_reference.html#spygame.examples.vikings.Baleog">[docs]</a><span class="k">class</span> <span class="nc">Baleog</span><span class="p">(</span><span class="n">Viking</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">spyg</span><span class="o">.</span><span class="n">SpriteSheet</span><span class="p">(</span><span class="s2">&quot;data/baleog.tsx&quot;</span><span class="p">),</span> <span class="p">{</span>

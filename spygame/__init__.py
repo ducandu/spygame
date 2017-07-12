@@ -1287,7 +1287,6 @@ class Stage(GameObject):
 
     def destroyed(self):
         self.invoke("debind_events")
-        self.trigger_event("destroyed")
 
     def for_each(self, callback, params=None):
         """
@@ -3395,10 +3394,13 @@ class PlatformerPhysics(ControlledPhysicsComponent):
             self.vx += ax * dt
             if abs(self.vx) > self.vx_max:
                 self.vx = math.copysign(self.vx_max, self.vx)
+
             if self.gravity:
                 self.vy += self.gravity_y * dt
+
             if abs(self.vy) > self.max_fall_speed:
                 self.vy = math.copysign(self.max_fall_speed, self.vy)
+
             # do we have to stop sinking?
             if self.is_sinking_til and obj.rect.y >= self.is_sinking_til:
                 self.vy = 0.0
@@ -3637,7 +3639,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
             # just on first collision: pull up a little again, then slowly sink in (no more gravity)
             obj.collision_mask = 0
             obj.rect.y += col.separate[1]
-            obj.is_sinking_til = other_obj.rect.top
+            self.is_sinking_til = other_obj.rect.top
             self.vy = 0.01
             self.gravity = False
             obj.trigger_event("hit.liquid", other_obj.description)
@@ -4167,30 +4169,54 @@ class Game(object):
             # static method
             self.display.change_dims(width, height)
 
-    # returns the next level (if exists) as object
-    # false if no next level
     def get_next_level(self, level):
+        """
+        returns the next level (if exists) as object; None if no next level
+
+        :param Level level: the Level, whose next Level we would like to get
+        :return: the next Level after level; None if no next Level exists
+        :rtype: Union[Level,None]
+        """
         try:
             next_ = self.levels[(level if isinstance(level, int) else level.id) + 1]
         except IndexError:
             next_ = None
         return next_
 
-    # a level has been successfully finished
-    # load/play next one
     def level_mastered(self, level):
+        """
+        a level has been successfully finished -> play next one
+
+        :param Level level: the Level object that has been mastered
+        """
         next_ = self.get_next_level(level)
-        if not next_:
+        if next_:
+            next_.play()
+        else:
             print("All done!! Congrats!!")
+            self.level_aborted(level)
 
-    # a level has been aborted
-    def level_aborted(self, level):
-        Stage.clear_stages()
-        self.screens_by_name["start"].play()
-
-    # a level has been lost (all characters died)
     def level_lost(self, level):
-        self.level_aborted(level)  # for now: same as aborted level
+        """
+        a level has been lost
+
+        :param Level level: the Level object in which the loss happened
+        """
+        print("Game Over!")
+        self.level_aborted(level)
+
+    def level_aborted(self, level):
+        """
+        aborts the level and tries to play the "start" screen
+
+        :param Level level: the Level object that has been aborted
+        """
+        Stage.clear_stages()
+        screen = self.screens_by_name.get("start")
+        if screen:
+            screen.play()
+        else:
+            quit()
 
 
 class CollisionAlgorithm(object):

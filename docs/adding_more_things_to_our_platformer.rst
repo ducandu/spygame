@@ -121,19 +121,20 @@ tilesets may offer ladder tiles of only one tile width. Your selection should lo
     :alt: Selecting a bunch of tiles that make up the trunk of a palm tree
 
 Then right click this selection and choose "Tile Properties". This will allow us to set custom properties for all the different tiles in the selection
-at the same time. We will add the property "type" (string) and set its value to "ladder".
+at the same time. We will add the property "autobuild_class" (string) and set its value to "spygame.Ladder".
 Make sure that every single tile has this property now by clicking tile by tile through the palm tree trunk and checking in the Properties panel for
 "type" set to "ladder". Next we need to use the brush tool (B) to paint the entire palm (not just the trunk) to the background layer:
 
 .. image:: tutorial/advanced/008_re_adding_the_palm_to_the_background.png
     :alt: Re-adding the palm tree - this time to the background layer
 
-You could have done the painting step before setting the tile properties (type=ladder).
+You could have done the painting step before setting the tile properties (autobuild_class=spygame.Ladder).
 Once you set or change a tile's properties, it will automatically apply to all already placed tiles in all existing layers.
 
 The last thing we need to do is tell the background layer that it should look for ladder tiles when the layer builds itself (during the construction of the
-spygame.TiledTileLayer object) and add spygame.Ladder objects for all consecutive tiles of type=ladder it can find. This is a fully automated process
-and all we have to do is set a single custom property in the background layer, named "build_ladders" (bool) and set its value to true.
+spygame.TiledTileLayer object) and add spygame.Ladder objects for all consecutive tiles of autobuild_class=spygame.Ladder it can find.
+This is a fully automated process and all we have to do is set a single custom property in the background layer,
+named "autobuild_objects" (bool) and set its value to true.
 
 If we now play the tutorial.py game, Erik should be able to climb up and down the trunk of the palm tree (using the up and down arrow keys):
 
@@ -144,10 +145,39 @@ If we now play the tutorial.py game, Erik should be able to climb up and down th
 tiles and add a real-looking ladder to your level via the background layer's build_ladder capabilities? Do it the exact same way as we did with the
 palm tree trunk.
 
-Next up: Building our first trap into the depth of our mean-ass pharao temple.
+Next up: Building our first trap into the depth of our mean-ass pharaoh temple.
 
 
 Adding Dangerous Quicksand to the Level
 ---------------------------------------
 
-In order to add either quicksand or water surfaces into your levels, you need to paint
+Liquid surfaces like water or quicksand that cause the player to sink and die can be added to a level in the same way as ladders.
+This time, however, we will add the respective tiles to the foreground layer (ladders are usually added to the background layer as the player
+is rendered in front of the ladder).
+We select all tiles in the egpt tileset that look like quicksand. These are the tiles with the IDs 320, 321, 322, 360, 400, 401, 440, 441, and 481. We can
+select all of them at the same time using the mouse and the CTRL key. Then we click on the plus sign in the Properties panel and add the property:
+"autobuild_class" (string) with the value "spygame.LiquidBody".
+We then paint (into the foreground layer) the following structure:
+
+.. image:: tutorial/advanced/010_adding_a_quicksand_trap.png
+    :alt: Adding a quicksand trap to the level
+
+Playing the tutorial.py game should now make Erik die when touching the surface of the quicksand. Let try it out:
+
+.. image:: tutorial/advanced/011_erik_sinking_into_the_trap.png
+    :alt: Poor Erik sinking into the quicksand trap
+
+The game should end here printing out "Game Over" on the console.
+
+
+Adding an Additional Viking to the Level
+----------------------------------------
+
+Now that we have the nicely sloped hill, we no longer rely on our hero being able to jump up the stairs. One can just walk. Therefore Vikings other
+than Erik, who are not able to jump (but have other qualities) can enter the scene now. So let's add Baleog the Fierce, a fearless warrior with sword and
+bow.
+
+We have to add a new tileset first, the one for Baleog. Click on *Map->New Tileset*, then pick the baleog.png file and make sure the width and height are 32px
+each. Click the little Export Tileset As button at the bottom of the Tilesets panel and save the Baloeg tileset as "baleog.tsx" in the data directory
+of your project. Select the object layer and - with the Insert Tile (T) tool - insert one Baleog object into the level.
+Choose the Select Tool (S) and click on the new Baleog, then set his Type property to "spygame.examples.vikings.Baleog".

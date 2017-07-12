@@ -827,7 +827,7 @@
 
         <span class="c1"># subscribe/register to some events</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;bump.bottom&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;land&quot;</span><span class="p">,</span> <span class="n">register</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">register_event</span><span class="p">(</span><span class="s2">&quot;bump.top&quot;</span><span class="p">,</span> <span class="s2">&quot;bump.left&quot;</span><span class="p">,</span> <span class="s2">&quot;bump.right&quot;</span><span class="p">,</span> <span class="s2">&quot;hit.liquid_ground&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_event</span><span class="p">(</span><span class="s2">&quot;bump.top&quot;</span><span class="p">,</span> <span class="s2">&quot;bump.left&quot;</span><span class="p">,</span> <span class="s2">&quot;bump.right&quot;</span><span class="p">,</span> <span class="s2">&quot;hit.liquid&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MovableRock.tick"><a class="viewcode-back" href="../spygame_reference.html#spygame.MovableRock.tick">[docs]</a>    <span class="k">def</span> <span class="nf">tick</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">game_loop</span><span class="p">):</span>
         <span class="c1"># let our physics component handle all movements</span>
@@ -837,7 +837,29 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">stage</span><span class="o">.</span><span class="n">shake_viewport</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="Ladder"><a class="viewcode-back" href="../spygame_reference.html#spygame.Ladder">[docs]</a><span class="k">class</span> <span class="nc">Ladder</span><span class="p">(</span><span class="n">Sprite</span><span class="p">):</span>
+<div class="viewcode-block" id="Autobuild"><a class="viewcode-back" href="../spygame_reference.html#spygame.Autobuild">[docs]</a><span class="k">class</span> <span class="nc">Autobuild</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mix-in class to force x, y, width, height structure of ctors. All autobuild objects (objects that are built automatically by a TiledTileLayer with</span>
+<span class="sd">    the property autobuild_objects=true) will have to abode to this ctor parameter structure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">tile_w</span><span class="p">,</span> <span class="n">tile_h</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param int x: the x position of the Autobuild in tile units</span>
+<span class="sd">        :param int y: the y position of the Autobuild in tile units</span>
+<span class="sd">        :param int w: the width of the Autobuild in tile units</span>
+<span class="sd">        :param int h: the height of the Autobuild in tile units</span>
+<span class="sd">        :param int tile_w: the tile width of the layer</span>
+<span class="sd">        :param int tile_h: the tile height of the layer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_in_tiles</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_in_tiles</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w_in_tiles</span> <span class="o">=</span> <span class="n">w</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h_in_tiles</span> <span class="o">=</span> <span class="n">h</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tile_w</span> <span class="o">=</span> <span class="n">tile_w</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tile_h</span> <span class="o">=</span> <span class="n">tile_h</span></div>
+
+
+<div class="viewcode-block" id="Ladder"><a class="viewcode-back" href="../spygame_reference.html#spygame.Ladder">[docs]</a><span class="k">class</span> <span class="nc">Ladder</span><span class="p">(</span><span class="n">Sprite</span><span class="p">,</span> <span class="n">Autobuild</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A Ladder object that actors can climb on.</span>
 <span class="sd">    One-way-platform type: one cannot fall through the top of the ladder but does not collide with the rest (e.g. from below) of the ladder.</span>
@@ -845,22 +867,56 @@
 <span class="sd">    TiledTileLayers have the possibility to generate Ladder objects automatically from those tiles that are flagged with the type=&#39;ladder&#39; property. In that</span>
 <span class="sd">    case, the TiledTileLayer property &#39;build_ladders&#39; (bool) has to be set to true.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">80</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">tile_w</span><span class="p">,</span> <span class="n">tile_h</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :param int x: the x position of the Ladder</span>
-<span class="sd">        :param int y: the y position of the Ladder</span>
-<span class="sd">        :param int width: the width of the Ladder in pixels (not tiles!)</span>
-<span class="sd">        :param int height: the height of the Ladder in pixels (not tiles!)</span>
+<span class="sd">        :param int x: the x position of the Ladder in tile units</span>
+<span class="sd">        :param int y: the y position of the Ladder in tile units</span>
+<span class="sd">        :param int w: the width of the Ladder in tile units</span>
+<span class="sd">        :param int h: the height of the Ladder in tile units</span>
+<span class="sd">        :param int tile_w: the tile width of the layer</span>
+<span class="sd">        :param int tile_h: the tile height of the layer</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Autobuild</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">tile_w</span><span class="p">,</span> <span class="n">tile_h</span><span class="p">)</span>
         <span class="c1"># transform values here to make collision with ladder to only trigger when player is relatively close to the x-center of the ladder</span>
         <span class="c1"># - make this a 2px wide vertical axis in the center of the ladder</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-        <span class="n">width</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">x_px</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_in_tiles</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_w</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_in_tiles</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_w</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">y_px</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_in_tiles</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_h</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">width_height</span><span class="o">=</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">))</span>
+        <span class="c1"># call the Sprite ctor (now everything is in px)</span>
+        <span class="n">Sprite</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_px</span><span class="p">,</span> <span class="n">y_px</span><span class="p">,</span> <span class="n">width_height</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">h_in_tiles</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_h</span><span class="p">))</span>
 
         <span class="c1"># collision types</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">Sprite</span><span class="o">.</span><span class="n">get_type</span><span class="p">(</span><span class="s2">&quot;ladder,dockable,one_way_platform&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collision_mask</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># do not do any collisions</span></div>
+
+
+<div class="viewcode-block" id="LiquidBody"><a class="viewcode-back" href="../spygame_reference.html#spygame.LiquidBody">[docs]</a><span class="k">class</span> <span class="nc">LiquidBody</span><span class="p">(</span><span class="n">Sprite</span><span class="p">,</span> <span class="n">Autobuild</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A LiquidBody object (quicksand, water, etc..) that an actor will sink into and die. The AIBrain of enemies will avoid stepping into such an object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">tile_w</span><span class="p">,</span> <span class="n">tile_h</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;quicksand&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param int x: the x position of the Ladder in tile units</span>
+<span class="sd">        :param int y: the y position of the Ladder in tile units</span>
+<span class="sd">        :param int w: the width of the Ladder in tile units</span>
+<span class="sd">        :param int h: the height of the Ladder in tile units</span>
+<span class="sd">        :param int tile_w: the tile width of the layer</span>
+<span class="sd">        :param int tile_h: the tile height of the layer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Autobuild</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">tile_w</span><span class="p">,</span> <span class="n">tile_h</span><span class="p">)</span>
+        <span class="c1"># make the liquid object a little lower than the actual tiles (especially at the top assuming that the top is done with tiles only showing</span>
+        <span class="c1"># the very shallow surface of the liquid body)</span>
+        <span class="n">x_px</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_in_tiles</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_w</span>
+        <span class="n">y_px</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_in_tiles</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_h</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tile_h</span> <span class="o">*</span> <span class="mf">0.9</span><span class="p">)</span>
+
+        <span class="c1"># call the Sprite ctor (now everything is in px)</span>
+        <span class="n">Sprite</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_px</span><span class="p">,</span> <span class="n">y_px</span><span class="p">,</span> <span class="n">width_height</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_in_tiles</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">h_in_tiles</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_h</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tile_h</span> <span class="o">*</span> <span class="mf">0.9</span><span class="p">)))</span>
+
+        <span class="c1"># can be used to distinguish between different types of liquids (water, quicksand, lava, etc..)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+
+        <span class="c1"># collision types</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">Sprite</span><span class="o">.</span><span class="n">get_type</span><span class="p">(</span><span class="s2">&quot;liquid&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">collision_mask</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># do not do any collisions</span></div>
 
 
@@ -1295,8 +1351,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;destroyed&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Stage.destroyed"><a class="viewcode-back" href="../spygame_reference.html#spygame.Stage.destroyed">[docs]</a>    <span class="k">def</span> <span class="nf">destroyed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;debind_events&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">trigger_event</span><span class="p">(</span><span class="s2">&quot;destroyed&quot;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;debind_events&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Stage.for_each"><a class="viewcode-back" href="../spygame_reference.html#spygame.Stage.for_each">[docs]</a>    <span class="k">def</span> <span class="nf">for_each</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1450,12 +1505,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">to_render</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tiled_tile_layer</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">to_render</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">render_order</span><span class="p">)</span>
 
-        <span class="c1"># TODO: make this ladder process more generic (maybe other object types could be built like that as well)</span>
-        <span class="c1"># capture ladders?</span>
-        <span class="k">if</span> <span class="n">tiled_tile_layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;build_ladders&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span><span class="p">:</span>
-            <span class="n">ladders</span> <span class="o">=</span> <span class="n">tiled_tile_layer</span><span class="o">.</span><span class="n">capture_ladders</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">ladder</span> <span class="ow">in</span> <span class="n">ladders</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">add_sprite</span><span class="p">(</span><span class="n">ladder</span><span class="p">,</span> <span class="s2">&quot;ladders&quot;</span><span class="p">)</span></div>
+        <span class="c1"># capture ladders and other autobuild structures?</span>
+        <span class="k">if</span> <span class="n">tiled_tile_layer</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;autobuild_objects&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span><span class="p">:</span>
+            <span class="n">objects</span> <span class="o">=</span> <span class="n">tiled_tile_layer</span><span class="o">.</span><span class="n">capture_autobuilds</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objects</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_sprite</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">&quot;autobuilds&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Stage.add_sprite"><a class="viewcode-back" href="../spygame_reference.html#spygame.Stage.add_sprite">[docs]</a>    <span class="k">def</span> <span class="nf">add_sprite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sprite</span><span class="p">,</span> <span class="n">group_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1755,17 +1809,16 @@
         <span class="n">r</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">display</span><span class="o">.</span><span class="n">height</span>
         <span class="n">display</span><span class="o">.</span><span class="n">surface</span><span class="o">.</span><span class="n">blit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pygame_sprite</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">area</span><span class="o">=</span><span class="n">r</span><span class="p">)</span></div>
 
-    <span class="c1"># TODO: make ladder-capturing from background layer more generic (include waterfalls sprites, quicksand sprites, etc..)</span>
-<div class="viewcode-block" id="TiledTileLayer.capture_ladders"><a class="viewcode-back" href="../spygame_reference.html#spygame.TiledTileLayer.capture_ladders">[docs]</a>    <span class="k">def</span> <span class="nf">capture_ladders</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TiledTileLayer.capture_autobuilds"><a class="viewcode-back" href="../spygame_reference.html#spygame.TiledTileLayer.capture_autobuilds">[docs]</a>    <span class="k">def</span> <span class="nf">capture_autobuilds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Captures all ladder objects in this layer and returns them in a list of Ladder objects.</span>
-<span class="sd">        Once a ladder tile is found: searches neighboring tiles (starting to move right and down) for the same property and thus measures the ladder width</span>
-<span class="sd">        and height (in tiles).</span>
+<span class="sd">        Captures all autobuild objects in this layer and returns them in a list of objects.</span>
+<span class="sd">        Once an autobuild tile is found: searches neighboring tiles (starting to move right and down) for the same property and thus measures the object&#39;s</span>
+<span class="sd">        width and height (in tiles).</span>
 
-<span class="sd">        :return: list of generated Ladder objects</span>
-<span class="sd">        :rtype: List[Ladder]</span>
+<span class="sd">        :return: list of generated autobuild objects</span>
+<span class="sd">        :rtype: List[object]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ladders</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">objects</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># loop through each tile and look for ladder type property</span>
         <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pytmx_layer</span><span class="o">.</span><span class="n">height</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pytmx_layer</span><span class="o">.</span><span class="n">width</span><span class="p">):</span>
@@ -1773,35 +1826,37 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">tile_sprite</span><span class="p">:</span>
                     <span class="k">continue</span>
                 <span class="n">props</span> <span class="o">=</span> <span class="n">tile_sprite</span><span class="o">.</span><span class="n">tile_props</span>
-                <span class="c1"># we hit the upper left corner of a ladder</span>
-                <span class="k">if</span> <span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;ladder&quot;</span><span class="p">:</span>
+                <span class="c1"># we hit the upper left corner of an autobuild object -&gt; spread out to find more neighboring similar tiles</span>
+                <span class="n">ctor</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;autobuild_class&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ctor</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ctor</span><span class="p">,</span> <span class="nb">type</span><span class="p">),</span> <span class="s2">&quot;ERROR: translation of tile (</span><span class="si">{}</span><span class="s2">,</span><span class="si">{}</span><span class="s2">) property `autobuild_class` did not yield a defined class!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
                     <span class="n">tile_left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_sprites</span><span class="p">[(</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">)]</span>  <span class="c1"># type: TileSprite</span>
                     <span class="n">tile_top</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_sprites</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span>  <span class="c1"># type: TileSprite</span>
-                    <span class="k">if</span> <span class="p">(</span><span class="n">tile_left</span> <span class="ow">and</span> <span class="n">tile_left</span><span class="o">.</span><span class="n">tile_props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;ladder&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">tile_top</span> <span class="ow">and</span> <span class="n">tile_top</span><span class="o">.</span><span class="n">tile_props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;ladder&quot;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">tile_left</span> <span class="ow">and</span> <span class="n">tile_left</span><span class="o">.</span><span class="n">tile_props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;autobuild_class&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">ctor</span> <span class="ow">or</span> \
+                            <span class="n">tile_top</span> <span class="ow">and</span> <span class="n">tile_top</span><span class="o">.</span><span class="n">tile_props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;autobuild_class&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">ctor</span><span class="p">:</span>
                         <span class="k">continue</span>
                     <span class="c1"># measure width and height</span>
                     <span class="n">w</span> <span class="o">=</span> <span class="mi">1</span>
                     <span class="n">h</span> <span class="o">=</span> <span class="mi">1</span>
                     <span class="n">x2</span> <span class="o">=</span> <span class="n">x</span><span class="o">+</span><span class="mi">1</span>
-                    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="k">while</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">x2</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_layer</span><span class="o">.</span><span class="n">width</span><span class="p">:</span>
                         <span class="n">ts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_sprites</span><span class="p">[(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y</span><span class="p">)]</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ts</span> <span class="ow">and</span> <span class="n">ts</span><span class="o">.</span><span class="n">tile_props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;ladder&quot;</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ts</span> <span class="ow">and</span> <span class="n">ts</span><span class="o">.</span><span class="n">tile_props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;autobuild_class&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">ctor</span><span class="p">):</span>
                             <span class="k">break</span>
                         <span class="n">w</span> <span class="o">+=</span> <span class="mi">1</span>
                         <span class="n">x2</span> <span class="o">+=</span> <span class="mi">1</span>
 
                     <span class="n">y2</span> <span class="o">=</span> <span class="n">y</span><span class="o">+</span><span class="mi">1</span>
-                    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="k">while</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">y2</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_layer</span><span class="o">.</span><span class="n">height</span><span class="p">:</span>
                         <span class="n">ts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_sprites</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">y2</span><span class="p">)]</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ts</span> <span class="ow">and</span> <span class="n">ts</span><span class="o">.</span><span class="n">tile_props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;ladder&quot;</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ts</span> <span class="ow">and</span> <span class="n">ts</span><span class="o">.</span><span class="n">tile_props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;autobuild_class&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">ctor</span><span class="p">):</span>
                             <span class="k">break</span>
                         <span class="n">h</span> <span class="o">+=</span> <span class="mi">1</span>
                         <span class="n">y2</span> <span class="o">+=</span> <span class="mi">1</span>
 
-                    <span class="c1"># insert new Ladder</span>
-                    <span class="n">ladders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Ladder</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="n">y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">,</span>\
-                                          <span class="n">w</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="n">h</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">ladders</span></div>
+                    <span class="c1"># insert new object (all autobuild objects need to accept x, y, w, h in their constructors)</span>
+                    <span class="n">objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ctor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">objects</span></div>
 
 <div class="viewcode-block" id="TiledTileLayer.get_overlapping_tiles"><a class="viewcode-back" href="../spygame_reference.html#spygame.TiledTileLayer.get_overlapping_tiles">[docs]</a>    <span class="k">def</span> <span class="nf">get_overlapping_tiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sprite</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1853,6 +1908,7 @@
                 <span class="k">if</span> <span class="n">col</span><span class="p">:</span>
                     <span class="k">return</span> <span class="n">col</span>
         <span class="k">return</span> <span class="kc">None</span></div></div>
+
 
 <div class="viewcode-block" id="TileSprite"><a class="viewcode-back" href="../spygame_reference.html#spygame.TileSprite">[docs]</a><span class="k">class</span> <span class="nc">TileSprite</span><span class="p">(</span><span class="n">Sprite</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1957,9 +2013,9 @@
             <span class="c1"># - first look in the tile&#39;s properties for the &#39;class&#39; field, only then try the &#39;type&#39; field directly of the object (manually given by designer)</span>
             <span class="n">class_global</span> <span class="o">=</span> <span class="n">obj_props</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">obj</span><span class="o">.</span><span class="n">type</span>
             <span class="k">if</span> <span class="n">class_global</span><span class="p">:</span>
-                <span class="n">match_obj</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="s1">&#39;^((.+)\.)?(\w+)$&#39;</span><span class="p">,</span> <span class="n">class_global</span><span class="p">)</span>
-                <span class="k">assert</span> <span class="n">match_obj</span><span class="p">,</span> <span class="s2">&quot;ERROR: type field (</span><span class="si">{}</span><span class="s2">) of object in pytmx.pytmx.TiledObjectGroup does not match pattern!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
-                <span class="n">_</span><span class="p">,</span> <span class="n">module_</span><span class="p">,</span> <span class="n">class_</span> <span class="o">=</span> <span class="n">match_obj</span><span class="o">.</span><span class="n">groups</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;__main__&quot;</span><span class="p">)</span>  <span class="c1"># if no module given, assume a class defined in __main__</span>
+                <span class="n">ctor</span> <span class="o">=</span> <span class="n">convert_type</span><span class="p">(</span><span class="n">class_global</span><span class="p">,</span> <span class="n">force_class</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ctor</span><span class="p">,</span> <span class="nb">type</span><span class="p">),</span> <span class="s2">&quot;ERROR: python class `</span><span class="si">{}</span><span class="s2">` for object in object-layer `</span><span class="si">{}</span><span class="s2">` not defined!&quot;</span><span class="o">.</span>\
+                    <span class="nb">format</span><span class="p">(</span><span class="n">class_global</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
                 <span class="c1"># get other kwargs for the Sprite&#39;s c&#39;tor</span>
                 <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1979,8 +2035,6 @@
                         <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert_type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
                 <span class="c1"># generate the Sprite</span>
-                <span class="n">ctor</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">module_</span><span class="p">],</span> <span class="n">class_</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="k">assert</span> <span class="n">ctor</span><span class="p">,</span> <span class="s2">&quot;ERROR: python class `</span><span class="si">{}</span><span class="s2">` for object in object-layer `</span><span class="si">{}</span><span class="s2">` not defined!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
                 <span class="n">sprite</span> <span class="o">=</span> <span class="n">ctor</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
                 <span class="c1">## add the do_render and render_order to the new instance</span>
                 <span class="c1">#sprite.do_render = (obj_props.get(&quot;do_render&quot;, &quot;true&quot;) == &quot;true&quot;)  # the default for objects is true</span>
@@ -2460,7 +2514,7 @@
                                <span class="n">w</span><span class="p">,</span>
                                <span class="n">tile_h</span> <span class="o">*</span> <span class="mf">1.75</span><span class="p">,</span>
                                <span class="n">Sprite</span><span class="o">.</span><span class="n">get_type</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">))</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">col</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">sprite2</span><span class="p">,</span> <span class="n">TileSprite</span><span class="p">)</span> <span class="ow">and</span> <span class="n">col</span><span class="o">.</span><span class="n">sprite2</span><span class="o">.</span><span class="n">tile_props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;quicksand&quot;</span><span class="p">,</span> <span class="s2">&quot;water&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">col</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">sprite2</span><span class="p">,</span> <span class="n">LiquidBody</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
@@ -2892,9 +2946,9 @@
                 <span class="n">value</span> <span class="o">=</span> <span class="n">convert_type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
                 <span class="n">tile_props</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
-            <span class="n">ret</span><span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">tile_sprite_class</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">tile_props</span><span class="p">,</span>
-                                        <span class="n">pygame</span><span class="o">.</span><span class="n">Rect</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="n">y</span> <span class="o">*</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">,</span>
-                                                    <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">))</span>
+            <span class="n">ret</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">tile_sprite_class</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">tile_props</span><span class="p">,</span>
+                                         <span class="n">pygame</span><span class="o">.</span><span class="n">Rect</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="n">y</span> <span class="o">*</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">,</span>
+                                                     <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
     <span class="c1"># probably needs to be extended further by child classes</span>
@@ -3247,6 +3301,7 @@
         <span class="c1"># self.touching = 0  # bitmap with those bits set that the entity is currently touching (colliding with)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">at_exit</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">at_wall</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_sinking_til</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># a y-pos at which point the GameObject will stop sinking into a LiquidBody</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_ladder</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># None if GameObject is not locked into a ladder; Ladder obj if obj is currently locked into a ladder (in climbing position)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">touched_ladder</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># holds the ladder Sprite, if player is currently touching a Ladder (not locked in!), otherwise: None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">climb_frame_value</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># int([climb_frame_value]) determines the frame to use to display climbing position</span>
@@ -3261,11 +3316,11 @@
         <span class="c1"># add the Dockable Component to our GameObject (we need it this for us to work properly)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">game_obj_cmp_dockable</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="n">Dockable</span><span class="p">(</span><span class="s2">&quot;dockable&quot;</span><span class="p">))</span>
 
-        <span class="c1"># add default and ladder to the collision mask of our GameObject</span>
-        <span class="n">obj</span><span class="o">.</span><span class="n">collision_mask</span> <span class="o">|=</span> <span class="n">Sprite</span><span class="o">.</span><span class="n">get_type</span><span class="p">(</span><span class="s2">&quot;default,ladder&quot;</span><span class="p">)</span>
+        <span class="c1"># add some bit-flags to the collision mask of our GameObject</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">collision_mask</span> <span class="o">|=</span> <span class="n">Sprite</span><span class="o">.</span><span class="n">get_type</span><span class="p">(</span><span class="s2">&quot;default,ladder,liquid&quot;</span><span class="p">)</span>
 
         <span class="c1"># register events that we may trigger directly on the game_object</span>
-        <span class="n">obj</span><span class="o">.</span><span class="n">register_event</span><span class="p">(</span><span class="s2">&quot;hit.particle&quot;</span><span class="p">,</span> <span class="s2">&quot;hit.liquid_ground&quot;</span><span class="p">,</span> <span class="s2">&quot;squeezed.top&quot;</span><span class="p">,</span> <span class="s2">&quot;bump.top&quot;</span><span class="p">,</span> <span class="s2">&quot;bump.bottom&quot;</span><span class="p">,</span> <span class="s2">&quot;bump.left&quot;</span><span class="p">,</span> <span class="s2">&quot;bump.right&quot;</span><span class="p">)</span></div>
+        <span class="n">obj</span><span class="o">.</span><span class="n">register_event</span><span class="p">(</span><span class="s2">&quot;hit.particle&quot;</span><span class="p">,</span> <span class="s2">&quot;hit.liquid&quot;</span><span class="p">,</span> <span class="s2">&quot;squeezed.top&quot;</span><span class="p">,</span> <span class="s2">&quot;bump.top&quot;</span><span class="p">,</span> <span class="s2">&quot;bump.bottom&quot;</span><span class="p">,</span> <span class="s2">&quot;bump.left&quot;</span><span class="p">,</span> <span class="s2">&quot;bump.right&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PlatformerPhysics.lock_ladder"><a class="viewcode-back" href="../spygame_reference.html#spygame.PlatformerPhysics.lock_ladder">[docs]</a>    <span class="k">def</span> <span class="nf">lock_ladder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -3404,10 +3459,16 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">vx</span> <span class="o">+=</span> <span class="n">ax</span> <span class="o">*</span> <span class="n">dt</span>
             <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">vx_max</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">vx</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">copysign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vx_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vx</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gravity</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">vy</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gravity_y</span> <span class="o">*</span> <span class="n">dt</span>
+
             <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vy</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_fall_speed</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">vy</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">copysign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_fall_speed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vy</span><span class="p">)</span>
+
+            <span class="c1"># do we have to stop sinking?</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_sinking_til</span> <span class="ow">and</span> <span class="n">obj</span><span class="o">.</span><span class="n">rect</span><span class="o">.</span><span class="n">y</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_sinking_til</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vy</span> <span class="o">=</span> <span class="mf">0.0</span>
 
             <span class="c1"># reset all touch flags before doing all the collision analysis</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vx</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">vy</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
@@ -3628,24 +3689,26 @@
             <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span> <span class="ow">or</span> <span class="n">col</span><span class="o">.</span><span class="n">direction_veloc</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">original_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">obj</span><span class="o">.</span><span class="n">rect</span><span class="o">.</span><span class="n">height</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">other_obj</span><span class="o">.</span><span class="n">rect</span><span class="o">.</span><span class="n">top</span><span class="p">:</span>
                 <span class="k">return</span>
 
+        <span class="c1"># TODO: get rid of this:</span>
         <span class="c1"># a collision layer</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other_obj</span><span class="p">,</span> <span class="n">TileSprite</span><span class="p">):</span>
             <span class="n">tile_props</span> <span class="o">=</span> <span class="n">other_obj</span><span class="o">.</span><span class="n">tile_props</span>
             <span class="n">type_</span> <span class="o">=</span> <span class="n">tile_props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
-            <span class="c1"># quicksand or water</span>
-            <span class="k">if</span> <span class="n">type_</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;quicksand&quot;</span><span class="p">,</span> <span class="s2">&quot;water&quot;</span><span class="p">]:</span>
-                <span class="c1"># just on first collision: pull up a little again, then slowly sink in (no more gravity)</span>
-                <span class="n">obj</span><span class="o">.</span><span class="n">collision_mask</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="n">obj</span><span class="o">.</span><span class="n">rect</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">col</span><span class="o">.</span><span class="n">separate</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">vy</span> <span class="o">=</span> <span class="mf">0.01</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">gravity</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="n">obj</span><span class="o">.</span><span class="n">trigger_event</span><span class="p">(</span><span class="s2">&quot;hit.liquid_ground&quot;</span><span class="p">,</span> <span class="n">type_</span><span class="p">)</span>
-                <span class="k">return</span>
             <span class="c1"># colliding with an exit</span>
-            <span class="k">elif</span> <span class="n">type_</span> <span class="o">==</span> <span class="s2">&quot;exit&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">type_</span> <span class="o">==</span> <span class="s2">&quot;exit&quot;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">at_exit</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">stage</span><span class="o">.</span><span class="n">screen</span><span class="o">.</span><span class="n">trigger_event</span><span class="p">(</span><span class="s2">&quot;reached_exit&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>  <span class="c1"># let the level know</span>
                 <span class="k">return</span>
+        <span class="c1"># a liquid body</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other_obj</span><span class="p">,</span> <span class="n">LiquidBody</span><span class="p">):</span>
+            <span class="c1"># just on first collision: pull up a little again, then slowly sink in (no more gravity)</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">collision_mask</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">rect</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">col</span><span class="o">.</span><span class="n">separate</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_sinking_til</span> <span class="o">=</span> <span class="n">other_obj</span><span class="o">.</span><span class="n">rect</span><span class="o">.</span><span class="n">top</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vy</span> <span class="o">=</span> <span class="mf">0.01</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gravity</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">trigger_event</span><span class="p">(</span><span class="s2">&quot;hit.liquid&quot;</span><span class="p">,</span> <span class="n">other_obj</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+            <span class="k">return</span>
 
         <span class="c1"># normal collision</span>
         <span class="n">col</span><span class="o">.</span><span class="n">impact</span> <span class="o">=</span> <span class="mf">0.0</span>
@@ -4171,30 +4234,54 @@
             <span class="c1"># static method</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">change_dims</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
 
-    <span class="c1"># returns the next level (if exists) as object</span>
-    <span class="c1"># false if no next level</span>
 <div class="viewcode-block" id="Game.get_next_level"><a class="viewcode-back" href="../spygame_reference.html#spygame.Game.get_next_level">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_level</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        returns the next level (if exists) as object; None if no next level</span>
+
+<span class="sd">        :param Level level: the Level, whose next Level we would like to get</span>
+<span class="sd">        :return: the next Level after level; None if no next Level exists</span>
+<span class="sd">        :rtype: Union[Level,None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">next_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">[(</span><span class="n">level</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="n">level</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
             <span class="n">next_</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">next_</span></div>
 
-    <span class="c1"># a level has been successfully finished</span>
-    <span class="c1"># load/play next one</span>
 <div class="viewcode-block" id="Game.level_mastered"><a class="viewcode-back" href="../spygame_reference.html#spygame.Game.level_mastered">[docs]</a>    <span class="k">def</span> <span class="nf">level_mastered</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        a level has been successfully finished -&gt; play next one</span>
+
+<span class="sd">        :param Level level: the Level object that has been mastered</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">next_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_next_level</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">next_</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All done!! Congrats!!&quot;</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">next_</span><span class="p">:</span>
+            <span class="n">next_</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All done!! Congrats!!&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">level_aborted</span><span class="p">(</span><span class="n">level</span><span class="p">)</span></div>
 
-    <span class="c1"># a level has been aborted</span>
-<div class="viewcode-block" id="Game.level_aborted"><a class="viewcode-back" href="../spygame_reference.html#spygame.Game.level_aborted">[docs]</a>    <span class="k">def</span> <span class="nf">level_aborted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
-        <span class="n">Stage</span><span class="o">.</span><span class="n">clear_stages</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">screens_by_name</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">play</span><span class="p">()</span></div>
-
-    <span class="c1"># a level has been lost (all characters died)</span>
 <div class="viewcode-block" id="Game.level_lost"><a class="viewcode-back" href="../spygame_reference.html#spygame.Game.level_lost">[docs]</a>    <span class="k">def</span> <span class="nf">level_lost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">level_aborted</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>  <span class="c1"># for now: same as aborted level</span></div></div>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        a level has been lost</span>
+
+<span class="sd">        :param Level level: the Level object in which the loss happened</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Game Over!&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level_aborted</span><span class="p">(</span><span class="n">level</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Game.level_aborted"><a class="viewcode-back" href="../spygame_reference.html#spygame.Game.level_aborted">[docs]</a>    <span class="k">def</span> <span class="nf">level_aborted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        aborts the level and tries to play the &quot;start&quot; screen</span>
+
+<span class="sd">        :param Level level: the Level object that has been aborted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Stage</span><span class="o">.</span><span class="n">clear_stages</span><span class="p">()</span>
+        <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">screens_by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">screen</span><span class="p">:</span>
+            <span class="n">screen</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">quit</span><span class="p">()</span></div></div>
 
 
 <div class="viewcode-block" id="CollisionAlgorithm"><a class="viewcode-back" href="../spygame_reference.html#spygame.CollisionAlgorithm">[docs]</a><span class="k">class</span> <span class="nc">CollisionAlgorithm</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -4450,8 +4537,7 @@
         <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># overwrite no matter what</span></div>
 
 
-<span class="c1"># simple type conversion (from string input) by regular expression matching</span>
-<div class="viewcode-block" id="convert_type"><a class="viewcode-back" href="../spygame_reference.html#spygame.convert_type">[docs]</a><span class="k">def</span> <span class="nf">convert_type</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="convert_type"><a class="viewcode-back" href="../spygame_reference.html#spygame.convert_type">[docs]</a><span class="k">def</span> <span class="nf">convert_type</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">force_class</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts the given value from a string (or other) type into the most likely type.</span>
 <span class="sd">    E.g.</span>
@@ -4462,8 +4548,10 @@
 <span class="sd">    &#39;true&#39; -&gt; True (bool)</span>
 <span class="sd">    &#39;False&#39; -&gt; False (bool)</span>
 <span class="sd">    [1, 2, 3] -&gt; [1, 2, 3] (list)</span>
+<span class="sd">    spygame.Ladder -&gt; &lt;type spygame.Ladder&gt; (a python class object; can be used as a ctor to construct objects of that class)</span>
 
 <span class="sd">    :param any value: the given value to be converted to the most-likely python type</span>
+<span class="sd">    :param bool force_class: if True, we will interpret even simple strings (starting with upper case but without any dots) as class names (e.g. Ladder)</span>
 <span class="sd">    :return: the converted value</span>
 <span class="sd">    :rtype: any</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -4477,9 +4565,24 @@
     <span class="c1"># bool</span>
     <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="s1">&#39;(true|false)&#39;</span><span class="p">,</span> <span class="n">as_str</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;True&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
-    <span class="c1"># str (or list or others)</span>
-    <span class="k">return</span> <span class="n">value</span></div>
-
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">match_obj</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="s1">&#39;^((.+)\.)?([A-Z][a-zA-Z0-9]+)$&#39;</span><span class="p">,</span> <span class="n">as_str</span><span class="p">)</span>
+        <span class="c1"># a class with preceding modules (force_class does not have to be set to trigger this detection)</span>
+        <span class="k">if</span> <span class="n">match_obj</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">module_</span><span class="p">,</span> <span class="n">class_</span> <span class="o">=</span> <span class="n">match_obj</span><span class="o">.</span><span class="n">groups</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;__main__&quot;</span><span class="p">)</span>  <span class="c1"># if no module given, assume a class defined in __main__</span>
+            <span class="n">ctor</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">module_</span><span class="p">],</span> <span class="n">class_</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ctor</span><span class="p">,</span> <span class="nb">type</span><span class="p">),</span> <span class="s2">&quot;ERROR: the string </span><span class="si">{}</span><span class="s2">.</span><span class="si">{}</span><span class="s2"> does not resolve into a defined class!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module_</span><span class="p">,</span> <span class="n">class_</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ctor</span>
+        <span class="c1"># a class (no modules, but force_class is set to True)</span>
+        <span class="k">elif</span> <span class="n">force_class</span><span class="p">:</span>
+            <span class="n">match_obj</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="s1">&#39;^([A-Z][a-zA-Z0-9]+)$&#39;</span><span class="p">,</span> <span class="n">as_str</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">match_obj</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">class_</span><span class="p">)</span> <span class="o">=</span> <span class="n">match_obj</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+                <span class="n">ctor</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s2">&quot;__main__&quot;</span><span class="p">],</span> <span class="n">class_</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ctor</span><span class="p">,</span> <span class="nb">type</span><span class="p">),</span> <span class="s2">&quot;ERROR: the string </span><span class="si">{}</span><span class="s2"> does not resolve into a defined class!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">ctor</span>
+        <span class="c1"># str (or list or others)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
 
 </pre></div>
 
