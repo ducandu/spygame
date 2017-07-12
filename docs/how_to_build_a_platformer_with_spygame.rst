@@ -12,8 +12,8 @@ space bar (to make him jump).
 .. image:: tutorial/001_final_spygame_game.png
     :alt: The final spygame game we will be building in this tutorial
 
-In the next part of the tutorial (on the following page(s)), we will add further interesting objects and enemies to the level and make
-the level look nicer as well.
+In the next part of the tutorial (on the following page(s)), we will add further interesting objects and enemies to the level and also make
+it look nicer via a few tricks.
 
 You will need the following simple prerequisites to follow along with the different steps in this tutorial:
 
