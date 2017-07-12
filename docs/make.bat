@@ -35,12 +35,13 @@ goto end
 :end
 
 cd ..
-rmdir docs\_images /s /q
-rmdir docs\_static /s /q
-rmdir docs\_modules /s /q
-rmdir docs\_sources /s /q
-mv html/* docs/.
-rmdir html /s /q
+rd docs\_images\ /s /q
+rd docs\_static\ /s /q
+rd docs\_modules\ /s /q
+rd docs\_sources\ /s /q
+xcopy html\*.* docs /e /s /y
+xcopy docs\spygame_sphinx.css docs\_static\ /y
+rd html /s /q
 
 popd
 

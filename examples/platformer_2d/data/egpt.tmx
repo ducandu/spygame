@@ -106,6 +106,9 @@
  <tileset firstgid="3713" source="elevator.tsx"/>
  <tileset firstgid="3714" source="enemies.tsx"/>
  <tileset firstgid="4050" source="coconut.tsx"/>
+ <tileset firstgid="4054" name="erik" tilewidth="32" tileheight="32" tilecount="162" columns="9">
+  <image source="../images/erik.png" width="294" height="599"/>
+ </tileset>
  <layer name="background" width="106" height="24">
   <properties>
    <property name="build_ladders" type="bool" value="true"/>

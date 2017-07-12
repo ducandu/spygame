@@ -15,7 +15,8 @@ spygame is a 2D game engine based on the python pygame module and "level-tmx" fi
 
    readme_link.rst
    intro.rst
-   how_to_build_a_platformer.rst
+   how_to_build_a_platformer_with_spygame.rst
+   adding_more_things_to_our_platformer.rst
    how_to_code_against_spygame.rst
    spygame_reference.rst
 

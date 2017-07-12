@@ -70,9 +70,6 @@ This should give you a level like this:
 
 You can now control the Agent via the four arrow keys (up, down, left, right).
 
-**NOTE: All graphics used here are taken from the game "The Lost Vikings" (c) 1992 by Silicon and Synapse (now Blizzard Entertainment Inc.).
-Please only use these (in your own projects and repos) for demonstration purposes.**
-
 Next steps
 ----------
 

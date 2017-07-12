@@ -1,0 +1,421 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>How to build a Platformer with spygame &#8212; spygame 0.1a8 documentation</title>
+    
+    <link rel="stylesheet" href="_static/spygame_sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1a8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Adding more Things to our Platformer" href="adding_more_things_to_our_platformer.html" />
+    <link rel="prev" title="Introduction to spygame" href="intro.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="adding_more_things_to_our_platformer.html" title="Adding more Things to our Platformer"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction to spygame"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">spygame 0.1a8 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">How to build a Platformer with spygame</a><ul>
+<li><a class="reference internal" href="#level-tmx-files">Level tmx-files</a></li>
+<li><a class="reference internal" href="#layers">Layers</a><ul>
+<li><a class="reference internal" href="#tilesets">Tilesets</a><ul>
+<li><a class="reference internal" href="#creating-new-tilesets-from-png-files">Creating new Tilesets from png Files</a></li>
+<li><a class="reference internal" href="#modifying-tilesets-and-adding-properties-to-single-tiles">Modifying Tilesets and Adding Properties to Single Tiles</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-collision-layer">The Collision Layer</a></li>
+<li><a class="reference internal" href="#the-background-layer">The Background Layer</a></li>
+<li><a class="reference internal" href="#the-foreground-layer">The Foreground Layer</a></li>
+<li><a class="reference internal" href="#the-object-layer">The Object Layer</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#keyboard-event-setup">Keyboard Event Setup</a></li>
+<li><a class="reference internal" href="#code-to-get-level-running">Code to get Level Running</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">Introduction to spygame</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="adding_more_things_to_our_platformer.html"
+                        title="next chapter">Adding more Things to our Platformer</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/how_to_build_a_platformer_with_spygame.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="how-to-build-a-platformer-with-spygame">
+<h1>How to build a Platformer with spygame<a class="headerlink" href="#how-to-build-a-platformer-with-spygame" title="Permalink to this headline">¶</a></h1>
+<p><strong>IMPORTANT NOTE:</strong> <em>All graphics used in this tutorial were taken from the game “The Lost Vikings” (c) 1992 by Silicon and Synapse
+(now Blizzard Entertainment Inc.). Please use these (in your own projects and repos) for demonstration purposes only and thereby mention this
+copyright statement!</em></p>
+<p>In this tutorial, we will be building a 2D platformer level from scratch using the spygame library. It will look roughly like this:</p>
+<img alt="The final spygame game we will be building in this tutorial" src="_images/001_final_spygame_game.png" />
+<p>In the game, we will be able to control Erik the Swift via the arrow keys and the space bar (to make him jump).</p>
+<p>You will need the following simple prerequisites to follow along with the different steps in this tutorial:</p>
+<ul class="simple">
+<li>The “Tiled” editor to create spygame’s level-tmx files. A level-tmx file contains all necessary information for spygame to build a complete level, i.e.
+background and foreground graphics, objects that the level will start with (e.g. player, enemies, traps, elevators, ladders, etc..).
+You can download <a class="reference external" href="http://www.mapeditor.org">Tiled from here</a>.</li>
+<li>The spygame library: See our <a class="reference external" href="readme_link.html#get-the-code">Quick Setup Instructions</a> for all necessary details on how to get and install spygame.</li>
+<li>Some asset files: Download the following two folders into the directory, in which you would like to develop the game. This will be the directory, in
+which we will write the tutorial.py file (the only python file we are going to create and write to in this tutorial).<ol class="loweralpha">
+<li>images/ (<a class="reference external" href="https://github.com/sven1977/spygame/tree/master/examples/tutorial/images">from here</a>)</li>
+<li>data/ (you can create this as an empty directory; we’ll be populating it from scratch with a level-tmx and some tsx (spritesheet) files)</li>
+</ol>
+</li>
+</ul>
+<div class="section" id="level-tmx-files">
+<h2>Level tmx-files<a class="headerlink" href="#level-tmx-files" title="Permalink to this headline">¶</a></h2>
+<p>Our first step in building a platformer will be to create the level as a so called level-tmx file. A level-tmx file is nothing other than a regular
+tmx file (which is a type of xml) that can be opened and edited with the Tiled editor. However, spygame level-tmx files additionally support certain
+spygame specific custom properties that can be used to tweak the behavior and look of a level.</p>
+<p>Let’s start by opening the Tiled editor. We click on <em>File-&gt;New</em></p>
+<img alt="Create a new level-tmx file" src="_images/002_file_new.png" />
+<p>We specify our tile settings to be 24x24 tiles, with 16x16px for each tile.</p>
+<img alt="Specify some initial properties for the level-tmx file" src="_images/003_file_new_specifics.png" />
+<p>This is what our empty level should now look like:</p>
+<a class="reference internal image-reference" href="_images/004_empty_level.png"><img alt="An empty level-tmx file ready to be populated" src="_images/004_empty_level.png" style="width: 564.5px; height: 405.0px;" /></a>
+<p>We click on <em>File-&gt;Save As</em> and store the newly created tmx file in the data/ directory of our project folder as “tutorial.tmx”. This is the only file that
+should be in the data/ directory right now.</p>
+<img alt="Chose a filename for your new level-tmx file" src="_images/005_file_save_as.png" />
+</div>
+<div class="section" id="layers">
+<h2>Layers<a class="headerlink" href="#layers" title="Permalink to this headline">¶</a></h2>
+<p><strong>Important Note:</strong> For the following, make sure you have the
+<em>View-&gt;Views and Toolbars-&gt;Tilesets, Objects, Layers, Properties, Main Toolbar, and Tools</em> all checked to be able to see your new tileset (and some
+other things we need later) in the editor.</p>
+<p>It’s time to work on our first layer of our level. A layer is a group of tiles that all have a common purpose and
+that - if the layer is visible - get rendered at the same time.
+The most commonly used layers in a level are “collision layer”, “background layer”, and “foreground layer”.
+The collision layer is usually not visible (not rendered), the background layer usually gets rendered first, followed by the game objects
+(the player, enemies, etc..) and the foreground
+layer, which gets rendered last (so it’s in the foreground).</p>
+<p>There should already be one layer in the just saved tmx file, called “Tile Layer 1”. We will rename this layer now to “collision” by double clicking the
+layer in the Layers panel.</p>
+<p>In order to place tiles into the layer, we have to first generate one or more tilesets:</p>
+<div class="section" id="tilesets">
+<h3>Tilesets<a class="headerlink" href="#tilesets" title="Permalink to this headline">¶</a></h3>
+<p>The tileset we will create first and then setup is a generic tileset that we will use to build our collision layer.
+The tiles in this layer will not be rendered in the game.</p>
+<div class="section" id="creating-new-tilesets-from-png-files">
+<h4>Creating new Tilesets from png Files<a class="headerlink" href="#creating-new-tilesets-from-png-files" title="Permalink to this headline">¶</a></h4>
+<p>We click on <em>Map-&gt;New Tileset</em> and then on the <em>Browse</em> button to select an image that we will turn into a tileset.</p>
+<img alt="Creating a new tileset from scratch" src="_images/006_map_new_tileset.png" />
+<p>A tileset is simply an image file that can be further split (horizontally and vertically) into “tiles”. For example:</p>
+<a class="reference internal image-reference" href="_images/007_tileset_ready_png_image.png"><img alt="A png file that's ready to become a tileset" src="_images/007_tileset_ready_png_image.png" style="width: 462.0px; height: 193.60000000000002px;" /></a>
+<p>From the images/ folder in our project, we now select the generic.png file and click on <em>Open</em>.</p>
+<p>We will leave the <em>Tile width/height</em> settings at 16px each (this will be the size of all our tiles used for layers in this level) and click on <em>OK</em>.
+We should see the following now in the Tilesets panel. Our new tileset has 18 usable tiles including the very first empty one. The tiles on the first
+row we will use to create walls and (sloped) floors. The tiles in the second row exist for other purposes (like defining a watery surface, an exit, etc..).</p>
+<img alt="Our first tileset in the Tilesets panel" src="_images/008_our_first_tileset.png" />
+</div>
+<div class="section" id="modifying-tilesets-and-adding-properties-to-single-tiles">
+<h4>Modifying Tilesets and Adding Properties to Single Tiles<a class="headerlink" href="#modifying-tilesets-and-adding-properties-to-single-tiles" title="Permalink to this headline">¶</a></h4>
+<p>Next, we will add some properties to some of the tiles in the “generic” tileset so that spygame can recognize these tiles as proper collision tiles
+and make sure its physics engine gets the idea of walls, floors and slopes (slopes will be covered only in the next tutorial).</p>
+<p>If you right click on a tile, you can select <em>Tile Properties</em> and then you see in the Properties panel that the tile already has the fixed properties
+ID, width and height. Width and height should both be 16, since this is the size we chose when generating the tileset from the png file.
+We won’t really care about the ID property here - or at any later time.</p>
+<img alt="" src="_images/009_changing_single_tiles_properties.png" />
+<p>We right click on the full red square tile and then click on the plus symbol in the properties panel to add a new custom property. We will call the
+property <em>slope</em> and set its type to <em>float</em> and its value to <em>0.0</em>. We add another property called <em>offset</em> (again: <em>float</em>) and set its value
+to <em>1.0</em>. These two
+values basically describe the slope function for that tile. The slope function returns a y value (vertical axis) for each x-axis (horizontal axis) value.
+X-axis values start from 0.0 at the very left edge of the tile and go to 1.0 at the very right edge of the tile.
+For example, for a fully filled tile, the slope function would be y=0x+1, where 0 is the slope (no slope, no change in y-value dependent on x-value)
+and an offset (y-axis intersection) of 1.
+A 45° up-slope would therefore have the values slope=1.0 and offset=0.0 (y=x). A 45° down-slope would look like slope=-1.0 and offset=1.0 (y=-x+1), etc..
+This way, we are able to define any arbitrary slopes.</p>
+<img alt="" src="_images/010_adding_the_offset_property_to_a_tile.png" />
+<img alt="" src="_images/011_custom_properties_for_a_tile.png" />
+<p>We will later add custom properties also to the other tiles in the <em>generic</em> tileset (when we talk about slopes in the next tutorial),
+but for now, the fully filled red square will be enough to get us started. It will allow us to create a floor, walls and some simple stairs-like structure.</p>
+</div>
+</div>
+<div class="section" id="the-collision-layer">
+<h3>The Collision Layer<a class="headerlink" href="#the-collision-layer" title="Permalink to this headline">¶</a></h3>
+<p>The collision layer defines the location of walls and floors of our level. The players - and usually also the enemies - will collide with the single tiles
+of this layer and thus cannot cross the barriers defined by it. This is where we will start: We will paint the floors and walls that make up our level.</p>
+<p>Press <em>B</em> to activate the stamp brush tool (make sure the red square tile is still selected in the “generic” tileset in the Tilesets panel).
+Paint a floor at the bottom of the level just like this:</p>
+<img alt="" src="_images/012_drawing_a_floor.png" />
+<p>Then paint a wall, some stairs, a hole and other structures like this (still only using that one red square tile):</p>
+<img alt="" src="_images/013_walls_and_other_structures.png" />
+<p>Finally, we need to let spygame know that the layer is a collision layer. Therefore, we will create a custom property on the layer itself
+(not on any tiles in a tileset!). We single click on the
+“collision” layer in the Layers panel and then on the plus symbol in the then showing layer properties in the Properties panel. This adds a new custom property
+to the layer. We will call the property “type” (string) and give it a value of “default”.
+The type property for layers (as well as - later - objects), determines the collision behavior or our spygame game objects. And “default” here just means,
+well, normal, like a wall or a floor are normal things to collide with. We will later get to know the types “friendly”, “one_way_platform”, “dockable”,
+“particle” and many other custom ones that we can define (and combine with each other) ourselves.</p>
+<p>Also, by default, all layers in a level-tmx file will be rendered by spygame. Since we don’t want to see any collision tiles in the final level, we
+need to set the “do_render” custom property to false. We do this by adding yet another property (click the plus button), select type <em>bool</em>, name the
+new property “do_render” and then make sure to un-tick the check box (to set it the value to false).</p>
+<p>And this concludes our collision layer. Next, we’ll add some nicer background and foreground graphics to our level.</p>
+</div>
+<div class="section" id="the-background-layer">
+<h3>The Background Layer<a class="headerlink" href="#the-background-layer" title="Permalink to this headline">¶</a></h3>
+<p>Let’s do the background layer next.</p>
+<p>We click on <em>Layer-&gt;New-&gt;Tile Layer</em> and rename the newly created layer in the Layer panel to be called “background”.</p>
+<img alt="The background layer" src="_images/014_background_layer.png" />
+<p>This time, we will not add a “type” property to the layer as the type will default to “none” (or 0), which means the layer won’t be considered for
+any collisions. However, we do need to set the “do_render” (bool) property and set it to true (tick the box next to the newly created property).
+We also need to specify a “render_order” (int) property and we will set that to 10 to make our background render quite early. The “do_render” tells spygame
+that a layer should be rendered (the default for layers is
+false (remember the collision layer, which was not rendered and where we didn’t have to set anything)).
+The “render_order” is just an int that defines the order in which a rendered layer object should be rendered. The lower the render_order, the earlier the
+object gets rendered. Values can be chosen freely, but should be between 0 and 100, in order to keep some convention.</p>
+<img alt="The customer properties of the new background layer" src="_images/015_properties_of_background.png" />
+<p>Next, we paint the details of the layer and therefore we will need another tileset (we need nicer tiles than the ones in the the “generic” tileset).
+We create a new tileset (just like we did before with the “generic” tileset) based on the egpt.png file in the images/ folder:</p>
+<img alt="The egpt tileset" src="_images/016_the_egpt_tileset.png" />
+<p>Make sure the background layer (and not the collision layer) is selected.
+By selecting more than one tile in the new egpt tileset (Tilesets panel), you can create a larger brush and paint the level in fewer steps utilizing the
+already given relations between the different tiles in the tileset. E.g.:</p>
+<img alt="Drawing a palm tree using more than one tile from the tileset at a time" src="_images/017_using_more_than_one_tile_at_a_time.png" />
+<p>Using the brush tool (press B) and maybe the eraser tool (press E), we can now draw our background layer. I recommend moving the background layer on top of
+the collision layer in the Layers panel to be able to draw over the collision layer (and make the collision layer slowly disappear behind the new background
+tiles). Don’t worry, since you have selected the background layer, you will not erase anything in the collision layer. Only the currently selected
+layer gets changed.
+Try to draw a background like the one in the image below:</p>
+<img alt="A possible background setup could look like this" src="_images/018_a_possible_background_setup.png" />
+<p>Your background doesn’t have to look exactly like the one above. Remember that the background is solely for graphical purposes.
+It won’t have any effect on collisions, wall-, or obstacle design. This concludes the work on our background layer.
+Next, we will add a palm tree to a new foreground layer to create the effect of the player moving behind the tree.</p>
+</div>
+<div class="section" id="the-foreground-layer">
+<h3>The Foreground Layer<a class="headerlink" href="#the-foreground-layer" title="Permalink to this headline">¶</a></h3>
+<p>We will now create yet another new layer similar to the background layer. Click on <em>Layer-&gt;New-&gt;Tile Layer</em> and rename the newly
+created layer into “foreground”.
+Then click on the foreground layer in the Layers panel and create the custom properties: do_render(bool)=true as well as render_order(int)=100.
+100 Makes sure that the foreground is rendered last. Everything we create now with render_order between 10 (background) and 100 (foreground) will seem
+to be between these two layers and allow us to create the typical pseudo 3D effect of all 2D platformer games (we will later even add a so
+called “repeater”, which will strengthen the pseudo 3D effect even more).</p>
+<p>Make sure the foreground layer is selected in the Layers panel and select any palm tree you like from the egpt tileset, then brush the palm onto our
+foreground:</p>
+<img alt="A possible foreground setup could look like this" src="_images/019_a_possible_foreground_setup.png" />
+<p>This concludes all our tiled tile layers (collision, back- and foreground). Next we will introduce a new type of layer, the so called “tiled object layer”.
+These allow us to populate our level with game objects, like the player, enemies, elevators, etc..</p>
+</div>
+<div class="section" id="the-object-layer">
+<h3>The Object Layer<a class="headerlink" href="#the-object-layer" title="Permalink to this headline">¶</a></h3>
+<p>An object layer, also sometimes referred to as “tiled object layer” is a lose collection of one or more objects each of which can be represented by a single
+tile. The tiles (objects) in an object layer are not nicely aligned horizontally and vertically as it is the case in tiled tile layers (e.g. the background).
+The positions of the objects are rather freely settable by the designer.</p>
+<p>Let’s create our object layer and populate it with a first single object, the player.</p>
+<p>We click on <em>Layer-&gt;New-&gt;Object Layer</em> and rename the new layer into “objects”. Object layers do not require any custom properties. Instead, we will set
+properties directly on the objects with which we populate the object layer (see below).</p>
+<img alt="The new &quot;tiled object layer&quot;" src="_images/020_new_object_layer.png" />
+<p>Then it’s time to create a new tileset for our player hero.
+We click on <em>Map-&gt;New Tileset</em> and chose the erik.png image file as the source for the new tileset. However, this time - before clicking on <em>OK</em> - we need
+to set the tile width and height parameters to 32px (not 16px!):</p>
+<img alt="Settings for the erik.tsx tileset" src="_images/021_setting_up_the_erik_tileset.png" />
+<p>We make sure that the new object layer is selected in the Layers panel and
+click on the very first tile in the erik tileset (the one where Erik is not doing really anything special). Then by clicking in the toolbar at the top on the
+“Insert Tile” tool (or by pressing T) and by clicking anywhere in the level, we can now place a single Erik into the level:</p>
+<img alt="Placing an Erik object into the level" src="_images/022_placing_erik_into_the_level.png" />
+<p>We change the tool from “Insert Tile” (T) to “Select Object” (S) and click on our new Erik. We can now drag Erik around and place him somewhere else or delete
+him by hitting “del”. We have just created a new object in our tiled object layer.</p>
+<p>When we select an object, we can set custom properties for only this object. All objects - by default - have the do_render property set to true and the
+render_order property set to 50. Thus, if we needed to distinguish between foreground and background objects, we could override the render_order setting easily
+by creating a new custom property “render_order” (int) and setting it to some value between 0 and 100. Note that values in our case lower than 11 would not
+make sense as the object would otherwise be overwritten by the background layer during spygame’s rendering loop. Instead of tinkering with render
+options, we need to set other properties to let spygame know, which spygame class to generate our object from (which constructor to call when building the
+object layer). The spygame class gets defined via the already existing “Type” property. We will set this to “spygame.examples.vikings.Erik”:</p>
+<img alt="Letting spygame know, which c'tor to use" src="_images/023_setting_eriks_constructor.png" />
+<p>We also set the already existing “Name” property to “erik”, just for good practice.</p>
+<p>Then we need to export the tileset for Erik into a separate file (a so called t**s**x file; not to be confused with tmx files!). This is necessary because
+the constructor for an Erik object needs this tsx file to construct a sprite sheet from it, which again is used to animate the character. More on tsx-files
+in a later tutorial. We click on the little “Export Tileset As” button:</p>
+<img alt="Exporting a tileset into a tsx file" src="_images/023a_exporting_eriks_tileset_as_tsx.png" />
+<p>and save it inside the data/ folder of our project as “erik.tsx”.</p>
+<p>This will be it for now with our object layer.
+The spygame engine will know by the Type field of each object, which constructor to use to build them. Classes defined directly in spygame must be preceded with
+“spygame.”, classes from the examples extensions of spygame must be preceded with “spygame.examples.[some extension name].”, and classes that you define
+yourself in your main module would not need a module (you just put the plain class name in the Type field).</p>
+<p>spygame.examples.vikings.Erik objects have - by default - the ability to walk and jump through the level.
+They require the erik.tsx file (for the tileset) to be available at construction time in order to animate the character.
+We will - on the next page - delve deeper into other spygame objects and show you how to set up each of them in the level-tmx file.</p>
+<p>The last thing we will have to do now before testing our new level is to create the keyboard input definition for our level.</p>
+</div>
+</div>
+<div class="section" id="keyboard-event-setup">
+<h2>Keyboard Event Setup<a class="headerlink" href="#keyboard-event-setup" title="Permalink to this headline">¶</a></h2>
+<p>In this last step, we will tell spygame, which keys it should listen to while playing the level. Keyboard inputs in spygame are based on the pygame
+nomenclature, which can be found in the first column of <a class="reference external" href="https://www.pygame.org/docs/ref/key.html">this table here</a>. For example ‘K_UP’ is the pygame
+short for the up-arrow. The spygame key names can be derived from these by dropping the preceding ‘<a href="#id1"><span class="problematic" id="id2">K_</span></a>’ and then converting the rest to all lower case.
+For example: ‘K_UP’ becomes ‘up’, ‘K_RETURN’ becomes ‘return’, and ‘K_a’ becomes simply ‘a’.</p>
+<p>In order to tell spygame, which keys to pay attention to during our game, we add a custom property to the global map object. Therefore, we click on
+<em>Map-&gt;Map Properties</em>, then on the plus sign at the bottom to add a new property and we call the property “keyboard_inputs” and make it of type string.
+Then we assign a value of “up,down,left,right,space” to it, which lets spygame know that we would like to listen to all arrow keys plus the space bar:</p>
+<img alt="Setting the keyboard_inputs property on the tmx map" src="_images/024_adding_keyboard_input_definitions.png" />
+<img alt="Defining the keys for spygame to listen to" src="_images/025_defining_keyboard_input_definitions.png" />
+<p>This was the last thing we had to do in our level-tmx file. Now we are ready to write some basic python code against spygame and then play the level.
+Remember to save the tmx file under its current name (tutorial.tmx).</p>
+</div>
+<div class="section" id="code-to-get-level-running">
+<h2>Code to get Level Running<a class="headerlink" href="#code-to-get-level-running" title="Permalink to this headline">¶</a></h2>
+<p>We are now ready to create our python program in which we will load the tmx file and then play the level.
+All the hard stuff was already done in the tmx file, all we have to do now is:</p>
+<ul class="simple">
+<li>Create a new python file in your project’s directory (the one in which you have the images/ and data/ folders). Name the new file “tutorial.py”</li>
+<li>Start coding:</li>
+</ul>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">spygame</span> <span class="kn">as</span> <span class="nn">spyg</span>
+<span class="kn">import</span> <span class="nn">spygame.examples.vikings</span> <span class="kn">as</span> <span class="nn">vik</span>
+</pre></div>
+</td></tr></table></div>
+<p>This will import the spygame library as well as spygame’s “Lost Vikings” extension.</p>
+<p>Then we will create a spygame Game object that contains as only spygame.Level object our tmx-level (as vik.VikingLevel object).
+The different levels of a game are specified in the Game’s constructor via a list of dictionaries, each of which specifying the Level’s “class:”
+(we use the vik.VikingLevel here, which supports the three player characters Erik, Olaf and Baleog; more on that later), the level’s “name:”
+(which may be a reference to the equally named tmx file in the data/ directory), and a numeric “id:”. The title arg to the Game’s constructor defines the
+caption of the pygame window that will open up when the game is played.</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># create a spyg.Game object</span>
+    <span class="n">game</span> <span class="o">=</span> <span class="n">spyg</span><span class="o">.</span><span class="n">Game</span><span class="p">(</span><span class="n">screens_and_levels</span><span class="o">=</span><span class="p">[</span>
+        <span class="c1"># the only level</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">vik</span><span class="o">.</span><span class="n">VikingLevel</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;TUTORIAL&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">},</span>
+
+        <span class="c1"># add more of your levels here</span>
+        <span class="c1"># { ... },</span>
+
+    <span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Erik&#39;s Trip to Egypt&quot;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<p>This will only create the Game object, and not really do anything exciting (visible) yet. If you don’t want to hint to your tmx file via the name
+of the Level object(s), you can pass an optional “tmx_file” arg to the screens_and_levels list like so:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="highlight"><pre><span></span>    <span class="c1"># ALTERNATIVELY: create a spyg.Game object using the tmx_file option</span>
+    <span class="n">game</span> <span class="o">=</span> <span class="n">spyg</span><span class="o">.</span><span class="n">Game</span><span class="p">(</span><span class="n">screens_and_levels</span><span class="o">=</span><span class="p">[</span>
+        <span class="c1"># the only level</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">vik</span><span class="o">.</span><span class="n">VikingLevel</span><span class="p">,</span> <span class="s2">&quot;tmx_file&quot;</span><span class="p">:</span> <span class="s2">&quot;data/tutorial.tmx&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;some strange and long name that is not used for tmx-file lookup (because we use the tmx_file arg)&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">},</span>
+</pre></div>
+</td></tr></table></div>
+<p>Now, in order to actually play the level, you have to access the VikingLevel object inside the Game object and tell this level to play:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>15</pre></div></td><td class="code"><div class="highlight"><pre><span></span>    <span class="n">game</span><span class="o">.</span><span class="n">levels_by_name</span><span class="p">[</span><span class="s2">&quot;TUTORIAL&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>Make sure the quoted string in the above line matches the name you gave to the level.</p>
+<p>This should open up a pygame window of automatic size (the size of the level-tmx map) that looks like this:</p>
+<img alt="Erik being happy to finally be able to jump around in his new home" src="_images/026_erik_jumping_around_in_the_level.png" />
+<p>You can move Erik around in the level via the arrow keys as well as the space bar (for jumping). He will have to jump in order to reach the top of the hill
+in the right part of the level. We will talk about replacing the stairs-structure with smooth slopes in the next tutorial.</p>
+<p>This concludes the first part of the platformer tutorial. In the next part, we will delve deeper into spygame’s built-in objects and possibilities
+and add some of them to our level-tmx file: Slopes to get rid of the ugly stairs-like structure in our current level, an elevator to go up and down,
+a moving rock that Erik can push around (if he puts enough effort into it), a fire spitter (use with caution!), a ladder,
+and - of course - a dangerous monster.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="adding_more_things_to_our_platformer.html" title="Adding more Things to our Platformer"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction to spygame"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">spygame 0.1a8 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, ducandu GmbH.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>
