@@ -5,12 +5,15 @@ How to build a Platformer with spygame
 (now Blizzard Entertainment Inc.). Please use these (in your own projects and repos) for demonstration purposes only and then mention this
 copyright statement!*
 
-In this tutorial, we will be building a 2D platformer level from scratch using the spygame library. It will look roughly like this:
+In this tutorial, we will be building a 2D platformer level from scratch using the spygame library. After the first part of the tutorial (this page),
+the game will look roughly like this and we will be able to control Erik the Swift (the dude with the red beard) via the arrow keys and the
+space bar (to make him jump).
 
 .. image:: tutorial/001_final_spygame_game.png
     :alt: The final spygame game we will be building in this tutorial
 
-In the game, we will be able to control Erik the Swift via the arrow keys and the space bar (to make him jump).
+In the next part of the tutorial (on the following page(s)), we will add further interesting objects and enemies to the level and make
+the level look nicer as well.
 
 You will need the following simple prerequisites to follow along with the different steps in this tutorial:
 
@@ -29,15 +32,15 @@ Level tmx-files
 ---------------
 
 Our first step in building a platformer will be to create the level as a so called level-tmx file. A level-tmx file is nothing other than a regular
-tmx file (which is a type of xml) that can be opened and edited with the Tiled editor. However, spygame level-tmx files additionally support certain
-spygame specific custom properties that can be used to tweak the behavior and look of a level.
+tmx file (which is a type of xml) that can be opened and edited with the Tiled editor. However, level-tmx files additionally support
+spygame specific custom properties that can be used to tweak the behavior and look of a level and allow spygame to bring the level to life.
 
-Let's start by opening the Tiled editor. We click on *File->New*
+Let's start by opening the Tiled editor. Then we click on *File->New*
 
 .. image:: tutorial/002_file_new.png
     :alt: Create a new level-tmx file
 
-We specify our tile settings to be 24x24 tiles, with 16x16px for each tile.
+We specify our tile settings to be 24x24 tiles, with 16x16px for each tile and click on *OK*:
 
 .. image:: tutorial/003_file_new_specifics.png
     :alt: Specify some initial properties for the level-tmx file
@@ -58,46 +61,48 @@ Layers
 ------
 
 **Important Note:** For the following, make sure you have the
-*View->Views and Toolbars->Tilesets, Objects, Layers, Properties, Main Toolbar, and Tools* all checked to be able to see your new tileset (and some
-other things we need later) in the editor.
+*View->Views and Toolbars->Tilesets/Objects/Layers/Properties/Main Toolbar/Tools* all checked to be able to see your new tileset (and some
+other things we need later) in the Tiled editor.
 
 It's time to work on our first layer of our level. A layer is a group of tiles that all have a common purpose and
 that - if the layer is visible - get rendered at the same time.
-The most commonly used layers in a level are "collision layer", "background layer", and "foreground layer".
+The most commonly used layers in a level are the "collision layer", the "background layer", and the "foreground layer".
 The collision layer is usually not visible (not rendered), the background layer usually gets rendered first, followed by the game objects
-(the player, enemies, etc..) and the foreground
-layer, which gets rendered last (so it's in the foreground).
+(the player, enemies, etc..) and the foreground layer, which gets rendered last (so it's in the foreground).
 
 There should already be one layer in the just saved tmx file, called "Tile Layer 1". We will rename this layer now to "collision" by double clicking the
 layer in the Layers panel.
 
-In order to place tiles into the layer, we have to first generate one or more tilesets:
+In order to place some tiles into the layer, we have to first generate one or more tilesets:
+
 
 Tilesets
 ++++++++
 
-The tileset we will create first and then setup is a generic tileset that we will use to build our collision layer.
-The tiles in this layer will not be rendered in the game.
-
-Creating new Tilesets from png Files
-************************************
-
-We click on *Map->New Tileset* and then on the *Browse* button to select an image that we will turn into a tileset.
-
-.. image:: tutorial/006_map_new_tileset.png
-    :alt: Creating a new tileset from scratch
-
-A tileset is simply an image file that can be further split (horizontally and vertically) into "tiles". For example:
+Tilesets are generated from special image files (usually png) whose content is arranged in a way that it can be easily split (horizontally and vertically)
+into "tiles". For example:
 
 .. image:: tutorial/007_tileset_ready_png_image.png
     :alt: A png file that's ready to become a tileset
     :scale: 40%
 
+The first tileset we will create and then setup from such a png file will be a generic tileset that we will use to build our collision layer.
+The tiles in this collision layer will not be rendered in the game.
+
+
+Creating new Tilesets from png Files
+************************************
+
+We click on *Map->New Tileset* and then on the *Browse* button to select an image that we will turn into a tileset.
 From the images/ folder in our project, we now select the generic.png file and click on *Open*.
 
-We will leave the *Tile width/height* settings at 16px each (this will be the size of all our tiles used for layers in this level) and click on *OK*.
-We should see the following now in the Tilesets panel. Our new tileset has 18 usable tiles including the very first empty one. The tiles on the first
-row we will use to create walls and (sloped) floors. The tiles in the second row exist for other purposes (like defining a watery surface, an exit, etc..).
+.. image:: tutorial/006_map_new_tileset.png
+    :alt: Creating a new tileset from scratch
+
+We will leave the *Tile width/height* settings at 16px each (this will be the size of all our tiles used for layers in this level) and click *OK*.
+We should see the following now in the Tilesets panel of the editor. Our new tileset has 18 usable tiles including the very first empty one.
+The tiles on the first row we will use to create walls and (sloped) floors.
+The tiles in the second row exist for other purposes (like defining a watery surface, an exit, etc..), but more on that in the next tutorial(s).
 
 .. image:: tutorial/008_our_first_tileset.png
     :alt: Our first tileset in the Tilesets panel
@@ -109,18 +114,22 @@ Modifying Tilesets and Adding Properties to Single Tiles
 Next, we will add some properties to some of the tiles in the "generic" tileset so that spygame can recognize these tiles as proper collision tiles
 and make sure its physics engine gets the idea of walls, floors and slopes (slopes will be covered only in the next tutorial).
 
-If you right click on a tile, you can select *Tile Properties* and then you see in the Properties panel that the tile already has the fixed properties
-ID, width and height. Width and height should both be 16, since this is the size we chose when generating the tileset from the png file.
-We won't really care about the ID property here - or at any later time.
+If you right click on a tile, you can select *Tile Properties* and then you see in the Properties panel of the editor that the tile already has the
+fixed properties ID, width and height. Note that the Properties panel might be at a very different location than the Tilesets panel in the Tiled editor.
+
+Width and height (in the Properties panel) should both be 16, since this is the size we chose when generating the tileset from the generic.png file.
+We won't really care about the ID property now or at any later time.
 
 .. image:: tutorial/009_changing_single_tiles_properties.png
     :alt:
 
-We right click on the full red square tile and then click on the plus symbol in the properties panel to add a new custom property. We will call the
-property *slope* and set its type to *float* and its value to *0.0*. We add another property called *offset* (again: *float*) and set its value
+We right click on the full red square tile and then click on the plus symbol at the bottom of the properties panel to add a new custom property.
+We will call the new
+property *slope* and set its type to *float* and its value to *0.0*. We then add another property called *offset* (again: *float*) and set its value
 to *1.0*. These two
 values basically describe the slope function for that tile. The slope function returns a y value (vertical axis) for each x-axis (horizontal axis) value.
-X-axis values start from 0.0 at the very left edge of the tile and go to 1.0 at the very right edge of the tile.
+X-axis values start at 0.0 at the very left edge of the tile and go to 1.0 at the very right edge of the tile. Similarly, y-axis values go from 0.0 at the
+bottom edge of the tile to 1.0 at the top edge of the tile.
 For example, for a fully filled tile, the slope function would be y=0x+1, where 0 is the slope (no slope, no change in y-value dependent on x-value)
 and an offset (y-axis intersection) of 1.
 A 45° up-slope would therefore have the values slope=1.0 and offset=0.0 (y=x). A 45° down-slope would look like slope=-1.0 and offset=1.0 (y=-x+1), etc..
@@ -133,7 +142,8 @@ This way, we are able to define any arbitrary slopes.
     :alt:
 
 We will later add custom properties also to the other tiles in the *generic* tileset (when we talk about slopes in the next tutorial),
-but for now, the fully filled red square will be enough to get us started. It will allow us to create a floor, walls and some simple stairs-like structure.
+but for now, the fully filled red square will be enough to get us started. It will allow us to create a floor, some walls and a simple,
+stairs-like structure.
 
 
 The Collision Layer
@@ -326,7 +336,7 @@ Code to get Level Running
 -------------------------
 
 We are now ready to create our python program in which we will load the tmx file and then play the level.
-All the hard stuff was already done in the tmx file, all we have to do now is:
+All the hard stuff was already done in the tmx file. All we have to do now is:
 
 - Create a new python file in your project's directory (the one in which you have the images/ and data/ folders). Name the new file "tutorial.py"
 - Start coding:
@@ -337,14 +347,16 @@ All the hard stuff was already done in the tmx file, all we have to do now is:
     import spygame as spyg
     import spygame.examples.vikings as vik
 
-
 This will import the spygame library as well as spygame's "Lost Vikings" extension.
 
-Then we will create a spygame Game object that contains as only spygame.Level object our tmx-level (as vik.VikingLevel object).
+Then we will create a spygame.Game object that contains only one spygame.Level object our tmx-level (as a vik.VikingLevel object, which is a child
+class of spygame.Level).
 The different levels of a game are specified in the Game's constructor via a list of dictionaries, each of which specifying the Level's "class:"
 (we use the vik.VikingLevel here, which supports the three player characters Erik, Olaf and Baleog; more on that later), the level's "name:"
-(which may be a reference to the equally named tmx file in the data/ directory), and a numeric "id:". The title arg to the Game's constructor defines the
-caption of the pygame window that will open up when the game is played.
+(which may be a reference to the equally named tmx file in the data/ directory without the .tmx extension),
+and a numeric "id:".
+
+The title arg to the Game's constructor defines the caption of the pygame window that will open up when the game is played.
 
 
 .. code-block:: python

@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="24" height="24" tilewidth="16" tileheight="16" nextobjectid="2">
+ <properties>
+  <property name="keyboard_inputs" value="up,down,left,right,space"/>
+ </properties>
+ <tileset firstgid="1" name="generic" tilewidth="16" tileheight="16" tilecount="1600" columns="40">
+  <image source="../../platformer_2d/images/generic.png" width="640" height="640"/>
+  <tile id="1">
+   <properties>
+    <property name="offset" type="float" value="1"/>
+    <property name="slope" type="float" value="0"/>
+   </properties>
+  </tile>
+  <tile id="2">
+   <properties>
+    <property name="offset" type="float" value="0"/>
+    <property name="slope" type="float" value="1"/>
+   </properties>
+  </tile>
+  <tile id="3">
+   <properties>
+    <property name="offset" type="float" value="0"/>
+    <property name="slope" type="float" value="0.5"/>
+   </properties>
+  </tile>
+  <tile id="4">
+   <properties>
+    <property name="offset" type="float" value="0.5"/>
+    <property name="slope" type="float" value="0.5"/>
+   </properties>
+  </tile>
+  <tile id="5">
+   <properties>
+    <property name="offset" type="float" value="0"/>
+    <property name="slope" type="float" value="0.333333333"/>
+   </properties>
+  </tile>
+  <tile id="6">
+   <properties>
+    <property name="offset" type="float" value="0.333333333"/>
+    <property name="slope" type="float" value="0.333333333"/>
+   </properties>
+  </tile>
+  <tile id="7">
+   <properties>
+    <property name="offset" type="float" value="0.666666666"/>
+    <property name="slope" type="float" value="0.333333333"/>
+   </properties>
+  </tile>
+  <tile id="8">
+   <properties>
+    <property name="offset" type="float" value="1"/>
+    <property name="slope" type="float" value="-1"/>
+   </properties>
+  </tile>
+  <tile id="9">
+   <properties>
+    <property name="offset" type="float" value="1"/>
+    <property name="slope" type="float" value="-0.5"/>
+   </properties>
+  </tile>
+  <tile id="10">
+   <properties>
+    <property name="offset" type="float" value="0.5"/>
+    <property name="slope" type="float" value="-0.5"/>
+   </properties>
+  </tile>
+  <tile id="11">
+   <properties>
+    <property name="offset" type="float" value="1"/>
+    <property name="slope" type="float" value="-0.333333333"/>
+   </properties>
+  </tile>
+  <tile id="12">
+   <properties>
+    <property name="offset" type="float" value="0.666666666"/>
+    <property name="slope" type="float" value="-0.333333333"/>
+   </properties>
+  </tile>
+  <tile id="13">
+   <properties>
+    <property name="offset" type="float" value="0.333333333"/>
+    <property name="slope" type="float" value="-0.333333333"/>
+   </properties>
+  </tile>
+  <tile id="43">
+   <properties>
+    <property name="type" value="quicksand"/>
+   </properties>
+  </tile>
+ </tileset>
+ <tileset firstgid="1601" name="egpt" tilewidth="16" tileheight="16" tilecount="1600" columns="40">
+  <image source="../../platformer_2d/images/egpt.png" width="640" height="640"/>
+  <terraintypes>
+   <terrain name="ground" tile="-1">
+    <properties>
+     <property name="build_ladders" type="bool" value="true"/>
+    </properties>
+   </terrain>
+  </terraintypes>
+  <tile id="103">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="104">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="320">
+   <properties>
+    <property name="autobuild_class" value="spygame.LiquidBody"/>
+   </properties>
+  </tile>
+  <tile id="321">
+   <properties>
+    <property name="autobuild_class" value="spygame.LiquidBody"/>
+   </properties>
+  </tile>
+  <tile id="322">
+   <properties>
+    <property name="autobuild_class" value="spygame.LiquidBody"/>
+   </properties>
+  </tile>
+  <tile id="360">
+   <properties>
+    <property name="autobuild_class" value="spygame.LiquidBody"/>
+   </properties>
+  </tile>
+  <tile id="379">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="380">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="400">
+   <properties>
+    <property name="autobuild_class" value="spygame.LiquidBody"/>
+   </properties>
+  </tile>
+  <tile id="401">
+   <properties>
+    <property name="autobuild_class" value="spygame.LiquidBody"/>
+   </properties>
+  </tile>
+  <tile id="406">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="407">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="410">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="411">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="419">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="420">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="440">
+   <properties>
+    <property name="autobuild_class" value="spygame.LiquidBody"/>
+   </properties>
+  </tile>
+  <tile id="441">
+   <properties>
+    <property name="autobuild_class" value="spygame.LiquidBody"/>
+   </properties>
+  </tile>
+  <tile id="446">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="447">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="450">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="451">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="481">
+   <properties>
+    <property name="autobuild_class" value="spygame.LiquidBody"/>
+   </properties>
+  </tile>
+  <tile id="486">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="487">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="490">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="491">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="492">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="493">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="529">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="530">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="533">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="534">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="641">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="642">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="681">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="682">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="721">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="722">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="730">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="731">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="761">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="762">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="770">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="771">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="793">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="794">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="810">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="811">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="850">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="851">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="890">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+  <tile id="891">
+   <properties>
+    <property name="autobuild_class" value="spygame.Ladder"/>
+   </properties>
+  </tile>
+ </tileset>
+ <tileset firstgid="3201" source="erik.tsx"/>
+ <layer name="background" width="24" height="24">
+  <properties>
+   <property name="autobuild_objects" type="bool" value="true"/>
+   <property name="render_order" type="int" value="10"/>
+  </properties>
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2161,2162,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2201,2202,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2241,2242,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2281,2282,
+1861,1862,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2321,2322,
+1901,1902,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2361,2362,
+1941,1942,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1725,
+1981,1982,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1765,
+2021,2022,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1784,
+1725,0,0,0,2250,2251,2252,2253,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1784,
+1765,0,0,0,2290,2291,2292,2293,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1725,
+1785,0,0,0,2330,2331,2332,2333,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1765,
+1785,0,0,0,2370,2371,2372,2373,0,0,0,0,0,0,0,0,2060,2061,1848,1848,1849,2481,2482,1784,
+1785,0,0,0,0,2451,2452,0,0,0,0,0,0,0,0,0,1842,1843,1844,1841,1842,1843,1844,1784,
+1725,0,0,0,0,2451,2452,0,0,0,0,0,0,0,0,1848,1882,1883,1884,1881,1882,1883,1884,1784,
+1765,0,0,0,2410,2411,2412,2413,0,0,0,0,0,0,1848,1843,1844,1849,1725,1725,1848,1848,1849,1725,
+1785,0,0,0,2450,2451,2452,2453,0,0,0,0,0,0,1843,1883,1884,1844,1765,1725,1848,1849,1849,1765,
+1684,0,0,0,2490,2491,2492,2493,0,0,0,0,0,0,1883,1884,1883,1884,1765,1725,1848,1848,1849,1784,
+1724,2485,2486,2487,2488,2489,2401,2402,2403,2404,1811,1811,1812,1784,1785,1785,1785,1785,1765,1765,1784,1785,1785,1785,
+1686,2525,2526,2527,2528,2529,2441,2442,2443,2444,1732,1733,1734,1735,1733,1734,1735,1811,1812,1778,1732,1733,1734,1735,
+1766,1767,1692,1693,1694,1695,1696,1697,1698,1811,1812,1773,1774,1775,1773,1774,1775,1696,1697,1732,1772,1773,1774,1775,
+1767,1767,1732,1733,1734,1735,1736,1737,1738,1811,1812,1773,1774,1775,1733,1734,1735,1736,1737,1772,1773,1774,1811,1812
+</data>
+ </layer>
+ <layer name="foreground" width="24" height="24">
+  <properties>
+   <property name="autobuild_objects" type="bool" value="true"/>
+   <property name="render_order" type="int" value="90"/>
+  </properties>
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,2168,2169,2170,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,2207,2208,2209,2249,1809,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,2245,2246,2247,2248,2249,1809,0,0,0,0,0,0,0,0,
+0,0,0,0,2410,0,0,2413,0,0,2285,2286,2287,2288,1809,0,0,0,0,0,2002,1922,1923,0,
+0,0,0,0,2450,0,0,2453,0,2324,2325,2326,2327,1725,0,0,0,0,0,0,2042,2042,2001,0,
+0,0,0,0,2490,0,0,2493,0,2364,2365,2366,1778,1765,0,0,0,0,0,0,2001,2082,2041,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup name="objects">
+  <object id="1" name="erik" type="spygame.examples.vikings.Erik" gid="3201" x="32" y="32" width="32" height="32"/>
+ </objectgroup>
+ <layer name="collision" width="24" height="24" visible="0">
+  <properties>
+   <property name="do_render" type="bool" value="false"/>
+   <property name="type" value="default"/>
+  </properties>
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
+2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
+2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
+2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
+2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,2,2,0,0,0,2,2,2,
+2,0,0,0,0,0,0,0,0,0,0,0,0,0,3,2,0,0,0,0,0,0,0,2,
+2,0,0,0,0,0,0,0,0,0,0,0,0,3,2,0,0,0,0,0,0,0,0,2,
+2,0,0,0,0,0,0,0,0,0,0,0,3,2,0,0,0,0,2,2,0,0,0,2,
+2,0,0,0,0,0,0,0,0,0,0,3,0,2,0,0,0,0,2,2,0,0,0,2,
+2,0,0,0,0,0,0,0,0,4,5,0,0,2,0,0,0,0,2,2,0,0,0,2,
+2,2,2,2,2,2,2,2,2,2,0,0,0,2,2,2,2,2,2,2,2,2,2,2,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+</map>

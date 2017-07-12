@@ -5216,7 +5216,7 @@
  </layer>
  <objectgroup name="objects">
   <object id="2" name="erik" type="spygame.examples.vikings.Erik" gid="3217" x="508" y="247" width="32" height="32"/>
-  <object id="3" name="scorpion" type="spygame.examples.vikings.Scorpion" gid="3201" x="1106" y="275" width="32" height="32"/>
+  <object id="3" name="scorpion" type="spygame.examples.vikings.Scorpion" gid="3201" x="1099" y="284" width="32" height="32"/>
   <object id="4" name="baleog" type="spygame.examples.vikings.Baleog" gid="3379" x="8" y="262" width="32" height="32"/>
   <object id="5" name="movable_rock" type="spygame.MovableRock" gid="3550" x="1456" y="240" width="32" height="32">
    <properties>
@@ -5250,7 +5250,7 @@
     <property name="color" value="yellow"/>
    </properties>
   </object>
-  <object id="23" name="dino1" type="spygame.examples.vikings.Dinosaur" gid="3726" x="436" y="294" width="32" height="32">
+  <object id="23" name="dino1" type="spygame.examples.vikings.Dinosaur" gid="3726" x="418" y="261" width="32" height="32">
    <properties>
     <property name="color" value="white"/>
    </properties>

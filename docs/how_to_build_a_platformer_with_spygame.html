@@ -107,11 +107,14 @@
   <div class="section" id="how-to-build-a-platformer-with-spygame">
 <h1>How to build a Platformer with spygame<a class="headerlink" href="#how-to-build-a-platformer-with-spygame" title="Permalink to this headline">¶</a></h1>
 <p><strong>IMPORTANT NOTE:</strong> <em>All graphics used in this tutorial were taken from the game “The Lost Vikings” (c) 1992 by Silicon and Synapse
-(now Blizzard Entertainment Inc.). Please use these (in your own projects and repos) for demonstration purposes only and thereby mention this
+(now Blizzard Entertainment Inc.). Please use these (in your own projects and repos) for demonstration purposes only and then mention this
 copyright statement!</em></p>
-<p>In this tutorial, we will be building a 2D platformer level from scratch using the spygame library. It will look roughly like this:</p>
+<p>In this tutorial, we will be building a 2D platformer level from scratch using the spygame library. After the first part of the tutorial (this page),
+the game will look roughly like this and we will be able to control Erik the Swift (the dude with the red beard) via the arrow keys and the
+space bar (to make him jump).</p>
 <img alt="The final spygame game we will be building in this tutorial" src="_images/001_final_spygame_game.png" />
-<p>In the game, we will be able to control Erik the Swift via the arrow keys and the space bar (to make him jump).</p>
+<p>In the next part of the tutorial (on the following page(s)), we will add further interesting objects and enemies to the level and make
+the level look nicer as well.</p>
 <p>You will need the following simple prerequisites to follow along with the different steps in this tutorial:</p>
 <ul class="simple">
 <li>The “Tiled” editor to create spygame’s level-tmx files. A level-tmx file contains all necessary information for spygame to build a complete level, i.e.
@@ -128,11 +131,11 @@ which we will write the tutorial.py file (the only python file we are going to c
 <div class="section" id="level-tmx-files">
 <h2>Level tmx-files<a class="headerlink" href="#level-tmx-files" title="Permalink to this headline">¶</a></h2>
 <p>Our first step in building a platformer will be to create the level as a so called level-tmx file. A level-tmx file is nothing other than a regular
-tmx file (which is a type of xml) that can be opened and edited with the Tiled editor. However, spygame level-tmx files additionally support certain
-spygame specific custom properties that can be used to tweak the behavior and look of a level.</p>
-<p>Let’s start by opening the Tiled editor. We click on <em>File-&gt;New</em></p>
+tmx file (which is a type of xml) that can be opened and edited with the Tiled editor. However, level-tmx files additionally support
+spygame specific custom properties that can be used to tweak the behavior and look of a level and allow spygame to bring the level to life.</p>
+<p>Let’s start by opening the Tiled editor. Then we click on <em>File-&gt;New</em></p>
 <img alt="Create a new level-tmx file" src="_images/002_file_new.png" />
-<p>We specify our tile settings to be 24x24 tiles, with 16x16px for each tile.</p>
+<p>We specify our tile settings to be 24x24 tiles, with 16x16px for each tile and click on <em>OK</em>:</p>
 <img alt="Specify some initial properties for the level-tmx file" src="_images/003_file_new_specifics.png" />
 <p>This is what our empty level should now look like:</p>
 <a class="reference internal image-reference" href="_images/004_empty_level.png"><img alt="An empty level-tmx file ready to be populated" src="_images/004_empty_level.png" style="width: 564.5px; height: 405.0px;" /></a>
@@ -143,46 +146,50 @@ should be in the data/ directory right now.</p>
 <div class="section" id="layers">
 <h2>Layers<a class="headerlink" href="#layers" title="Permalink to this headline">¶</a></h2>
 <p><strong>Important Note:</strong> For the following, make sure you have the
-<em>View-&gt;Views and Toolbars-&gt;Tilesets, Objects, Layers, Properties, Main Toolbar, and Tools</em> all checked to be able to see your new tileset (and some
-other things we need later) in the editor.</p>
+<em>View-&gt;Views and Toolbars-&gt;Tilesets/Objects/Layers/Properties/Main Toolbar/Tools</em> all checked to be able to see your new tileset (and some
+other things we need later) in the Tiled editor.</p>
 <p>It’s time to work on our first layer of our level. A layer is a group of tiles that all have a common purpose and
 that - if the layer is visible - get rendered at the same time.
-The most commonly used layers in a level are “collision layer”, “background layer”, and “foreground layer”.
+The most commonly used layers in a level are the “collision layer”, the “background layer”, and the “foreground layer”.
 The collision layer is usually not visible (not rendered), the background layer usually gets rendered first, followed by the game objects
-(the player, enemies, etc..) and the foreground
-layer, which gets rendered last (so it’s in the foreground).</p>
+(the player, enemies, etc..) and the foreground layer, which gets rendered last (so it’s in the foreground).</p>
 <p>There should already be one layer in the just saved tmx file, called “Tile Layer 1”. We will rename this layer now to “collision” by double clicking the
 layer in the Layers panel.</p>
-<p>In order to place tiles into the layer, we have to first generate one or more tilesets:</p>
+<p>In order to place some tiles into the layer, we have to first generate one or more tilesets:</p>
 <div class="section" id="tilesets">
 <h3>Tilesets<a class="headerlink" href="#tilesets" title="Permalink to this headline">¶</a></h3>
-<p>The tileset we will create first and then setup is a generic tileset that we will use to build our collision layer.
-The tiles in this layer will not be rendered in the game.</p>
+<p>Tilesets are generated from special image files (usually png) whose content is arranged in a way that it can be easily split (horizontally and vertically)
+into “tiles”. For example:</p>
+<a class="reference internal image-reference" href="_images/007_tileset_ready_png_image.png"><img alt="A png file that's ready to become a tileset" src="_images/007_tileset_ready_png_image.png" style="width: 462.0px; height: 193.60000000000002px;" /></a>
+<p>The first tileset we will create and then setup from such a png file will be a generic tileset that we will use to build our collision layer.
+The tiles in this collision layer will not be rendered in the game.</p>
 <div class="section" id="creating-new-tilesets-from-png-files">
 <h4>Creating new Tilesets from png Files<a class="headerlink" href="#creating-new-tilesets-from-png-files" title="Permalink to this headline">¶</a></h4>
-<p>We click on <em>Map-&gt;New Tileset</em> and then on the <em>Browse</em> button to select an image that we will turn into a tileset.</p>
+<p>We click on <em>Map-&gt;New Tileset</em> and then on the <em>Browse</em> button to select an image that we will turn into a tileset.
+From the images/ folder in our project, we now select the generic.png file and click on <em>Open</em>.</p>
 <img alt="Creating a new tileset from scratch" src="_images/006_map_new_tileset.png" />
-<p>A tileset is simply an image file that can be further split (horizontally and vertically) into “tiles”. For example:</p>
-<a class="reference internal image-reference" href="_images/007_tileset_ready_png_image.png"><img alt="A png file that's ready to become a tileset" src="_images/007_tileset_ready_png_image.png" style="width: 462.0px; height: 193.60000000000002px;" /></a>
-<p>From the images/ folder in our project, we now select the generic.png file and click on <em>Open</em>.</p>
-<p>We will leave the <em>Tile width/height</em> settings at 16px each (this will be the size of all our tiles used for layers in this level) and click on <em>OK</em>.
-We should see the following now in the Tilesets panel. Our new tileset has 18 usable tiles including the very first empty one. The tiles on the first
-row we will use to create walls and (sloped) floors. The tiles in the second row exist for other purposes (like defining a watery surface, an exit, etc..).</p>
+<p>We will leave the <em>Tile width/height</em> settings at 16px each (this will be the size of all our tiles used for layers in this level) and click <em>OK</em>.
+We should see the following now in the Tilesets panel of the editor. Our new tileset has 18 usable tiles including the very first empty one.
+The tiles on the first row we will use to create walls and (sloped) floors.
+The tiles in the second row exist for other purposes (like defining a watery surface, an exit, etc..), but more on that in the next tutorial(s).</p>
 <img alt="Our first tileset in the Tilesets panel" src="_images/008_our_first_tileset.png" />
 </div>
 <div class="section" id="modifying-tilesets-and-adding-properties-to-single-tiles">
 <h4>Modifying Tilesets and Adding Properties to Single Tiles<a class="headerlink" href="#modifying-tilesets-and-adding-properties-to-single-tiles" title="Permalink to this headline">¶</a></h4>
 <p>Next, we will add some properties to some of the tiles in the “generic” tileset so that spygame can recognize these tiles as proper collision tiles
 and make sure its physics engine gets the idea of walls, floors and slopes (slopes will be covered only in the next tutorial).</p>
-<p>If you right click on a tile, you can select <em>Tile Properties</em> and then you see in the Properties panel that the tile already has the fixed properties
-ID, width and height. Width and height should both be 16, since this is the size we chose when generating the tileset from the png file.
-We won’t really care about the ID property here - or at any later time.</p>
+<p>If you right click on a tile, you can select <em>Tile Properties</em> and then you see in the Properties panel of the editor that the tile already has the
+fixed properties ID, width and height. Note that the Properties panel might be at a very different location than the Tilesets panel in the Tiled editor.</p>
+<p>Width and height (in the Properties panel) should both be 16, since this is the size we chose when generating the tileset from the generic.png file.
+We won’t really care about the ID property now or at any later time.</p>
 <img alt="" src="_images/009_changing_single_tiles_properties.png" />
-<p>We right click on the full red square tile and then click on the plus symbol in the properties panel to add a new custom property. We will call the
-property <em>slope</em> and set its type to <em>float</em> and its value to <em>0.0</em>. We add another property called <em>offset</em> (again: <em>float</em>) and set its value
+<p>We right click on the full red square tile and then click on the plus symbol at the bottom of the properties panel to add a new custom property.
+We will call the new
+property <em>slope</em> and set its type to <em>float</em> and its value to <em>0.0</em>. We then add another property called <em>offset</em> (again: <em>float</em>) and set its value
 to <em>1.0</em>. These two
 values basically describe the slope function for that tile. The slope function returns a y value (vertical axis) for each x-axis (horizontal axis) value.
-X-axis values start from 0.0 at the very left edge of the tile and go to 1.0 at the very right edge of the tile.
+X-axis values start at 0.0 at the very left edge of the tile and go to 1.0 at the very right edge of the tile. Similarly, y-axis values go from 0.0 at the
+bottom edge of the tile to 1.0 at the top edge of the tile.
 For example, for a fully filled tile, the slope function would be y=0x+1, where 0 is the slope (no slope, no change in y-value dependent on x-value)
 and an offset (y-axis intersection) of 1.
 A 45° up-slope would therefore have the values slope=1.0 and offset=0.0 (y=x). A 45° down-slope would look like slope=-1.0 and offset=1.0 (y=-x+1), etc..
@@ -190,7 +197,8 @@ This way, we are able to define any arbitrary slopes.</p>
 <img alt="" src="_images/010_adding_the_offset_property_to_a_tile.png" />
 <img alt="" src="_images/011_custom_properties_for_a_tile.png" />
 <p>We will later add custom properties also to the other tiles in the <em>generic</em> tileset (when we talk about slopes in the next tutorial),
-but for now, the fully filled red square will be enough to get us started. It will allow us to create a floor, walls and some simple stairs-like structure.</p>
+but for now, the fully filled red square will be enough to get us started. It will allow us to create a floor, some walls and a simple,
+stairs-like structure.</p>
 </div>
 </div>
 <div class="section" id="the-collision-layer">
@@ -317,7 +325,7 @@ Remember to save the tmx file under its current name (tutorial.tmx).</p>
 <div class="section" id="code-to-get-level-running">
 <h2>Code to get Level Running<a class="headerlink" href="#code-to-get-level-running" title="Permalink to this headline">¶</a></h2>
 <p>We are now ready to create our python program in which we will load the tmx file and then play the level.
-All the hard stuff was already done in the tmx file, all we have to do now is:</p>
+All the hard stuff was already done in the tmx file. All we have to do now is:</p>
 <ul class="simple">
 <li>Create a new python file in your project’s directory (the one in which you have the images/ and data/ folders). Name the new file “tutorial.py”</li>
 <li>Start coding:</li>
@@ -328,11 +336,13 @@ All the hard stuff was already done in the tmx file, all we have to do now is:</
 </pre></div>
 </td></tr></table></div>
 <p>This will import the spygame library as well as spygame’s “Lost Vikings” extension.</p>
-<p>Then we will create a spygame Game object that contains as only spygame.Level object our tmx-level (as vik.VikingLevel object).
+<p>Then we will create a spygame.Game object that contains only one spygame.Level object our tmx-level (as a vik.VikingLevel object, which is a child
+class of spygame.Level).
 The different levels of a game are specified in the Game’s constructor via a list of dictionaries, each of which specifying the Level’s “class:”
 (we use the vik.VikingLevel here, which supports the three player characters Erik, Olaf and Baleog; more on that later), the level’s “name:”
-(which may be a reference to the equally named tmx file in the data/ directory), and a numeric “id:”. The title arg to the Game’s constructor defines the
-caption of the pygame window that will open up when the game is played.</p>
+(which may be a reference to the equally named tmx file in the data/ directory without the .tmx extension),
+and a numeric “id:”.</p>
+<p>The title arg to the Game’s constructor defines the caption of the pygame window that will open up when the game is played.</p>
 <div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 3
  4
  5

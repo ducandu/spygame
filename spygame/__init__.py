@@ -762,7 +762,7 @@ class MovableRock(Sprite):
 
         # subscribe/register to some events
         self.on_event("bump.bottom", self, "land", register=True)
-        self.register_event("bump.top", "bump.left", "bump.right", "hit.liquid_ground")
+        self.register_event("bump.top", "bump.left", "bump.right", "hit.liquid")
 
     def tick(self, game_loop):
         # let our physics component handle all movements
@@ -772,7 +772,29 @@ class MovableRock(Sprite):
         self.stage.shake_viewport(1, 10)
 
 
-class Ladder(Sprite):
+class Autobuild(object):
+    """
+    Mix-in class to force x, y, width, height structure of ctors. All autobuild objects (objects that are built automatically by a TiledTileLayer with
+    the property autobuild_objects=true) will have to abode to this ctor parameter structure.
+    """
+    def __init__(self, x, y, w, h, tile_w, tile_h):
+        """
+        :param int x: the x position of the Autobuild in tile units
+        :param int y: the y position of the Autobuild in tile units
+        :param int w: the width of the Autobuild in tile units
+        :param int h: the height of the Autobuild in tile units
+        :param int tile_w: the tile width of the layer
+        :param int tile_h: the tile height of the layer
+        """
+        self.x_in_tiles = x
+        self.y_in_tiles = y
+        self.w_in_tiles = w
+        self.h_in_tiles = h
+        self.tile_w = tile_w
+        self.tile_h = tile_h
+
+
+class Ladder(Sprite, Autobuild):
     """
     A Ladder object that actors can climb on.
     One-way-platform type: one cannot fall through the top of the ladder but does not collide with the rest (e.g. from below) of the ladder.
@@ -780,22 +802,56 @@ class Ladder(Sprite):
     TiledTileLayers have the possibility to generate Ladder objects automatically from those tiles that are flagged with the type='ladder' property. In that
     case, the TiledTileLayer property 'build_ladders' (bool) has to be set to true.
     """
-    def __init__(self, x, y, width=32, height=80):
+    def __init__(self, x, y, w, h, tile_w, tile_h):
         """
-        :param int x: the x position of the Ladder
-        :param int y: the y position of the Ladder
-        :param int width: the width of the Ladder in pixels (not tiles!)
-        :param int height: the height of the Ladder in pixels (not tiles!)
+        :param int x: the x position of the Ladder in tile units
+        :param int y: the y position of the Ladder in tile units
+        :param int w: the width of the Ladder in tile units
+        :param int h: the height of the Ladder in tile units
+        :param int tile_w: the tile width of the layer
+        :param int tile_h: the tile height of the layer
         """
+        Autobuild.__init__(self, x, y, w, h, tile_w, tile_h)
         # transform values here to make collision with ladder to only trigger when player is relatively close to the x-center of the ladder
         # - make this a 2px wide vertical axis in the center of the ladder
-        x = x + int(width/2) - 1
-        width = 2
+        x_px = self.x_in_tiles * self.tile_w + int(self.w_in_tiles * self.tile_w/2) - 1
+        y_px = self.y_in_tiles * self.tile_h
 
-        super().__init__(x, y, width_height=(width, height))
+        # call the Sprite ctor (now everything is in px)
+        Sprite.__init__(self, x_px, y_px, width_height=(2, self.h_in_tiles * self.tile_h))
 
         # collision types
         self.type = Sprite.get_type("ladder,dockable,one_way_platform")
+        self.collision_mask = 0  # do not do any collisions
+
+
+class LiquidBody(Sprite, Autobuild):
+    """
+    A LiquidBody object (quicksand, water, etc..) that an actor will sink into and die. The AIBrain of enemies will avoid stepping into such an object.
+    """
+    def __init__(self, x, y, w, h, tile_w, tile_h, description="quicksand"):
+        """
+        :param int x: the x position of the Ladder in tile units
+        :param int y: the y position of the Ladder in tile units
+        :param int w: the width of the Ladder in tile units
+        :param int h: the height of the Ladder in tile units
+        :param int tile_w: the tile width of the layer
+        :param int tile_h: the tile height of the layer
+        """
+        Autobuild.__init__(self, x, y, w, h, tile_w, tile_h)
+        # make the liquid object a little lower than the actual tiles (especially at the top assuming that the top is done with tiles only showing
+        # the very shallow surface of the liquid body)
+        x_px = self.x_in_tiles * self.tile_w
+        y_px = self.y_in_tiles * self.tile_h + int(self.tile_h * 0.9)
+
+        # call the Sprite ctor (now everything is in px)
+        Sprite.__init__(self, x_px, y_px, width_height=(self.w_in_tiles * self.tile_w, self.h_in_tiles * self.tile_h - int(self.tile_h * 0.9)))
+
+        # can be used to distinguish between different types of liquids (water, quicksand, lava, etc..)
+        self.description = description
+
+        # collision types
+        self.type = Sprite.get_type("liquid")
         self.collision_mask = 0  # do not do any collisions
 
 
@@ -1385,12 +1441,11 @@ class Stage(GameObject):
             self.to_render.append(tiled_tile_layer)
             self.to_render.sort(key=lambda x: x.render_order)
 
-        # TODO: make this ladder process more generic (maybe other object types could be built like that as well)
-        # capture ladders?
-        if tiled_tile_layer.properties.get("build_ladders") == "true":
-            ladders = tiled_tile_layer.capture_ladders()
-            for ladder in ladders:
-                self.add_sprite(ladder, "ladders")
+        # capture ladders and other autobuild structures?
+        if tiled_tile_layer.properties.get("autobuild_objects") == "true":
+            objects = tiled_tile_layer.capture_autobuilds()
+            for obj in objects:
+                self.add_sprite(obj, "autobuilds")
 
     def add_sprite(self, sprite, group_name):
         """
@@ -1690,17 +1745,16 @@ class TiledTileLayer(TmxLayer):
         r.height = display.height
         display.surface.blit(self.pygame_sprite.image, dest=(0, 0), area=r)
 
-    # TODO: make ladder-capturing from background layer more generic (include waterfalls sprites, quicksand sprites, etc..)
-    def capture_ladders(self):
+    def capture_autobuilds(self):
         """
-        Captures all ladder objects in this layer and returns them in a list of Ladder objects.
-        Once a ladder tile is found: searches neighboring tiles (starting to move right and down) for the same property and thus measures the ladder width
-        and height (in tiles).
+        Captures all autobuild objects in this layer and returns them in a list of objects.
+        Once an autobuild tile is found: searches neighboring tiles (starting to move right and down) for the same property and thus measures the object's
+        width and height (in tiles).
 
-        :return: list of generated Ladder objects
-        :rtype: List[Ladder]
+        :return: list of generated autobuild objects
+        :rtype: List[object]
         """
-        ladders = []
+        objects = []
         # loop through each tile and look for ladder type property
         for y in range(self.pytmx_layer.height):
             for x in range(self.pytmx_layer.width):
@@ -1708,35 +1762,37 @@ class TiledTileLayer(TmxLayer):
                 if not tile_sprite:
                     continue
                 props = tile_sprite.tile_props
-                # we hit the upper left corner of a ladder
-                if props.get("type") == "ladder":
+                # we hit the upper left corner of an autobuild object -> spread out to find more neighboring similar tiles
+                ctor = props.get("autobuild_class", False)
+                if ctor:
+                    assert isinstance(ctor, type), "ERROR: translation of tile ({},{}) property `autobuild_class` did not yield a defined class!".format(x, y)
                     tile_left = self.tile_sprites[(x-1, y)]  # type: TileSprite
                     tile_top = self.tile_sprites[(x, y-1)]  # type: TileSprite
-                    if (tile_left and tile_left.tile_props.get("type") == "ladder") or (tile_top and tile_top.tile_props.get("type") == "ladder"):
+                    if tile_left and tile_left.tile_props.get("autobuild_class") == ctor or \
+                            tile_top and tile_top.tile_props.get("autobuild_class") == ctor:
                         continue
                     # measure width and height
                     w = 1
                     h = 1
                     x2 = x+1
-                    while True:
+                    while True and x2 < self.pytmx_layer.width:
                         ts = self.tile_sprites[(x2, y)]
-                        if not (ts and ts.tile_props.get("type") == "ladder"):
+                        if not (ts and ts.tile_props.get("autobuild_class") == ctor):
                             break
                         w += 1
                         x2 += 1
 
                     y2 = y+1
-                    while True:
+                    while True and y2 < self.pytmx_layer.height:
                         ts = self.tile_sprites[(x, y2)]
-                        if not (ts and ts.tile_props.get("type") == "ladder"):
+                        if not (ts and ts.tile_props.get("autobuild_class") == ctor):
                             break
                         h += 1
                         y2 += 1
 
-                    # insert new Ladder
-                    ladders.append(Ladder(x * self.pytmx_tiled_map.tilewidth, y * self.pytmx_tiled_map.tileheight,\
-                                          w * self.pytmx_tiled_map.tilewidth, h * self.pytmx_tiled_map.tileheight))
-        return ladders
+                    # insert new object (all autobuild objects need to accept x, y, w, h in their constructors)
+                    objects.append(ctor(x, y, w, h, self.pytmx_tiled_map.tilewidth, self.pytmx_tiled_map.tileheight))
+        return objects
 
     def get_overlapping_tiles(self, sprite):
         """
@@ -1788,6 +1844,7 @@ class TiledTileLayer(TmxLayer):
                 if col:
                     return col
         return None
+
 
 class TileSprite(Sprite):
     """
@@ -1892,9 +1949,9 @@ class TiledObjectGroup(TmxLayer):
             # - first look in the tile's properties for the 'class' field, only then try the 'type' field directly of the object (manually given by designer)
             class_global = obj_props.pop("class", None) or obj.type
             if class_global:
-                match_obj = re.fullmatch('^((.+)\.)?(\w+)$', class_global)
-                assert match_obj, "ERROR: type field ({}) of object in pytmx.pytmx.TiledObjectGroup does not match pattern!".format(obj.type)
-                _, module_, class_ = match_obj.groups(default="__main__")  # if no module given, assume a class defined in __main__
+                ctor = convert_type(class_global, force_class=True)
+                assert isinstance(ctor, type), "ERROR: python class `{}` for object in object-layer `{}` not defined!".\
+                    format(class_global, self.pytmx_layer.name)
 
                 # get other kwargs for the Sprite's c'tor
                 kwargs = {}
@@ -1914,8 +1971,6 @@ class TiledObjectGroup(TmxLayer):
                         kwargs[key] = convert_type(value)
 
                 # generate the Sprite
-                ctor = getattr(sys.modules[module_], class_, None)
-                assert ctor, "ERROR: python class `{}` for object in object-layer `{}` not defined!".format(class_, self.pytmx_layer.name)
                 sprite = ctor(obj.x, obj.y, **kwargs)
                 ## add the do_render and render_order to the new instance
                 #sprite.do_render = (obj_props.get("do_render", "true") == "true")  # the default for objects is true
@@ -2395,7 +2450,7 @@ class AIBrain(AnimationLinkedBrain):
                                w,
                                tile_h * 1.75,
                                Sprite.get_type("default"))
-        if not col or isinstance(col.sprite2, TileSprite) and col.sprite2.tile_props.get("type") in ["quicksand", "water"]:
+        if not col or isinstance(col.sprite2, LiquidBody):
             return True
         return False
 
@@ -2827,9 +2882,9 @@ class PhysicsComponent(Component, metaclass=ABCMeta):
                 value = convert_type(value)
                 tile_props[key] = value
 
-            ret[x,y] = tile_sprite_class(layer, layer.pytmx_tiled_map, gid, tile_props,
-                                        pygame.Rect(x * layer.pytmx_tiled_map.tilewidth, y * layer.pytmx_tiled_map.tileheight,
-                                                    layer.pytmx_tiled_map.tilewidth, layer.pytmx_tiled_map.tileheight))
+            ret[x, y] = tile_sprite_class(layer, layer.pytmx_tiled_map, gid, tile_props,
+                                         pygame.Rect(x * layer.pytmx_tiled_map.tilewidth, y * layer.pytmx_tiled_map.tileheight,
+                                                     layer.pytmx_tiled_map.tilewidth, layer.pytmx_tiled_map.tileheight))
         return ret
 
     # probably needs to be extended further by child classes
@@ -3182,6 +3237,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
         # self.touching = 0  # bitmap with those bits set that the entity is currently touching (colliding with)
         self.at_exit = False
         self.at_wall = False
+        self.is_sinking_til = None  # a y-pos at which point the GameObject will stop sinking into a LiquidBody
         self.on_ladder = None  # None if GameObject is not locked into a ladder; Ladder obj if obj is currently locked into a ladder (in climbing position)
         self.touched_ladder = None  # holds the ladder Sprite, if player is currently touching a Ladder (not locked in!), otherwise: None
         self.climb_frame_value = 0  # int([climb_frame_value]) determines the frame to use to display climbing position
@@ -3196,11 +3252,11 @@ class PlatformerPhysics(ControlledPhysicsComponent):
         # add the Dockable Component to our GameObject (we need it this for us to work properly)
         self.game_obj_cmp_dockable = obj.add_component(Dockable("dockable"))
 
-        # add default and ladder to the collision mask of our GameObject
-        obj.collision_mask |= Sprite.get_type("default,ladder")
+        # add some bit-flags to the collision mask of our GameObject
+        obj.collision_mask |= Sprite.get_type("default,ladder,liquid")
 
         # register events that we may trigger directly on the game_object
-        obj.register_event("hit.particle", "hit.liquid_ground", "squeezed.top", "bump.top", "bump.bottom", "bump.left", "bump.right")
+        obj.register_event("hit.particle", "hit.liquid", "squeezed.top", "bump.top", "bump.bottom", "bump.left", "bump.right")
 
     def lock_ladder(self):
         """
@@ -3343,6 +3399,9 @@ class PlatformerPhysics(ControlledPhysicsComponent):
                 self.vy += self.gravity_y * dt
             if abs(self.vy) > self.max_fall_speed:
                 self.vy = math.copysign(self.max_fall_speed, self.vy)
+            # do we have to stop sinking?
+            if self.is_sinking_til and obj.rect.y >= self.is_sinking_til:
+                self.vy = 0.0
 
             # reset all touch flags before doing all the collision analysis
             if self.vx != 0.0 or self.vy != 0.0:
@@ -3563,24 +3622,26 @@ class PlatformerPhysics(ControlledPhysicsComponent):
             if col.direction == "x" or col.direction_veloc < 0 or (col.original_pos[1] + obj.rect.height) > other_obj.rect.top:
                 return
 
+        # TODO: get rid of this:
         # a collision layer
         if isinstance(other_obj, TileSprite):
             tile_props = other_obj.tile_props
             type_ = tile_props.get("type")
-            # quicksand or water
-            if type_ in ["quicksand", "water"]:
-                # just on first collision: pull up a little again, then slowly sink in (no more gravity)
-                obj.collision_mask = 0
-                obj.rect.y += col.separate[1]
-                self.vy = 0.01
-                self.gravity = False
-                obj.trigger_event("hit.liquid_ground", type_)
-                return
             # colliding with an exit
-            elif type_ == "exit":
+            if type_ == "exit":
                 self.at_exit = True
                 obj.stage.screen.trigger_event("reached_exit", obj)  # let the level know
                 return
+        # a liquid body
+        elif isinstance(other_obj, LiquidBody):
+            # just on first collision: pull up a little again, then slowly sink in (no more gravity)
+            obj.collision_mask = 0
+            obj.rect.y += col.separate[1]
+            obj.is_sinking_til = other_obj.rect.top
+            self.vy = 0.01
+            self.gravity = False
+            obj.trigger_event("hit.liquid", other_obj.description)
+            return
 
         # normal collision
         col.impact = 0.0
@@ -4385,8 +4446,7 @@ def extend(dictionary, extend_dict):
         dictionary[key] = value  # overwrite no matter what
 
 
-# simple type conversion (from string input) by regular expression matching
-def convert_type(value):
+def convert_type(value, force_class=False):
     """
     Converts the given value from a string (or other) type into the most likely type.
     E.g.
@@ -4397,8 +4457,10 @@ def convert_type(value):
     'true' -> True (bool)
     'False' -> False (bool)
     [1, 2, 3] -> [1, 2, 3] (list)
+    spygame.Ladder -> <type spygame.Ladder> (a python class object; can be used as a ctor to construct objects of that class)
 
     :param any value: the given value to be converted to the most-likely python type
+    :param bool force_class: if True, we will interpret even simple strings (starting with upper case but without any dots) as class names (e.g. Ladder)
     :return: the converted value
     :rtype: any
     """
@@ -4412,7 +4474,22 @@ def convert_type(value):
     # bool
     elif re.fullmatch('(true|false)', as_str, flags=re.I):
         return value in ("True", "true")
-    # str (or list or others)
-    return value
-
+    else:
+        match_obj = re.fullmatch('^((.+)\.)?([A-Z][a-zA-Z0-9]+)$', as_str)
+        # a class with preceding modules (force_class does not have to be set to trigger this detection)
+        if match_obj:
+            _, module_, class_ = match_obj.groups(default="__main__")  # if no module given, assume a class defined in __main__
+            ctor = getattr(sys.modules[module_], class_, None)
+            assert isinstance(ctor, type), "ERROR: the string {}.{} does not resolve into a defined class!".format(module_, class_)
+            return ctor
+        # a class (no modules, but force_class is set to True)
+        elif force_class:
+            match_obj = re.fullmatch('^([A-Z][a-zA-Z0-9]+)$', as_str)
+            if match_obj:
+                (class_) = match_obj.groups()
+                ctor = getattr(sys.modules["__main__"], class_, None)
+                assert isinstance(ctor, type), "ERROR: the string {} does not resolve into a defined class!".format(class_)
+                return ctor
+        # str (or list or others)
+        return value
 

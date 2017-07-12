@@ -29,7 +29,7 @@ class MyAgent(spyg.Sprite):
         self.cmp_physics = self.add_component(spyg.TopDownPhysics("physics"))
 
     # plain spyg.Sprite objects do not implement the `tick` function, so nothing ever happens with them
-    # - we need to implement it here to add the pre-tick event (this will trigger the brain and physics components to act)
+    # - we need to implement it here to make sure our components (brain and physics) are ticked as well
     def tick(self, game_loop):
         self.cmp_brain.tick(game_loop)
         self.cmp_physics.tick(game_loop)

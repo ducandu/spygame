@@ -81,7 +81,7 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
         # subscribe/register to some events
         self.on_event("bump.bottom", self, "land")
         self.on_event("squeezed.top", self, "get_squeezed")
-        self.on_event("hit.liquid_ground", self, "hit_liquid_ground")  # player stepped into liquid ground
+        self.on_event("hit.liquid", self, "hit_liquid")  # player stepped into liquid ground
         self.on_event("hit.particle", self, "hit_particle")  # player hits a particle
         self.on_event("die", register=True)  # some animations trigger 'die' when done
         self.register_event("dead")
@@ -227,8 +227,8 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
             self.play_animation("be_dizzy", 1)
 
     # quicksand or water
-    def hit_liquid_ground(self, what):
-        self.play_animation("sink_in_" + what)
+    def hit_liquid(self, description):
+        self.play_animation("sink_in_" + description)
 
     # hit a flying particle (shot, arrow, etc..)
     def hit_particle(self, col):
