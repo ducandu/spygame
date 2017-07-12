@@ -2,7 +2,7 @@ How to build a Platformer with spygame
 ======================================
 
 **IMPORTANT NOTE:** *All graphics used in this tutorial were taken from the game "The Lost Vikings" (c) 1992 by Silicon and Synapse
-(now Blizzard Entertainment Inc.). Please use these (in your own projects and repos) for demonstration purposes only and thereby mention this
+(now Blizzard Entertainment Inc.). Please use these (in your own projects and repos) for demonstration purposes only and then mention this
 copyright statement!*
 
 In this tutorial, we will be building a 2D platformer level from scratch using the spygame library. It will look roughly like this:
