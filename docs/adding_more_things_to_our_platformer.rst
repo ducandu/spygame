@@ -28,9 +28,10 @@ We open the tutorial.tmx file in our Tiled editor and go to the Layers panel.
 *View->Views and Toolbars->Tilesets/Objects/Layers/Properties/Main Toolbar/Tools* panels all checked to make these visible in your editor.
 
 We go to the Layers panel and make all layers invisible, except for the collision layer and the background layer.
-We will also move up the collision layer to the first position in the layers list for better visibility purposes. Note that the position in the list of layers
+We will also move up the collision layer to the first position in the layers list for better visibility purposes by using the highlighted up-arrow in the image
+below. Note that the position in the list of layers
 in the Layers panel has no effect on the actual render order in the game. The render order is determined by the custom property render_order (int) for each
-layer (which has do_render=true) and defaults to 50:
+layer (that has do_render set to true) and defaults to a value of 50:
 
 .. image:: tutorial/advanced/002_moving_layers_up_and_down.png
     :alt: Moving layers up and down
