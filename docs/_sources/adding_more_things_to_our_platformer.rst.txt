@@ -178,6 +178,98 @@ than Erik, who are not able to jump (but have other qualities) can enter the sce
 bow.
 
 We have to add a new tileset first, the one for Baleog. Click on *Map->New Tileset*, then pick the baleog.png file and make sure the width and height are 32px
-each. Click the little Export Tileset As button at the bottom of the Tilesets panel and save the Baloeg tileset as "baleog.tsx" in the data directory
+each. Click the little "Export Tileset As" button at the bottom of the Tilesets panel and save the Baloeg tileset as "baleog.tsx" in the data/ directory
 of your project. Select the object layer and - with the Insert Tile (T) tool - insert one Baleog object into the level.
-Choose the Select Tool (S) and click on the new Baleog, then set his Type property to "spygame.examples.vikings.Baleog".
+Switch to the Select Tool (S) and click on the newly inserted Baleog, then set his Type property to "spygame.examples.vikings.Baleog".
+
+There is one more thing we have to do before we can fully utilize Baleog's capabilities. Baleog can hit with his sword (using space) and shoot an arrow
+with his bow (by pressing D). Also, only one of the two vikings (Erik or Baleog) can be played at a given time. To switch between the vikings during
+the game, we will use CTRL. These keys are defined inside the spygame.examples.vikings classes and we will - in a later tutorial - talk about
+what these classes look like and go through their code. However, to simply make spygame listen to these keys for now, we need to add them to our
+keyboard_inputs list in the tmx file's properties. Click on *Map->Map Properties* and change the value of the keyboard_inputs variable to be
+"up,down,left,right,space,rctrl,lctrl,d". Lctrl and rctrl stand for the left control key and the right control key, respectively.
+
+.. image:: tutorial/advanced/012_baleog_and_erik_together.png
+    :alt: Baleog and Erik are two temple-trapped vikings
+
+**Exercise:** Can you find out about the third viking (Olaf) and try to add him to the level as well? Try to use the exact same steps as for Baleog.
+Olaf does not need any more keyboard_inputs settings. He can only use the space bar, which will cause him to switch between his shield being up (above
+head) or down (in front of him).
+
+In the next paragraph, we will add a movable rock to the level, which can be pushed back and forth by the vikings and which one has to be
+careful not to push above some viking's head (that would be really bad!).
+
+Adding a Movable Rock
+---------------------
+
+Movable rocks are spygame objects that obey similar physics laws than our Vikings. In fact, internally they use the exact same physics component as our heroes.
+In this physics component, the settings is_heavy and is_pushable are set to True and thus they have the characteristic to a) be pushable (also up and down
+slopes) and b) squeeze things beneath them (for example our vikings).
+
+Let's add the graphics to our tmx file (a new sprite sheet) and then place one movable rock into our level.
+
+Click on *Map->New Tileset* and choose the "movable_rock.png" file, then setup the tileset with a tile width and height of 32px each:
+
+.. image:: tutorial/advanced/013_tileset_for_a_movable_rock.png
+    :alt: The tileset for a movable rock
+
+Click on the object layer in the Layers panel, then select the only tile in the movable_rock tileset and press T to activate the "Insert Tile" tool.
+Click somewhere in the level to place one rock object, then press S for "Select Object" and set the rock's Type to "spygame.MovableRock".
+
+When you play the level, you should now be able to push the rock with either Erik or Baleog, uphill and downhill, only being blocked by another viking or
+a wall on the other side of the rock:
+
+.. figure:: tutorial/advanced/014_baleog_pushing_the_rock.png
+    :alt: Baleog pushing the movable rock object
+
+    Baleog pushing the movable rock object
+
+.. figure:: tutorial/advanced/015_erik_blocking_baleog_from_pushing_the_rock.png
+    :alt: Erik blocking Baleog from pushing the movable rock object
+
+    Erik blocking Baleog from pushing the movable rock object
+
+.. figure:: tutorial/advanced/016_baleog_pushing_the_rock_with_erik_on_top.png
+    :alt: Baleog pushing the movable rock object with Erik standing on top
+
+    Baleog pushing the movable rock object with Erik standing on top (and moving along with the rock)
+
+.. figure:: tutorial/advanced/017_erik_pushing_the_rock_uphill.png
+    :alt: Erik pushing the Rock uphill
+
+    Erik pushing the Rock uphill
+
+.. figure:: tutorial/advanced/018_poor_baleog_getting_squeezed_by_the_rock.png
+    :alt: Poor Baleog getting squeezed by the rock
+
+    Poor Baleog getting squeezed by the rock
+
+You see, there are many cool things to do with rocks (well, don't ask Baleog for his opinion on the last stunt). In the next paragraph, we will explore
+elevators and moving platforms.
+
+
+
+Adding an Elevator
+------------------
+
+Spygame also comes with moving platforms (or elevators). At this stage of spygame development, these can either go up and down or left and right.
+The two extreme points, where the elevator will revert its speed and start moving into the other direction, have to be specified at
+construction time.
+
+
+Adding a Repeater for even more of a 3D Effect
+----------------------------------------------
+
+
+
+Adding a Fire Spitter
+---------------------
+
+
+
+
+Adding Monsters
+---------------
+
+
+

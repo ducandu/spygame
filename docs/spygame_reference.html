@@ -1306,13 +1306,6 @@ Needs to override <cite>tick</cite> and <cite>collision</cite>.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="spygame.PlatformerCollision">
-<em class="property">class </em><code class="descclassname">spygame.</code><code class="descname">PlatformerCollision</code><a class="reference internal" href="_modules/spygame.html#PlatformerCollision"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.PlatformerCollision" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#spygame.Collision" title="spygame.Collision"><code class="xref py py-class docutils literal"><span class="pre">spygame.Collision</span></code></a></p>
-<p>A collision object that can be used by PlatformerPhysics to handle Collisions.</p>
-</dd></dl>
-
-<dl class="class">
 <dt id="spygame.PlatformerPhysics">
 <em class="property">class </em><code class="descclassname">spygame.</code><code class="descname">PlatformerPhysics</code><span class="sig-paren">(</span><em>name=’physics’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#PlatformerPhysics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.PlatformerPhysics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#spygame.ControlledPhysicsComponent" title="spygame.ControlledPhysicsComponent"><code class="xref py py-class docutils literal"><span class="pre">spygame.ControlledPhysicsComponent</span></code></a></p>
@@ -1377,16 +1370,11 @@ Certain restrictions apply for the tiled landscape for this algorithm to work:
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>col</strong> (<a class="reference internal" href="#spygame.PlatformerCollision" title="spygame.PlatformerCollision"><em>PlatformerCollision</em></a>) – the collision object of the detected collision (the first sprite in that Collision object must be our GameObject)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>col</strong> (<a class="reference internal" href="#spygame.Collision" title="spygame.Collision"><em>Collision</em></a>) – the collision object of the detected collision (the first sprite in that Collision object must be our GameObject)</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
-
-<dl class="attribute">
-<dt id="spygame.PlatformerPhysics.collision_objects">
-<code class="descname">collision_objects</code><em class="property"> = (&lt;spygame.PlatformerCollision object&gt;, &lt;spygame.PlatformerCollision object&gt;)</em><a class="headerlink" href="#spygame.PlatformerPhysics.collision_objects" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="staticmethod">
 <dt id="spygame.PlatformerPhysics.get_highest_tile">
@@ -2656,6 +2644,11 @@ spygame.Ladder -&gt; &lt;type spygame.Ladder&gt; (a python class object; can be 
 <em class="property">class </em><code class="descclassname">spygame.examples.vikings.</code><code class="descname">Arrow</code><span class="sig-paren">(</span><em>shooter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#Arrow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.Arrow" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#spygame.examples.vikings.Shot" title="spygame.examples.vikings.Shot"><code class="xref py py-class docutils literal"><span class="pre">spygame.examples.vikings.Shot</span></code></a></p>
 <p>arrow class</p>
+<dl class="attribute">
+<dt id="spygame.examples.vikings.Arrow.sprite_sheet">
+<code class="descname">sprite_sheet</code><em class="property"> = None</em><a class="headerlink" href="#spygame.examples.vikings.Arrow.sprite_sheet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -2827,6 +2820,11 @@ spygame.Ladder -&gt; &lt;type spygame.Ladder&gt; (a python class object; can be 
 <em class="property">class </em><code class="descclassname">spygame.examples.vikings.</code><code class="descname">Fireball</code><span class="sig-paren">(</span><em>shooter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#Fireball"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.Fireball" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#spygame.examples.vikings.Shot" title="spygame.examples.vikings.Shot"><code class="xref py py-class docutils literal"><span class="pre">spygame.examples.vikings.Shot</span></code></a></p>
 <p>fireball class</p>
+<dl class="attribute">
+<dt id="spygame.examples.vikings.Fireball.sprite_sheet">
+<code class="descname">sprite_sheet</code><em class="property"> = None</em><a class="headerlink" href="#spygame.examples.vikings.Fireball.sprite_sheet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -2915,7 +2913,7 @@ spygame.Ladder -&gt; &lt;type spygame.Ladder&gt; (a python class object; can be 
 
 <dl class="class">
 <dt id="spygame.examples.vikings.Shot">
-<em class="property">class </em><code class="descclassname">spygame.examples.vikings.</code><code class="descname">Shot</code><span class="sig-paren">(</span><em>offset_x</em>, <em>offset_y</em>, <em>spritesheet</em>, <em>animation_setup</em>, <em>shooter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#Shot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.Shot" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">spygame.examples.vikings.</code><code class="descname">Shot</code><span class="sig-paren">(</span><em>offset_x</em>, <em>offset_y</em>, <em>spritesheet</em>, <em>animation_setup</em>, <em>shooter</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#Shot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.Shot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#spygame.AnimatedSprite" title="spygame.AnimatedSprite"><code class="xref py py-class docutils literal"><span class="pre">spygame.AnimatedSprite</span></code></a></p>
 <p>a shot (like the one a scorpion shoots)
 - can be extended to do more complicated stuff</p>

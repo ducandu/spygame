@@ -13,6 +13,7 @@
 
 
 import spygame as spyg
+import pygame
 import random
 from abc import ABCMeta, abstractmethod
 
@@ -75,7 +76,7 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
         self.cmp_brain = self.add_component(spyg.HumanPlayerBrain("brain", ["up", "down", "left", "right"]))  # type: spyg.HumanPlayerBrain
 
         phys = spyg.PlatformerPhysics("physics")
-        phys.squeeze_speed = 0.5
+        phys.squeeze_speed = 0.25
         self.cmp_physics = self.add_component(phys)  # type: spyg.PlatformerPhysics
 
         # subscribe/register to some events
@@ -238,10 +239,12 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
     # called when this object gets squeezed from top by a heavy object
     def get_squeezed(self, squeezer):
         self.play_animation("get_squeezed", 1)
-        # update collision points (top point should be 1px lower than bottom point of squeezer)
-        # TODO: don't have p.points in spygame ??
-        # dy = (squeezer.rect.y + squeezer.rect.centery) - (self.y + p.points[0][1]) + 1
-        # Q._changePoints(this, 0, dy)
+        # update collision rect: top point should be always be 1px lower than bottom point of squeezer
+        # that way, we make sure that the squeezer will again trigger another squeeze.top event next time
+        top_orig = self.rect.top
+        self.rect.top = squeezer.rect.bottom + 1
+        diff = self.rect.top - top_orig  # how much did we just get squeezed?
+        self.rect.height -= diff  # change out height by that much
 
     # die function (take this Viking out of the game)
     def die(self):
@@ -293,45 +296,45 @@ class Viking(spyg.AnimatedSprite, metaclass=ABCMeta):
 class Baleog(Viking):
     def __init__(self, x, y):
         super().__init__(x, y, spyg.SpriteSheet("data/baleog.tsx"), {
-            "default"          : "stand",  # the default animation to play
-            "stand"            : {"frames": [0], "loop": False, "flags": spyg.Animation.get_flag("block_stand"), "priority": 0},
-            "be_bored1"        : {"frames": [1, 2, 2, 1, 1, 3, 4, 3, 4, 5, 6, 5, 6, 7, 8, 7, 8, 3, 4, 3, 4], "rate": 1 / 3, "loop": False, "next": "stand"},
-            "be_bored2"        : {"frames": [1, 2, 2, 1, 1, 7, 8, 7, 8, 2, 2, 1, 2, 2, 1], "rate": 1 / 3, "loop": False, "next": "stand"},
-            "climb"            : {"flags": spyg.Animation.get_flag("manual")},
-            "run"              : {"frames": [9, 10, 11, 12, 13, 14, 15, 16], "rate": 1 / 8},
-            "push"             : {"frames": [54, 55, 56, 57], "rate": 1 / 4},
-            "jump"             : {"frames": [36, 37], "rate": 1 / 6},
-            "fall"             : {"frames"    : [38], "loop": False, "flags": spyg.Animation.get_flag("paralyzes"),
+            "default":           "stand",  # the default animation to play
+            "stand":             {"frames": [0], "loop": False, "flags": spyg.Animation.get_flag("block_stand"), "priority": 0},
+            "be_bored1":         {"frames": [1, 2, 2, 1, 1, 3, 4, 3, 4, 5, 6, 5, 6, 7, 8, 7, 8, 3, 4, 3, 4], "rate": 1 / 3, "loop": False, "next": "stand"},
+            "be_bored2":         {"frames": [1, 2, 2, 1, 1, 7, 8, 7, 8, 2, 2, 1, 2, 2, 1], "rate": 1 / 3, "loop": False, "next": "stand"},
+            "climb":             {"flags": spyg.Animation.get_flag("manual")},
+            "run":               {"frames": [9, 10, 11, 12, 13, 14, 15, 16], "rate": 1 / 8},
+            "push":              {"frames": [54, 55, 56, 57], "rate": 1 / 4},
+            "jump":              {"frames": [36, 37], "rate": 1 / 6},
+            "fall":              {"frames":     [38], "loop": False, "flags": spyg.Animation.get_flag("paralyzes"),
                                   "properties": {"paralyzes_exceptions": {"left", "right", "up"}}},
-            "be_dizzy"         : {"frames": [39, 40, 41, 40, 41, 42, 42, 43], "rate": 1 / 3, "loop": False, "next": "stand",
-                                  "flags" : spyg.Animation.get_flag("paralyzes,block_stand")},
-            "get_hurt"         : {"frames": [72], "rate": 1 / 2, "next": "stand",
-                                  "flags" : spyg.Animation.get_flag("paralyzes,block_stand")},
-            "get_squeezed"     : {"frames": [122, 123, 124, 124, 125, 125, 125, 125], "rate": 1 / 3, "loop": False, "trigger": "die",
-                                  "flags" : spyg.Animation.get_flag("paralyzes,block_stand")},
-            "sink_in_quicksand": {"frames"  : [120, 121, 121, 120, 120, 121, 121, 120], "rate": 1 / 2, "loop": False, "trigger": "die",
+            "be_dizzy":          {"frames": [39, 40, 41, 40, 41, 42, 42, 43], "rate": 1 / 3, "loop": False, "next": "stand",
+                                  "flags":  spyg.Animation.get_flag("paralyzes,block_stand")},
+            "get_hurt":          {"frames": [72], "rate": 1 / 2, "next": "stand",
+                                  "flags":  spyg.Animation.get_flag("paralyzes,block_stand")},
+            "get_squeezed":      {"frames": [122, 123, 123, 124, 124, 125, 125], "rate": 1 / 11, "loop": False, "trigger": "die",
+                                  "flags":  spyg.Animation.get_flag("paralyzes,block_stand")},
+            "sink_in_quicksand": {"frames":   [120, 121, 121, 120, 120, 121, 121, 120], "rate": 1 / 2, "loop": False, "trigger": "die",
                                   "priority": 100,
-                                  "flags"   : spyg.Animation.get_flag("paralyzes")},
-            "sink_in_water"    : {"frames"  : [90, 91, 92, 93, 91, 92, 93], "rate": 1 / 2, "loop": False, "trigger": "die",
+                                  "flags":    spyg.Animation.get_flag("paralyzes")},
+            "sink_in_water":     {"frames":   [90, 91, 92, 93, 91, 92, 93], "rate": 1 / 2, "loop": False, "trigger": "die",
                                   "priority": 100,
-                                  "flags"   : spyg.Animation.get_flag("paralyzes")},
-            "burn"             : {"frames": [126, 127, 128, 129, 130, 131, 132, 133], "rate": 1 / 4, "loop": False, "trigger": "die",
-                                  "flags" : spyg.Animation.get_flag("paralyzes,block_stand")},
+                                  "flags":    spyg.Animation.get_flag("paralyzes")},
+            "burn":              {"frames": [126, 127, 128, 129, 130, 131, 132, 131, 132, 133], "rate": 1 / 4, "loop": False, "trigger": "die",
+                                  "flags":  spyg.Animation.get_flag("paralyzes,block_stand")},
             # disables control, except for action1 (which is pressed down)
-            "swing_sword1"     : {"frames": [18, 19, 20, 21], "rate": 1 / 4, "loop": False, "next": "stand",
-                                  "flags" : spyg.Animation.get_flag("paralyzes")},
+            "swing_sword1":      {"frames": [18, 19, 20, 21], "rate": 1 / 4, "loop": False, "next": "stand",
+                                  "flags":  spyg.Animation.get_flag("paralyzes")},
             # disables control, except for action1 (which is pressed down)
-            "swing_sword2"     : {"frames": [22, 23, 24, 25], "rate": 1 / 4, "loop": False, "next": "stand",
-                                  "flags" : spyg.Animation.get_flag("paralyzes")},
-            "draw_bow"         : {"frames"  : [27, 27, 28, 29, 30, 31], "rate": 1 / 5, "loop": False, "next": "hold_bow",
+            "swing_sword2":      {"frames": [22, 23, 24, 25], "rate": 1 / 4, "loop": False, "next": "stand",
+                                  "flags":  spyg.Animation.get_flag("paralyzes")},
+            "draw_bow":          {"frames":   [27, 27, 28, 29, 30, 31], "rate": 1 / 5, "loop": False, "next": "hold_bow",
                                   "priority": 1,
-                                  "flags"   : spyg.Animation.get_flag("paralyzes"), "properties": {"paralyzes_exceptions": {"d"}}},
-            "hold_bow"         : {"frames": [31], "loop": False, "priority": 2,
-                                  "flags" : spyg.Animation.get_flag("paralyzes"), "properties": {"paralyzes_exceptions": {"d"}},
+                                  "flags":    spyg.Animation.get_flag("paralyzes"), "properties": {"paralyzes_exceptions": {"d"}}},
+            "hold_bow":          {"frames": [31], "loop": False, "priority": 2,
+                                  "flags":  spyg.Animation.get_flag("paralyzes"), "properties": {"paralyzes_exceptions": {"d"}},
                                   },
-            "release_bow"      : {"frames"  : [33, 32, 33, 32, 33, 32, 0], "rate": 1 / 6, "loop": False, "next": "stand",
+            "release_bow":       {"frames":   [33, 32, 33, 32, 33, 32, 0], "rate": 1 / 6, "loop": False, "next": "stand",
                                   "priority": 3,
-                                  "flags"   : spyg.Animation.get_flag("block_stand,paralyzes")},
+                                  "flags":    spyg.Animation.get_flag("block_stand,paralyzes")},
         })
 
         # add non-standard actions to our Brain
@@ -385,35 +388,35 @@ class Baleog(Viking):
 class Erik(Viking):
     def __init__(self, x, y):
         super().__init__(x, y, spyg.SpriteSheet("data/erik.tsx"), {
-            "default"          : "stand",  # the default animation to play
-            "stand"            : {"frames": [0], "loop": False, "flags": spyg.Animation.get_flag("block_stand")},
-            "be_bored1"        : {"frames": [1], "rate": 1 / 2, "next": "stand", "flags": spyg.Animation.get_flag("block_stand")},
-            "be_bored2"        : {"frames": [61, 2, 3, 4, 3, 4, 3, 4], "rate": 1 / 3, "next": 'stand',
-                                  "flags" : spyg.Animation.get_flag("block_stand")},
-            "climb"            : {"flags": spyg.Animation.get_flag("manual")},
-            "run"              : {"frames": [5, 6, 7, 8, 9, 10, 11, 12], "rate": 1 / 8},
-            "out_of_breath"    : {"frames": [13, 14, 15, 13, 14, 15], "rate": 1 / 4, "next": 'stand',
-                                  "flags" : spyg.Animation.get_flag("block_stand")},
-            "push"             : {"frames": [54, 55, 56, 57], "rate": 1 / 4},
-            "jump_up"          : {"frames": [16], "loop": False},
-            "jump_peak"        : {"frames": [17], "loop": False},
-            "jump_down"        : {"frames": [18, 19], "rate": 1 / 3},
-            "fall"             : {"frames"    : [81], "loop": False, "flags": spyg.Animation.get_flag("paralyzes"),
+            "default":           "stand",  # the default animation to play
+            "stand":             {"frames": [0], "loop": False, "flags": spyg.Animation.get_flag("block_stand")},
+            "be_bored1":         {"frames": [1], "rate": 1 / 2, "next": "stand", "flags": spyg.Animation.get_flag("block_stand")},
+            "be_bored2":         {"frames": [61, 2, 3, 4, 3, 4, 3, 4], "rate": 1 / 3, "next": 'stand',
+                                  "flags":  spyg.Animation.get_flag("block_stand")},
+            "climb":             {"flags": spyg.Animation.get_flag("manual")},
+            "run":               {"frames": [5, 6, 7, 8, 9, 10, 11, 12], "rate": 1 / 8},
+            "out_of_breath":     {"frames": [13, 14, 15, 13, 14, 15], "rate": 1 / 4, "next": 'stand',
+                                  "flags":  spyg.Animation.get_flag("block_stand")},
+            "push":              {"frames": [54, 55, 56, 57], "rate": 1 / 4},
+            "jump_up":           {"frames": [16], "loop": False},
+            "jump_peak":         {"frames": [17], "loop": False},
+            "jump_down":         {"frames": [18, 19], "rate": 1 / 3},
+            "fall":              {"frames":     [81], "loop": False, "flags": spyg.Animation.get_flag("paralyzes"),
                                   "properties": {"paralyzes_exceptions": {"left", "right", "up"}}},
-            "be_dizzy"         : {"frames": [36, 37, 38, 39, 40, 38, 39, 40, 41, 42, 43], "rate": 1 / 3, "loop": False, "next": 'stand',
-                                  "flags" : spyg.Animation.get_flag("paralyzes,block_stand")},
-            "get_hurt"         : {"frames": [72], "rate": 1 / 2, "next": 'stand',
-                                  "flags" : spyg.Animation.get_flag("paralyzes,block_stand")},
-            "get_squeezed"     : {"frames": [126, 127, 128, 128, 129, 129, 129, 129], "rate": 1 / 4, "loop": False, "trigger": 'die',
-                                  "flags" : (spyg.Animation.get_flag("paralyzes,block_stand"))},
-            "sink_in_quicksand": {"frames"  : [108, 109, 110, 108, 109, 110, 108, 109], "loop": False, "rate": 1 / 2, "trigger": 'die',
+            "be_dizzy":          {"frames": [36, 37, 38, 39, 40, 38, 39, 40, 41, 42, 43], "rate": 1 / 3, "loop": False, "next": 'stand',
+                                  "flags":  spyg.Animation.get_flag("paralyzes,block_stand")},
+            "get_hurt":          {"frames": [72], "rate": 1 / 2, "next": 'stand',
+                                  "flags":  spyg.Animation.get_flag("paralyzes,block_stand")},
+            "get_squeezed":      {"frames": [126, 127, 127, 128, 128, 129, 129], "rate": 1 / 11, "loop": False, "trigger": "die",
+                                  "flags":  (spyg.Animation.get_flag("paralyzes,block_stand"))},
+            "sink_in_quicksand": {"frames":   [108, 109, 110, 108, 109, 110, 108, 109], "loop": False, "rate": 1 / 2, "trigger": 'die',
                                   "priority": 100,
-                                  "flags"   : spyg.Animation.get_flag("paralyzes")},
-            "sink_in_water"    : {"frames"  : [90, 91, 92, 93, 91, 92, 93], "loop": False, "rate": 1 / 2, "trigger": 'die',
+                                  "flags":    spyg.Animation.get_flag("paralyzes")},
+            "sink_in_water":     {"frames":   [90, 91, 92, 93, 91, 92, 93], "loop": False, "rate": 1 / 2, "trigger": 'die',
                                   "priority": 100,
-                                  "flags"   : spyg.Animation.get_flag("paralyzes")},
-            "burn"             : {"frames": [117, 118, 119, 120, 121, 122, 123, 124], "rate": 1 / 4, "loop": False, "trigger": 'die',
-                                  "flags" : spyg.Animation.get_flag("paralyzes")},
+                                  "flags":    spyg.Animation.get_flag("paralyzes")},
+            "burn":              {"frames": [117, 118, 119, 120, 121, 122, 123, 124], "rate": 1 / 4, "loop": False, "trigger": 'die',
+                                  "flags":  spyg.Animation.get_flag("paralyzes")},
         })
 
         # add non-standard actions to our Brain
@@ -494,34 +497,34 @@ class Erik(Viking):
 class Olaf(Viking):
     def __init__(self, x, y):
         super().__init__(x, y, spyg.SpriteSheet("data/olaf.tsx"), {
-            "default"             : "stand_shield_down",  # the default animation to play
-            "stand_shield_down"   : {"frames": [0], "loop": False},
-            "stand_shield_up"     : {"frames": [14], "loop": False},
-            "be_bored"            : {"frames": [1, 2, 3, 2, 3, 2, 3, 4, 4, 3, 1], "rate": 1 / 3, "next": self.which_stand,
-                                     "flags" : spyg.Animation.get_flag("block_stand")},
-            "climb"               : {"flags": spyg.Animation.get_flag("manual")},
-            "run_shield_down"     : {"frames": [5, 6, 7, 9, 10, 11, 12, 13], "rate": 1 / 8},
-            "run_shield_up"       : {"frames": [15, 16, 18, 19, 20, 21, 22, 23], "rate": 1 / 8},
-            "push"                : {"frames": [33, 34, 36, 37], "rate": 1 / 4},
-            "sail_shield_down"    : {"frames": [52, 53], "rate": 1 / 6},
-            "sail_shield_up"      : {"frames": [24, 25], "rate": 1 / 4},
+            "default":              "stand_shield_down",  # the default animation to play
+            "stand_shield_down":    {"frames": [0], "loop": False},
+            "stand_shield_up":      {"frames": [14], "loop": False},
+            "be_bored":             {"frames": [1, 2, 3, 2, 3, 2, 3, 4, 4, 3, 1], "rate": 1 / 3, "next": self.which_stand,
+                                     "flags":  spyg.Animation.get_flag("block_stand")},
+            "climb":                {"flags": spyg.Animation.get_flag("manual")},
+            "run_shield_down":      {"frames": [5, 6, 7, 9, 10, 11, 12, 13], "rate": 1 / 8},
+            "run_shield_up":        {"frames": [15, 16, 18, 19, 20, 21, 22, 23], "rate": 1 / 8},
+            "push":                 {"frames": [33, 34, 36, 37], "rate": 1 / 4},
+            "sail_shield_down":     {"frames": [52, 53], "rate": 1 / 6},
+            "sail_shield_up":       {"frames": [24, 25], "rate": 1 / 4},
             "sail_shield_up_steer": {"frames": [27, 28], "rate": 1 / 4},
-            "fall"                : {"frames"    : [54, 54, 90], "rate": 1, "loop": False, "flags": spyg.Animation.get_flag("paralyzes"),
+            "fall":                 {"frames":     [54, 54, 90], "rate": 1, "loop": False, "flags": spyg.Animation.get_flag("paralyzes"),
                                      "properties": {"paralyzes_exceptions": {"left", "right", "up"}}},
-            "be_dizzy"            : {"frames": [29, 30, 31, 32], "rate": 1 / 2, "loop": False, "next": self.which_stand,
-                                     "flags" : spyg.Animation.get_flag("paralyzes,block_stand")},
-            "get_hurt"            : {"frames": [38], "rate": 1 / 2, "next": self.which_stand,
-                                     "flags" : spyg.Animation.get_flag("paralyzes,block_stand")},
-            "get_squeezed"        : {"frames": [117, 118, 119, 119, 120, 120, 120, 120], "rate": 1 / 4, "loop": False, "trigger": "die",
-                                     "flags" : spyg.Animation.get_flag("paralyzes,block_stand")},
-            "sink_in_quicksand"   : {"frames"  : [102, 103, 102, 103, 102, 103, 102, 103], "loop": False, "rate": 1 / 2, "trigger": "die",
+            "be_dizzy":             {"frames": [29, 30, 31, 32], "rate": 1 / 2, "loop": False, "next": self.which_stand,
+                                     "flags":  spyg.Animation.get_flag("paralyzes,block_stand")},
+            "get_hurt":             {"frames": [38], "rate": 1 / 2, "next": self.which_stand,
+                                     "flags":  spyg.Animation.get_flag("paralyzes,block_stand")},
+            "get_squeezed":         {"frames": [117, 118, 118, 119, 119, 120, 120], "rate": 1 / 11, "loop": False, "trigger": "die",
+                                     "flags":  spyg.Animation.get_flag("paralyzes,block_stand")},
+            "sink_in_quicksand":    {"frames":   [102, 103, 102, 103, 102, 103, 102, 103], "loop": False, "rate": 1 / 2, "trigger": "die",
                                      "priority": 100,
-                                     "flags"   : spyg.Animation.get_flag("paralyzes")},
-            "sink_in_water"       : {"frames"  : [63, 64, 65, 66, 66, 67], "loop": False, "rate": 1 / 2, "trigger": "die",
+                                     "flags":    spyg.Animation.get_flag("paralyzes")},
+            "sink_in_water":        {"frames":   [63, 64, 65, 66, 66, 67], "loop": False, "rate": 1 / 2, "trigger": "die",
                                      "priority": 100,
-                                     "flags"   : spyg.Animation.get_flag("paralyzes")},
-            "burn"                : {"frames": [108, 109, 110, 111, 112, 113, 114, 115], "rate": 1 / 4, "loop": False, "trigger": "die",
-                                     "flags" : spyg.Animation.get_flag("paralyzes")},
+                                     "flags":    spyg.Animation.get_flag("paralyzes")},
+            "burn":                 {"frames": [108, 109, 110, 111, 112, 113, 114, 115], "rate": 1 / 4, "loop": False, "trigger": "die",
+                                     "flags":  spyg.Animation.get_flag("paralyzes")},
         })
 
         # add non-standard actions to our Brain
@@ -789,7 +792,7 @@ class Shot(spyg.AnimatedSprite):
     - can be extended to do more complicated stuff
     """
 
-    def __init__(self, offset_x, offset_y, spritesheet, animation_setup, shooter):
+    def __init__(self, offset_x, offset_y, spritesheet, animation_setup, shooter, **kwargs):
         """
         a generic Shot object being spawned into the game usually by a Shooter object
         :param int offset_x: the x-offset with respect to the Shooter's x position
@@ -804,7 +807,7 @@ class Shot(spyg.AnimatedSprite):
         self.flip = self.shooter.flip  # flip particle depending on shooter's flip
 
         super().__init__(self.shooter.rect.x + self.offset_x * (-1 if self.flip["x"] else 1), self.shooter.rect.y + self.offset_y,
-                         spritesheet, animation_setup)
+                         spritesheet, animation_setup, **kwargs)
 
         # some simple physics
         self.ax = 0
@@ -861,15 +864,20 @@ class Arrow(Shot):
     """
     arrow class
     """
+    sprite_sheet = None
 
     def __init__(self, shooter):
         """
         :param Sprite shooter: the shooter that shoots this Arrow object
         """
-        super().__init__(16, 16, spyg.SpriteSheet("data/arrow.tsx"), {
+        # init our recyclable SpriteSheet
+        if not self.sprite_sheet:
+            self.sprite_sheet = spyg.SpriteSheet("data/baleog.tsx")
+
+        super().__init__(16, 16, self.sprite_sheet, {
             "default": "fly",  # the default animation to play
-            "fly"    : {"frames": [0, 1, 2, 3], "rate": 1 / 10},
-        }, shooter)
+            "fly":     {"frames": [158, 159, 160, 161], "rate": 1 / 10},
+        }, shooter, anim_settings_name="arrow", width_height=(16, 5), image_rect=pygame.Rect(-8, -13, 32, 32))
 
         self.type = spyg.Sprite.get_type("arrow,particle")
         self.collision_mask = spyg.Sprite.get_type("default,enemy,friendly,coconut")
@@ -885,15 +893,20 @@ class Fireball(Shot):
     """
     fireball class
     """
+    sprite_sheet = None
 
     def __init__(self, shooter):
         """
         :param Sprite shooter: the shooter that shoots this FireBall object
         """
-        super().__init__(0, 0, spyg.SpriteSheet("data/fireball.tsx"), {
+        # init our recyclable SpriteSheet
+        if not self.sprite_sheet:
+            self.sprite_sheet = spyg.SpriteSheet("data/fireball.tsx")
+
+        super().__init__(0, 0, self.sprite_sheet, {
             "default": "fly",  # the default animation to play
-            "fly"    : {"frames": [0, 1], "rate": 1 / 5},
-            "hit"    : {"frames": [2, 3], "rate": 1 / 3, "loop": False, "trigger": "collision_done"}
+            "fly":     {"frames": [0, 1], "rate": 1 / 5},
+            "hit":     {"frames": [2, 3], "rate": 1 / 3, "loop": False, "trigger": "collision_done"}
         }, shooter)
 
         self.vx = 200

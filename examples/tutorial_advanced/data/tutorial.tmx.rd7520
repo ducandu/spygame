@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="24" height="24" tilewidth="16" tileheight="16" nextobjectid="6">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="24" height="24" tilewidth="16" tileheight="16" nextobjectid="4">
  <properties>
   <property name="keyboard_inputs" value="up,down,left,right,space,rctrl,lctrl,d"/>
  </properties>
@@ -366,9 +366,6 @@
  </tileset>
  <tileset firstgid="3201" source="erik.tsx"/>
  <tileset firstgid="3363" source="baleog.tsx"/>
- <tileset firstgid="3534" name="movable_rock" tilewidth="32" tileheight="32" tilecount="1" columns="1">
-  <image source="../images/movable_rock.png" width="32" height="32"/>
- </tileset>
  <layer name="background" width="24" height="24">
   <properties>
    <property name="autobuild_objects" type="bool" value="true"/>
@@ -434,14 +431,9 @@
 </data>
  </layer>
  <objectgroup name="objects">
-  <object id="1" name="erik" type="spygame.examples.vikings.Erik" gid="3201" x="153" y="258" width="32" height="32"/>
-  <object id="2" name="baleog" type="spygame.examples.vikings.Baleog" gid="3363" x="294" y="264" width="32" height="32"/>
-  <object id="3" name="rep" type="spygame.Repeater" gid="44" x="0" y="16" width="16" height="16">
-   <properties>
-    <property name="img" value="world3"/>
-   </properties>
-  </object>
-  <object id="5" name="rock1" type="spygame.MovableRock" gid="3534" x="245" y="221" width="32" height="32"/>
+  <object id="1" name="erik" type="spygame.examples.vikings.Erik" gid="3201" x="32" y="32" width="32" height="32"/>
+  <object id="2" type="spygame.examples.vikings.Baleog" gid="3363" x="249" y="219" width="32" height="32"/>
+  <object id="3" name="rep" type="spygame.Repeater" gid="44" x="0" y="16" width="16" height="16"/>
  </objectgroup>
  <layer name="collision" width="24" height="24">
   <properties>

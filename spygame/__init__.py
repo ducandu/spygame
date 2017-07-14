@@ -1935,7 +1935,7 @@ class TiledObjectGroup(TmxLayer):
         # create the sprite group for this layer (all GameObjects will be added to this group)
         self.sprite_group = pygame.sprite.Group()
 
-        # add each object from the layer converted into a GameObject to this Stage under group: group.name
+        # construct each object from the layer (as a Sprite) and add them to the sprite_group of this layer
         for obj in self.pytmx_layer:
             # allow objects in the tmx file to be 'switched-off' by making them invisible
             if not obj.visible:
@@ -1989,6 +1989,7 @@ class Collision(object):
         self.is_collided = True  # True if a collision happened (usually True)
         self.distance = 0  # how much do we have to move sprite1 to separate the two Sprites? (always negative)
         self.magnitude = 0  # abs(distance)
+        self.impact = 0.0  # NOT SURE: the impulse of the collision on some mass (used for pushing heavy objects)
         self.normal_x = 0.0  # x-component of the collision normal
         self.normal_y = 0.0  # y-component of the collision normal
         self.separate = [0, 0]  # (-distance * normal_x, -distance * normal_y) how much to we have to change x/y values for rect to separate the two sprites
@@ -2013,21 +2014,21 @@ class Collision(object):
         return self
 
 
-# TODO: OBSOLETE CLASS
-class PlatformerCollision(Collision):
-    """
-    A collision object that can be used by PlatformerPhysics to handle Collisions.
-    """
+## OBSOLETE CLASS
+#class PlatformerCollision(Collision):
+#    """
+#    A collision object that can be used by PlatformerPhysics to handle Collisions.
+#    """
+#
+#    def __init__(self):
+#        super().__init__()
+#        self.impact = 0.0  # the impulse of the collision on some mass (used for pushing heavy objects)
 
-    def __init__(self):
-        super().__init__()
-        self.impact = 0.0  # the impulse of the collision on some mass (used for pushing heavy objects)
-
-        # OBSOLETE: these should all be no longer needed
-        # self.slope = False  # whether this is a collision with a sloped TileSprite of a TiledTileLayer
+#        # OBSOLETE: these should all be no longer needed
+#        # self.slope = False  # whether this is a collision with a sloped TileSprite of a TiledTileLayer
                             # (will also be False if obj1 collides with the Tile's rect, but obj1 is still in air (slope))
-        # self.slope_y_pull = 0  # amount of y that Sprite has to move up (negative) or down (positive) because of the collision (with a slope)
-        #self.slope_up_down = 0  # 0=no slope, -1=down slope, 1 = up slope
+#        # self.slope_y_pull = 0  # amount of y that Sprite has to move up (negative) or down (positive) because of the collision (with a slope)
+#        #self.slope_up_down = 0  # 0=no slope, -1=down slope, 1 = up slope
 
 
 class Component(GameObject, metaclass=ABCMeta):
@@ -3166,7 +3167,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
     """
 
     # used repeatedly (recycle) for collision detection information being passed between the CollisionAlgorithm object and the physics Copmonents
-    collision_objects = (PlatformerCollision(), PlatformerCollision())
+    # collision_objects = (PlatformerCollision(), PlatformerCollision())
 
     @staticmethod
     def get_highest_tile(tiles, direction, start_abs, end_abs):
@@ -3517,17 +3518,17 @@ class PlatformerPhysics(ControlledPhysicsComponent):
                         if neighbor_border_y > 0:
                             # neighbor slope reaches full tile OR stairs option enabled
                             if neighbor_border_y >= tile_sprite.offset * layer.pytmx_tiled_map.tileheight or self.allow_stairs_climb:
-                                col = AABBCollision.collide(sprite, tile_sprite, self.collision_objects, "y", 0.1, original_pos)
+                                col = AABBCollision.collide(sprite, tile_sprite, None, "y", 0.1, original_pos)
                             # neighbor slope not high enough AND stairs option disabled -> 1) bump up sprite on slope 2) solve x-collision against full tile
                             else:
                                 # make sure the sprite is bumped up on the neighbor up-slope (this may already be done by the xy-pull if vx is not too high)
                                 if sprite.components["dockable"].is_docked():
                                     sprite.move(0.0, -(sprite.rect.bottom - (neighbor.rect.bottom - neighbor_border_y)))
                                 # no stairs -> bump against full tile from the side
-                                col = AABBCollision.collide(sprite, tile_sprite, self.collision_objects, direction, direction_veloc, original_pos)
+                                col = AABBCollision.collide(sprite, tile_sprite, None, direction, direction_veloc, original_pos)
                         # normal full-tile x-collision w/o neighbor slope
                         else:
-                            col = AABBCollision.collide(sprite, tile_sprite, self.collision_objects, direction, direction_veloc, original_pos)
+                            col = AABBCollision.collide(sprite, tile_sprite, None, direction, direction_veloc, original_pos)
 
                         assert col, "ERROR: there must be a col returned from collision detector for tile {},{} neighbored by {},{}!".\
                             format(tile_sprite.tile_x, tile_sprite.tile_y, (neighbor.tile_x if neighbor else "none"), (neighbor.tile_y if neighbor else "none"))
@@ -3542,7 +3543,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
                 for tile_x in range(tile_start_x, tile_end_x + 1):
                     tile_sprite = layer.tile_sprites[tile_x, tile_y]
                     if tile_sprite and tile_sprite.is_full:
-                        col = AABBCollision.collide(sprite, tile_sprite, self.collision_objects, direction, direction_veloc, original_pos)
+                        col = AABBCollision.collide(sprite, tile_sprite, None, direction, direction_veloc, original_pos)
                         assert col, "ERROR: there must be a col returned from collision detector for tile {},{}!".format(tile_x, tile_y)
                         sprite.trigger_event("collision", col)
                         return
@@ -3564,7 +3565,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
             if highest_tile is not None:
                 # y-direction (falling): deal with impact/docking/etc..
                 if direction == "y":
-                    col = AABBCollision.collide(sprite, highest_tile, self.collision_objects, direction, direction_veloc, original_pos)
+                    col = AABBCollision.collide(sprite, highest_tile, None, direction, direction_veloc, original_pos)
                     assert col, "ERROR: there must be a col returned from collision detector (y) for tile {},{}!".format(highest_tile.tile_x, tile_y)
                     # fix our y-pull value via separate[1] (AABB does not know slopes, we have to adapt it to the slope's shape)
                     col.separate[1] = - (sprite.rect.bottom - (highest_tile.rect.bottom - highest_height))
@@ -3588,7 +3589,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
         """
         Gets called (via event trigger 'collision' (setup when this component is added to our GameObject)) when a collision is detected (e.g. by a layer).
 
-        :param PlatformerCollision col: the collision object of the detected collision (the first sprite in that Collision object must be our GameObject)
+        :param Collision col: the collision object of the detected collision (the first sprite in that Collision object must be our GameObject)
         """
         obj = self.game_object
         assert obj is col.sprite1, "ERROR: game_object ({}) of physics component is not identical with passed in col.sprite1 ({})!".format(obj, col.sprite1)
@@ -3670,10 +3671,10 @@ class PlatformerPhysics(ControlledPhysicsComponent):
 
                 # adjust the collision separation to the new squeezeSpeed
                 if self.vy > other_obj_physics.squeeze_speed:
-                    obj.rect.y = y_orig - col.separate[1] * (other_obj_physics.squeeze_speed / self.vy)
-                # otherwise, just undo the separation
+                    obj.move(None, y_orig - col.separate[1] * (other_obj_physics.squeeze_speed / self.vy), absolute=True)
+                # otherwise, just undo the y-separation
                 else:
-                    obj.rect.y -= col.separate[1]
+                    obj.move(0.0, -col.separate[1])
 
                 self.vy = other_obj_physics.squeeze_speed
                 other_obj.trigger_event("squeezed.top", obj)
