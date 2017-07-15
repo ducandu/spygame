@@ -75,18 +75,20 @@ This should give you a level like this:
 
 You can now control the Agent via the four arrow keys (up, down, left, right).
 
-Next steps
-----------
+Next steps and Full Documentation
+---------------------------------
 
 If you would like to create more complex levels (or entire Games with many Screens and Levels), read the
 `spygame documentation <https://sven1977.github.io/spygame/>`_, in which we'll create a full-blown 2D platformer Level
-(sorry, documentation is still very WIP!).
+(sorry about spygame's documentation still being work in progress).
+
 
 AI (Reinforcement Learning) with spygame
 ----------------------------------------
 
 I'm currently working on making spygame available as an openAI-gym Environment type, so that reinforcement learning algorithms can run against any spygame
 Level objects.
+
 
 Contribute to spygame
 ---------------------

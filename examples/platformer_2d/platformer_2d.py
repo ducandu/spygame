@@ -21,7 +21,7 @@ import spygame.examples.vikings as vik
 # main program
 if __name__ == "__main__":
 
-    level = "EGPT"  # make this match your tmx file (tmx-file's name in all upper case and without the .tmx extension)
+    level = "WRBC"  # make this match your tmx file (tmx-file's name in all upper case and without the .tmx extension)
 
     # create a spyg.Game object
     game = spyg.Game(screens_and_levels=[
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
         ], #width=1200, height=380,
         # debug_flags=(spyg.DEBUG_DONT_RENDER_TILED_TILE_LAYERS | spyg.DEBUG_RENDER_COLLISION_TILES | spyg.DEBUG_RENDER_SPRITES_RECTS | spyg.DEBUG_RENDER_ACTIVE_COLLISION_TILES))
-        title="The Lost Vikings - Return of the Heroes :)", debug_flags=(spyg.DEBUG_DONT_RENDER_TILED_TILE_LAYERS | spyg.DEBUG_RENDER_COLLISION_TILES | spyg.DEBUG_RENDER_SPRITES_RECTS))
+        title="The Lost Vikings - Return of the Heroes :)")  #, debug_flags=(spyg.DEBUG_DONT_RENDER_TILED_TILE_LAYERS | spyg.DEBUG_RENDER_COLLISION_TILES | spyg.DEBUG_RENDER_SPRITES_RECTS))
 
     # that's it, play one of the levels -> this will enter an endless game loop
     game.levels_by_name[level].play()

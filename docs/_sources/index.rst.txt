@@ -6,12 +6,18 @@
 Welcome to spygame's documentation!
 ===================================
 
-spygame is a 2D game engine based on the python pygame module and "level-tmx" files
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+spygame is a python 2D game engine based on pygame and level-tmx files
+----------------------------------------------------------------------
+
+|
+
+.. image:: images/index_001_screenshot.png
+   :alt: Level: "We are back!"
 
 .. toctree::
    :maxdepth: 3
    :caption: Contents:
+   :numbered:
 
    readme_link.rst
    intro.rst

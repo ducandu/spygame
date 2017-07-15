@@ -393,7 +393,7 @@
  <tileset firstgid="4054" name="erik" tilewidth="32" tileheight="32" tilecount="162" columns="9">
   <image source="../images/erik.png" width="294" height="599"/>
  </tileset>
- <layer name="background" width="106" height="24" visible="0">
+ <layer name="background" width="106" height="24">
   <properties>
    <property name="autobuild_objects" type="bool" value="true"/>
    <property name="do_render" type="bool" value="true"/>
@@ -5499,7 +5499,7 @@
    <tile gid="0"/>
   </data>
  </layer>
- <objectgroup name="objects" visible="0">
+ <objectgroup name="objects">
   <object id="2" name="erik" type="spygame.examples.vikings.Erik" gid="3217" x="508" y="247" width="32" height="32"/>
   <object id="3" name="scorpion" type="spygame.examples.vikings.Scorpion" gid="3201" x="1099" y="284" width="32" height="32"/>
   <object id="4" name="baleog" type="spygame.examples.vikings.Baleog" gid="3379" x="8" y="262" width="32" height="32"/>
@@ -5542,7 +5542,7 @@
   <object id="28" name="coco1" gid="4050" x="290" y="294" width="16" height="16"/>
   <object id="29" name="coco2" gid="4050" x="282" y="293" width="16" height="16"/>
  </objectgroup>
- <layer name="collision" width="106" height="24" visible="0">
+ <layer name="collision" width="106" height="24">
   <properties>
    <property name="type" value="default"/>
   </properties>
