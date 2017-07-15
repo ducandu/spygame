@@ -1,9 +1,7 @@
 How to build a Platformer with spygame
 ======================================
 
-**IMPORTANT NOTE:** *All graphics used in this tutorial were taken from the game "The Lost Vikings" (c) 1992 by Silicon and Synapse
-(now Blizzard Entertainment Inc.). Please use these (in your own projects and repos) for demonstration purposes only and then mention this
-copyright statement!*
+.. include:: blizzard_copyright_disclaimer.rst
 
 In this tutorial, we will be building a 2D platformer level from scratch using the spygame library. After the first part of the tutorial (this page),
 the game will look roughly like in the following picture and we will be able to control Erik the Swift (the dude with the red beard) via the arrow keys and the

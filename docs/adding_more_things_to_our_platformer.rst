@@ -1,9 +1,7 @@
 Adding more Things to our Platformer
 ====================================
 
-**IMPORTANT NOTE:** *All graphics used in this tutorial were taken from the game "The Lost Vikings" (c) 1992 by Silicon and Synapse
-(now Blizzard Entertainment Inc.). Please use these (in your own projects and repos) for demonstration purposes only and then mention this
-copyright statement!*
+.. include:: blizzard_copyright_disclaimer.rst
 
 Welcome back to the advanced spygame level-tmx tutorial, in which we will improve our level from the previous tutorial by adding more exciting things to
 it. At the end of this process, our level will look like this:

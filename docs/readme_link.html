@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Quick Setup Instructions &#8212; spygame 0.1a9 documentation</title>
+    <title>spygame - Quick Setup Instructions &#8212; spygame 0.1a9 documentation</title>
     
     <link rel="stylesheet" href="_static/spygame_sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -53,7 +53,7 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Quick Setup Instructions</a><ul>
+<li><a class="reference internal" href="#">spygame - Quick Setup Instructions</a><ul>
 <li><a class="reference internal" href="#get-the-code">Get the code</a></li>
 <li><a class="reference internal" href="#get-started">Get started</a></li>
 <li><a class="reference internal" href="#next-steps">Next steps</a></li>
@@ -94,12 +94,15 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="quick-setup-instructions">
-<h1>Quick Setup Instructions<a class="headerlink" href="#quick-setup-instructions" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="spygame-quick-setup-instructions">
+<h1>spygame - Quick Setup Instructions<a class="headerlink" href="#spygame-quick-setup-instructions" title="Permalink to this headline">¶</a></h1>
 <div class="figure" id="id1">
 <img alt="The Lost Vikings - Sample spygame Level" src="https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen2.png" />
 <p class="caption"><span class="caption-text">The Lost Vikings - Sample spygame Level - <em>All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)</em></span></p>
 </div>
+<p><strong>IMPORTANT NOTE:</strong> <em>All graphics used in this documentation and in the spygame.examples.vikings package of the spygame library were taken from the game
+“The Lost Vikings” (c) 1992 by Blizzard Entertainment Inc. (formerly known as Silicon and Synapse). Please use these images (in your own projects and repos)
+for demonstration purposes only and then also mention this copyright statement!</em></p>
 <div class="section" id="get-the-code">
 <h2>Get the code<a class="headerlink" href="#get-the-code" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -173,7 +176,7 @@
     <span class="n">game</span> <span class="o">=</span> <span class="n">spyg</span><span class="o">.</span><span class="n">Game</span><span class="p">(</span><span class="n">screens_and_levels</span><span class="o">=</span><span class="p">[</span>
         <span class="c1"># the only level</span>
         <span class="p">{</span>
-            <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">spyg</span><span class="o">.</span><span class="n">Level</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;MAZE&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="c1"># &lt;- this will read the data/maze.tmx file for the level&#39;s layout and setup data</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">spyg</span><span class="o">.</span><span class="n">Level</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;MAZE&quot;</span><span class="p">,</span> <span class="c1"># &lt;- this will read the data/maze.tmx file for the level&#39;s layout and setup data</span>
         <span class="p">},</span>
 
         <span class="c1"># add more of your levels here</span>

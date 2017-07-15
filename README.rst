@@ -1,10 +1,14 @@
-Quick Setup Instructions
-========================
+spygame - Quick Setup Instructions
+==================================
 
 .. figure:: https://raw.githubusercontent.com/sven1977/spygame/master/examples/platformer_2d/screen2.png
     :alt: The Lost Vikings - Sample spygame Level
 
     The Lost Vikings - Sample spygame Level - *All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)*
+
+
+.. include:: blizzard_copyright_disclaimer.rst
+.. include:: docs/blizzard_copyright_disclaimer.rst
 
 
 Get the code
@@ -45,7 +49,7 @@ Get started
         game = spyg.Game(screens_and_levels=[
             # the only level
             {
-                "class": spyg.Level, "name": "MAZE", "id": 1, # <- this will read the data/maze.tmx file for the level's layout and setup data
+                "id": 1, "class": spyg.Level, "name": "MAZE", # <- this will read the data/maze.tmx file for the level's layout and setup data
             },
 
             # add more of your levels here

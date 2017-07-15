@@ -1,16 +1,18 @@
 Introduction to spygame
 =======================
 
+.. include:: blizzard_copyright_disclaimer.rst
+
 What is spygame?
 ----------------
 
 Spygame is a lightweight 2D game engine written in python3 using the pygame library. It's purpose
 is to:
 
-#. allow python enthusiasts to reverse engineer their favourite 2D classic games in python
-#. support recent AI developments via integration into the openAI toolbox (gym and rllab) and thus
+#. Allow python enthusiasts to reverse engineer their favourite 2D classic games in python.
+#. Support bleeding-edge AI developments via integration into the openAI toolbox (gym and rllab) and thus
    allow researchers to test their reinforcement learning algorithms on complex and \"reward-sparse\" environments.
-#. have fun developing new games and game genres using just python
+#. Have fun developing new games and game genres using just python.
 
 Main Features
 -------------
