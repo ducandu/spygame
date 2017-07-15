@@ -58,10 +58,10 @@
 <li><a class="reference internal" href="#fixing-the-foreground-layer-and-preparing-for-ladders">Fixing the Foreground Layer and Preparing for Ladders</a></li>
 <li><a class="reference internal" href="#adding-ladders-to-the-levels">Adding Ladders to the Levels</a></li>
 <li><a class="reference internal" href="#adding-dangerous-quicksand-to-the-level">Adding Dangerous Quicksand to the Level</a></li>
+<li><a class="reference internal" href="#adding-a-repeater-for-even-more-of-a-3d-effect">Adding a Repeater for even more of a 3D Effect</a></li>
 <li><a class="reference internal" href="#adding-an-additional-viking-to-the-level">Adding an Additional Viking to the Level</a></li>
 <li><a class="reference internal" href="#adding-a-movable-rock">Adding a Movable Rock</a></li>
 <li><a class="reference internal" href="#adding-an-elevator">Adding an Elevator</a></li>
-<li><a class="reference internal" href="#adding-a-repeater-for-even-more-of-a-3d-effect">Adding a Repeater for even more of a 3D Effect</a></li>
 <li><a class="reference internal" href="#adding-a-fire-spitter">Adding a Fire Spitter</a></li>
 <li><a class="reference internal" href="#adding-monsters">Adding Monsters</a></li>
 </ul>
@@ -278,13 +278,71 @@ We then paint (into the foreground layer) the following structure:</p>
 <img alt="Poor Erik sinking into the quicksand trap" src="_images/011_erik_sinking_into_the_trap.png" />
 <p>The game should end here printing out “Game Over” on the console.</p>
 </div>
+<div class="section" id="adding-a-repeater-for-even-more-of-a-3d-effect">
+<h2>Adding a Repeater for even more of a 3D Effect<a class="headerlink" href="#adding-a-repeater-for-even-more-of-a-3d-effect" title="Permalink to this headline">¶</a></h2>
+<p>The next item we are going to add will be very simple but quite effective. We will use a so-called repeater object. A Repeater in spygame is a kind of
+super-background. It will be rendered with a render_order of 0 (remember the background layer had a value of 10 here). Also, if the level is a little larger
+and you specify a width and height parameter in the constructor of the spygame.Game object, you will be able to see that there is a viewport that follows
+the active character around in the level. During the scrolling of that viewport, the repeater scrolls along, but at a slightly different speed (should be
+slower) so that a pseudo-3D effect arises out of this. Let’s try it out:</p>
+<ol class="arabic simple">
+<li>We will change the call to the Game constructor in tutorial.py to add the two parameters width=200 and height=200:</li>
+</ol>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># create a spyg.Game object</span>
+<span class="n">game</span> <span class="o">=</span> <span class="n">spyg</span><span class="o">.</span><span class="n">Game</span><span class="p">(</span><span class="n">screens_and_levels</span><span class="o">=</span><span class="p">[</span>
+    <span class="c1"># the only level</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="n">vik</span><span class="o">.</span><span class="n">VikingLevel</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;TUTORIAL&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">},</span>
+
+    <span class="c1"># add more of your levels here</span>
+    <span class="c1"># { ... },</span>
+
+<span class="p">],</span> <span class="n">width</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Erik&#39;s Trip to Egypt&quot;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<ol class="arabic simple" start="2">
+<li>We need to insert the repeater object into the level:
+The following will make clear that the inserted object tiles (the ones that go into the tiled object layer in the level-tmx file), have nothing
+to do with the images actually being rendered in the spygame level. We use these particular images in the Tiled editor only to get a better picture of
+what the level will look like in the end. So choose any tile you like from any tileset you like and place this tile once into the object layer as a
+new object
+(I chose the fully filled red square from the generic tileset). Place it all the way in the top left corner of the level:</li>
+</ol>
+<img alt="Placing a spygame.Repeater object (represented by an arbitrary tile) into the level" src="_images/023_placing_the_repeater_as_arbitrary_tile_in_the_level.png" />
+<ol class="arabic simple" start="3">
+<li>… and assign the following properties to the new object:</li>
+</ol>
+<img alt="The repeater's properties" src="_images/024_repeater_properties.png" />
+<p>Now, let’s try the level again. You should see that when Erik jumps for example, the repeater super-background scrolls a little slower than the rest of the
+level (the background and foreground tiled layers). You can play around with the vx and vy parameters in the Repeater’s constructor (use values between
+0.25 and 1.0 in the custom properties of the repeater object).
+1.0 here means scroll just like the regular layers (no extra pseudo 3D effect). Values larger than 1.0 will look physically
+counter intuitive as the super-background (which is supposed to be further away then the tiled layers) will scroll faster than the tiled layers.</p>
+<div class="figure" id="id1">
+<img alt="The repeater in action" src="_images/025_the_repeater_in_action_in_the_game.png" />
+<p class="caption"><span class="caption-text">What a ready spygame.Repeater object will look like.</span></p>
+</div>
+<p>When you are done testing, please set the width and height of the Game back to “auto” (meaning: remove the parameters from the function call).
+For the following, we would like to see the entire level again, not just a section of it.</p>
+</div>
 <div class="section" id="adding-an-additional-viking-to-the-level">
 <h2>Adding an Additional Viking to the Level<a class="headerlink" href="#adding-an-additional-viking-to-the-level" title="Permalink to this headline">¶</a></h2>
 <p>Now that we have the nicely sloped hill, we no longer rely on our hero being able to jump up the stairs. One can just walk. Therefore Vikings other
 than Erik, who are not able to jump (but have other qualities) can enter the scene now. So let’s add Baleog the Fierce, a fearless warrior with sword and
 bow.</p>
 <p>We have to add a new tileset first, the one for Baleog. Click on <em>Map-&gt;New Tileset</em>, then pick the baleog.png file and make sure the width and height are 32px
-each. Click the little “Export Tileset As” button at the bottom of the Tilesets panel and save the Baloeg tileset as “baleog.tsx” in the data/ directory
+each. Click the little “Export Tileset As” button at the bottom of the Tilesets panel and save the Baleog tileset as “baleog.tsx” in the data/ directory
 of your project. Select the object layer and - with the Insert Tile (T) tool - insert one Baleog object into the level.
 Switch to the Select Tool (S) and click on the newly inserted Baleog, then set his Type property to “spygame.examples.vikings.Baleog”.</p>
 <p>There is one more thing we have to do before we can fully utilize Baleog’s capabilities. Baleog can hit with his sword (using space) and shoot an arrow
@@ -312,23 +370,23 @@ slopes) and b) squeeze things beneath them (for example our vikings).</p>
 Click somewhere in the level to place one rock object, then press S for “Select Object” and set the rock’s Type to “spygame.MovableRock”.</p>
 <p>When you play the level, you should now be able to push the rock with either Erik or Baleog, uphill and downhill, only being blocked by another viking or
 a wall on the other side of the rock:</p>
-<div class="figure" id="id1">
+<div class="figure" id="id2">
 <img alt="Baleog pushing the movable rock object" src="_images/014_baleog_pushing_the_rock.png" />
 <p class="caption"><span class="caption-text">Baleog pushing the movable rock object</span></p>
 </div>
-<div class="figure" id="id2">
+<div class="figure" id="id3">
 <img alt="Erik blocking Baleog from pushing the movable rock object" src="_images/015_erik_blocking_baleog_from_pushing_the_rock.png" />
 <p class="caption"><span class="caption-text">Erik blocking Baleog from pushing the movable rock object</span></p>
 </div>
-<div class="figure" id="id3">
+<div class="figure" id="id4">
 <img alt="Baleog pushing the movable rock object with Erik standing on top" src="_images/016_baleog_pushing_the_rock_with_erik_on_top.png" />
 <p class="caption"><span class="caption-text">Baleog pushing the movable rock object with Erik standing on top (and moving along with the rock)</span></p>
 </div>
-<div class="figure" id="id4">
+<div class="figure" id="id5">
 <img alt="Erik pushing the Rock uphill" src="_images/017_erik_pushing_the_rock_uphill.png" />
 <p class="caption"><span class="caption-text">Erik pushing the Rock uphill</span></p>
 </div>
-<div class="figure" id="id5">
+<div class="figure" id="id6">
 <img alt="Poor Baleog getting squeezed by the rock" src="_images/018_poor_baleog_getting_squeezed_by_the_rock.png" />
 <p class="caption"><span class="caption-text">Poor Baleog getting squeezed by the rock</span></p>
 </div>
@@ -337,15 +395,41 @@ elevators and moving platforms.</p>
 </div>
 <div class="section" id="adding-an-elevator">
 <h2>Adding an Elevator<a class="headerlink" href="#adding-an-elevator" title="Permalink to this headline">¶</a></h2>
-<p>Spygame also comes with moving platforms (or elevators). At this stage of spygame development, these can either go up and down or left and right.
+<p>Spygame also comes with moving platforms (or elevators). At this stage of spygame development, these can either move in up/down (y) or left/right direction (x).
 The two extreme points, where the elevator will revert its speed and start moving into the other direction, have to be specified at
 construction time.</p>
-</div>
-<div class="section" id="adding-a-repeater-for-even-more-of-a-3d-effect">
-<h2>Adding a Repeater for even more of a 3D Effect<a class="headerlink" href="#adding-a-repeater-for-even-more-of-a-3d-effect" title="Permalink to this headline">¶</a></h2>
+<p>We create yet another tileset for the elevator image in our level-tmx file. Click on <em>Map-&gt; New Tileset</em> and browse for the elevator.png image in the images/
+folder of the project. <strong>Important:</strong> Set the width to 32px and the height to 15px (not 16!). These are the dimensions of the image and the image will thus
+only yield a single tile. We use that single tile and the Insert Tile (T) tool (remember to click on the objects layer first), as well as the Select Objects (S)
+tool to place an elevator into the level and set its Type property to “spygame.Elevator” (you can also give it a descriptive Name property , like “elevator”):</p>
+<img alt="Placing a new elevator into the scene" src="_images/019_placing_an_elevator.png" />
+<p>Also, create the following custom properties on the elevator object:</p>
+<img alt="The elevator's built-in properties and custom properties" src="_images/020_the_elevators_properties.png" />
+<p>This specifies that the elevator will move in up/down direction with a speed of 10 and will turn around at the extreme points y=33 and y=232.
+Let’s try it out. Erik can jump on top of the elevator from the palm tree or from the hill, Baleog should be able to “jump” onto the elevator from the top
+of the palm tree, but only if you make that tree a little higher:</p>
+<img alt="Baleog jumping onto the elevator from the top of the palm" src="_images/021_baleog_jumping_onto_the_elevator.png" />
+<img alt="Erik and Baleog standing together on the elevator" src="_images/022_erik_and_baleog_standing_on_the_elevator.png" />
 </div>
 <div class="section" id="adding-a-fire-spitter">
 <h2>Adding a Fire Spitter<a class="headerlink" href="#adding-a-fire-spitter" title="Permalink to this headline">¶</a></h2>
+<p>Let’s do something mean again and this time add a fire spitter to the level. After all, we are in a pharaoh temple in old egypt and thus expect to see
+many traps and pitfalls. The FireSpitter class comes with the examples.vikings package of spygame and is yet another autobuild object (just like Ladder
+and LiquidBody), which means it gets created automatically via a) the background layer being set to autobuild_objects=true and b) some tiles (in the
+background layer) having an autobuild_class defined (in this case, “spygame.examples.vikings.FireSpitter”).
+However, what’s new to learn here is that besides the
+autobuild_class specification, we can always set further parameters that we would like to send to the FireSpitter (or any other Autobuild)
+constructor. The FireSpitter constructor takes an optional “direction” parameter (shooting left or right)
+and a “frequency” parameter (shooting frequency in 1/sec). To specify these in
+the level-tmx file, we have to create them as custom properties of the tile.</p>
+<p>Look for the two tiles that look like fire spitters in the egpt tileset. They are marked with a blue X in the image below:</p>
+<img alt="" src="_images/026_the_two_firespitter_tiles.png" />
+<p>Now select both of them and set their autobuild_class to “spygame.examples.vikings.FireSpitter”. Also give both of them another new custom property
+called “P_frequency” (float) and set the value to 0.3. Then select only the left one and create the new custom property “P_direction” (string) = “left” and
+do the same for the right fire spitter (“P_direction” (string) = “right”). You can see that additional parameters to the autobuild constructors
+have to have a preceding “P_” so that spygame recognizes these as autobuild c’tor parameters:</p>
+<p>TODO: make egpt a tsx spritesheet (so the fireball can be animated!)
+TODO: explain setting constructor parameters with P_ prefix in level-tmx file (autobuild tile props)</p>
 </div>
 <div class="section" id="adding-monsters">
 <h2>Adding Monsters<a class="headerlink" href="#adding-monsters" title="Permalink to this headline">¶</a></h2>

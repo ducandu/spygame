@@ -1790,7 +1790,7 @@ class TiledTileLayer(TmxLayer):
                         y2 += 1
 
                     # insert new object (all autobuild objects need to accept x, y, w, h in their constructors)
-                    objects.append(ctor(x, y, w, h, self.pytmx_tiled_map.tilewidth, self.pytmx_tiled_map.tileheight))
+                    objects.append(ctor(x, y, w, h, self.pytmx_tiled_map.tilewidth, self.pytmx_tiled_map.tileheight, **props.get("autobuild_kwargs", {})))
         return objects
 
     def get_overlapping_tiles(self, sprite):
@@ -1953,21 +1953,7 @@ class TiledObjectGroup(TmxLayer):
                     format(class_global, self.pytmx_layer.name)
 
                 # get other kwargs for the Sprite's c'tor
-                kwargs = {}
-                for key, value in obj_props.items():
-                    # special cases
-                    # a spritesheet (filename)
-                    if key == "tsx":
-                        kwargs["sprite_sheet"] = SpriteSheet("data/" + value + ".tsx")
-                    # an image_file
-                    elif key == "img":
-                        kwargs["image_file"] = "images/" + value + ".png"
-                    # a width/height information for the collision box
-                    elif key == "width_height":
-                        kwargs["width_height"] = tuple(map(lambda x: convert_type(x), value.split(",")))
-                    # vanilla kwarg
-                    else:
-                        kwargs[key] = convert_type(value)
+                kwargs = get_kwargs_from_obj_props(obj_props)
 
                 # generate the Sprite
                 sprite = ctor(obj.x, obj.y, **kwargs)
@@ -2878,13 +2864,23 @@ class PhysicsComponent(Component, metaclass=ABCMeta):
                 continue
             tile_props = layer.pytmx_tiled_map.get_tile_properties_by_gid(gid) or {}
             # go through dict and translate data types into proper python types ("true" -> bool, 0.0 -> float, etc..)
+            # also keep autobuild kwargs in a separate dict
+            look_for_autobuild = (True if tile_props.get("autobuild_class") else False)
+            autobuild_kwargs = {}
             for key, value in tile_props.items():
                 value = convert_type(value)
-                tile_props[key] = value
+                # a special autobuild kwarg (for the autobuild c'tor)
+                if look_for_autobuild and key[:2] == "P_":
+                    autobuild_kwargs[key[2:]] = value
+                else:
+                    tile_props[key] = value
+
+            if look_for_autobuild:
+                tile_props["autobuild_kwargs"] = autobuild_kwargs
 
             ret[x, y] = tile_sprite_class(layer, layer.pytmx_tiled_map, gid, tile_props,
-                                         pygame.Rect(x * layer.pytmx_tiled_map.tilewidth, y * layer.pytmx_tiled_map.tileheight,
-                                                     layer.pytmx_tiled_map.tilewidth, layer.pytmx_tiled_map.tileheight))
+                                          pygame.Rect(x * layer.pytmx_tiled_map.tilewidth, y * layer.pytmx_tiled_map.tileheight,
+                                                      layer.pytmx_tiled_map.tilewidth, layer.pytmx_tiled_map.tileheight))
         return ret
 
     # probably needs to be extended further by child classes
@@ -3604,10 +3600,9 @@ class PlatformerPhysics(ControlledPhysicsComponent):
             # shooter (this) is colliding with own shot -> ignore
             if obj is not other_obj.shooter:
                 obj.trigger_event("hit.particle", col)
-                self.push_back([500 * col.normal_x if col.normal_x != 0 else math.copysign(1.0, getattr(other_obj, "vx", 1.0))] * 5)
-                # for particles, force the reciprocal collisions (otherwise, the character that got shot could be gone (dead) before any collisions on the
-                # particle could get triggered (-> e.g. arrow will fly through a dying enemy without ever actually touching the enemy))
-                #OBSOLETE: other_obj.trigger_event("collision", col)
+                push_direction = col.normal_x if col.normal_x != 0 else math.copysign(1.0, getattr(other_obj, "vx", 0.0))
+                if push_direction != 0.0:
+                    self.push_back([500 * push_direction] * 5)
             return
 
         # colliding with a one-way-platform: can only collide when coming from the top
@@ -4520,3 +4515,25 @@ def convert_type(value, force_class=False):
         # str (or list or others)
         return value
 
+
+def get_kwargs_from_obj_props(obj_props):
+    """
+    returns a kwargs dict retrieved from a single object's properties in a level-tmx TiledObjectGroup
+    """
+    kwargs = {}
+    for key, value in obj_props.items():
+        # special cases
+        # a spritesheet (filename)
+        if key == "tsx":
+            kwargs["sprite_sheet"] = SpriteSheet("data/" + value + ".tsx")
+        # an image_file
+        elif key == "img":
+            kwargs["image_file"] = "images/" + value + ".png"
+        # a width/height information for the collision box
+        elif key == "width_height":
+            kwargs["width_height"] = tuple(map(lambda x: convert_type(x), value.split(",")))
+        # vanilla kwarg
+        else:
+            kwargs[key] = convert_type(value)
+
+    return kwargs

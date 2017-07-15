@@ -1855,7 +1855,7 @@
                         <span class="n">y2</span> <span class="o">+=</span> <span class="mi">1</span>
 
                     <span class="c1"># insert new object (all autobuild objects need to accept x, y, w, h in their constructors)</span>
-                    <span class="n">objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ctor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">))</span>
+                    <span class="n">objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ctor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">,</span> <span class="o">**</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;autobuild_kwargs&quot;</span><span class="p">,</span> <span class="p">{})))</span>
         <span class="k">return</span> <span class="n">objects</span></div>
 
 <div class="viewcode-block" id="TiledTileLayer.get_overlapping_tiles"><a class="viewcode-back" href="../spygame_reference.html#spygame.TiledTileLayer.get_overlapping_tiles">[docs]</a>    <span class="k">def</span> <span class="nf">get_overlapping_tiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sprite</span><span class="p">):</span>
@@ -2018,21 +2018,7 @@
                     <span class="nb">format</span><span class="p">(</span><span class="n">class_global</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytmx_layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
                 <span class="c1"># get other kwargs for the Sprite&#39;s c&#39;tor</span>
-                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
-                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">obj_props</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="c1"># special cases</span>
-                    <span class="c1"># a spritesheet (filename)</span>
-                    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;tsx&quot;</span><span class="p">:</span>
-                        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sprite_sheet&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">SpriteSheet</span><span class="p">(</span><span class="s2">&quot;data/&quot;</span> <span class="o">+</span> <span class="n">value</span> <span class="o">+</span> <span class="s2">&quot;.tsx&quot;</span><span class="p">)</span>
-                    <span class="c1"># an image_file</span>
-                    <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;img&quot;</span><span class="p">:</span>
-                        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;image_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;images/&quot;</span> <span class="o">+</span> <span class="n">value</span> <span class="o">+</span> <span class="s2">&quot;.png&quot;</span>
-                    <span class="c1"># a width/height information for the collision box</span>
-                    <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;width_height&quot;</span><span class="p">:</span>
-                        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;width_height&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">convert_type</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)))</span>
-                    <span class="c1"># vanilla kwarg</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert_type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="n">get_kwargs_from_obj_props</span><span class="p">(</span><span class="n">obj_props</span><span class="p">)</span>
 
                 <span class="c1"># generate the Sprite</span>
                 <span class="n">sprite</span> <span class="o">=</span> <span class="n">ctor</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -2943,13 +2929,23 @@
                 <span class="k">continue</span>
             <span class="n">tile_props</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">get_tile_properties_by_gid</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
             <span class="c1"># go through dict and translate data types into proper python types (&quot;true&quot; -&gt; bool, 0.0 -&gt; float, etc..)</span>
+            <span class="c1"># also keep autobuild kwargs in a separate dict</span>
+            <span class="n">look_for_autobuild</span> <span class="o">=</span> <span class="p">(</span><span class="kc">True</span> <span class="k">if</span> <span class="n">tile_props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;autobuild_class&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">autobuild_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">tile_props</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">value</span> <span class="o">=</span> <span class="n">convert_type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-                <span class="n">tile_props</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="c1"># a special autobuild kwarg (for the autobuild c&#39;tor)</span>
+                <span class="k">if</span> <span class="n">look_for_autobuild</span> <span class="ow">and</span> <span class="n">key</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;P_&quot;</span><span class="p">:</span>
+                    <span class="n">autobuild_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="mi">2</span><span class="p">:]]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">tile_props</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+            <span class="k">if</span> <span class="n">look_for_autobuild</span><span class="p">:</span>
+                <span class="n">tile_props</span><span class="p">[</span><span class="s2">&quot;autobuild_kwargs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">autobuild_kwargs</span>
 
             <span class="n">ret</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">tile_sprite_class</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">tile_props</span><span class="p">,</span>
-                                         <span class="n">pygame</span><span class="o">.</span><span class="n">Rect</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="n">y</span> <span class="o">*</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">,</span>
-                                                     <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">))</span>
+                                          <span class="n">pygame</span><span class="o">.</span><span class="n">Rect</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="n">y</span> <span class="o">*</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">,</span>
+                                                      <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tilewidth</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">pytmx_tiled_map</span><span class="o">.</span><span class="n">tileheight</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
     <span class="c1"># probably needs to be extended further by child classes</span>
@@ -3669,10 +3665,9 @@
             <span class="c1"># shooter (this) is colliding with own shot -&gt; ignore</span>
             <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other_obj</span><span class="o">.</span><span class="n">shooter</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">trigger_event</span><span class="p">(</span><span class="s2">&quot;hit.particle&quot;</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">push_back</span><span class="p">([</span><span class="mi">500</span> <span class="o">*</span> <span class="n">col</span><span class="o">.</span><span class="n">normal_x</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">normal_x</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">copysign</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other_obj</span><span class="p">,</span> <span class="s2">&quot;vx&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))]</span> <span class="o">*</span> <span class="mi">5</span><span class="p">)</span>
-                <span class="c1"># for particles, force the reciprocal collisions (otherwise, the character that got shot could be gone (dead) before any collisions on the</span>
-                <span class="c1"># particle could get triggered (-&gt; e.g. arrow will fly through a dying enemy without ever actually touching the enemy))</span>
-                <span class="c1">#OBSOLETE: other_obj.trigger_event(&quot;collision&quot;, col)</span>
+                <span class="n">push_direction</span> <span class="o">=</span> <span class="n">col</span><span class="o">.</span><span class="n">normal_x</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">normal_x</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">copysign</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other_obj</span><span class="p">,</span> <span class="s2">&quot;vx&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">push_direction</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">push_back</span><span class="p">([</span><span class="mi">500</span> <span class="o">*</span> <span class="n">push_direction</span><span class="p">]</span> <span class="o">*</span> <span class="mi">5</span><span class="p">)</span>
             <span class="k">return</span>
 
         <span class="c1"># colliding with a one-way-platform: can only collide when coming from the top</span>
@@ -4585,6 +4580,28 @@
         <span class="c1"># str (or list or others)</span>
         <span class="k">return</span> <span class="n">value</span></div>
 
+
+<div class="viewcode-block" id="get_kwargs_from_obj_props"><a class="viewcode-back" href="../spygame_reference.html#spygame.get_kwargs_from_obj_props">[docs]</a><span class="k">def</span> <span class="nf">get_kwargs_from_obj_props</span><span class="p">(</span><span class="n">obj_props</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns a kwargs dict retrieved from a single object&#39;s properties in a level-tmx TiledObjectGroup</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">obj_props</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># special cases</span>
+        <span class="c1"># a spritesheet (filename)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;tsx&quot;</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sprite_sheet&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">SpriteSheet</span><span class="p">(</span><span class="s2">&quot;data/&quot;</span> <span class="o">+</span> <span class="n">value</span> <span class="o">+</span> <span class="s2">&quot;.tsx&quot;</span><span class="p">)</span>
+        <span class="c1"># an image_file</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;img&quot;</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;image_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;images/&quot;</span> <span class="o">+</span> <span class="n">value</span> <span class="o">+</span> <span class="s2">&quot;.png&quot;</span>
+        <span class="c1"># a width/height information for the collision box</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;width_height&quot;</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;width_height&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">convert_type</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)))</span>
+        <span class="c1"># vanilla kwarg</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert_type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">kwargs</span></div>
 </pre></div>
 
           </div>

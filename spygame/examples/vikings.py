@@ -895,13 +895,13 @@ class Fireball(Shot):
     """
     sprite_sheet = None
 
-    def __init__(self, shooter):
+    def __init__(self, shooter, direction="right"):
         """
         :param Sprite shooter: the shooter that shoots this FireBall object
         """
         # init our recyclable SpriteSheet
         if not self.sprite_sheet:
-            self.sprite_sheet = spyg.SpriteSheet("data/fireball.tsx")
+            self.sprite_sheet = spyg.SpriteSheet("data/egpt.tsx")
 
         super().__init__(0, 0, self.sprite_sheet, {
             "default": "fly",  # the default animation to play
@@ -909,25 +909,42 @@ class Fireball(Shot):
             "hit":     {"frames": [2, 3], "rate": 1 / 3, "loop": False, "trigger": "collision_done"}
         }, shooter)
 
-        self.vx = 200
+        self.flip = {"x": (True if direction == "left" else False), "y": False}
+        self.vx = 200 * (-1 if direction == "left" else 1)
         self.type = spyg.Sprite.get_type("particle,fireball")
         self.collision_mask = spyg.Sprite.get_type("default,friendly")
         self.damage = 2  # a fireball causes more damage
 
 
-class FireSpitter(spyg.Sprite):
+class FireSpitter(spyg.Sprite, spyg.Autobuild):
     """
     a FireSpitter can spit fireballs that kill the Vikings
     """
+    def __init__(self, x, y, w, h, tile_w, tile_h, **kwargs):
+        """
+        :param int x: the x position of the Ladder in tile units
+        :param int y: the y position of the Ladder in tile units
+        :param int w: the width of the Ladder in tile units
+        :param int h: the height of the Ladder in tile units
+        :param int tile_w: the tile width of the layer
+        :param int tile_h: the tile height of the layer
+        :param any kwargs:
+            frequency (float): the shooting frequency in 1/s
+            direction (string): "left" or "right"; the x-direction of the shot being fired
+        """
+        spyg.Autobuild.__init__(self, x, y, w, h, tile_w, tile_h)
+        # transform values here into px
+        # call the Sprite ctor (now everything is in px)
+        spyg.Sprite.__init__(self, self.x_in_tiles * self.tile_w, self.y_in_tiles * self.tile_h,
+                             width_height=(self.w_in_tiles * self.tile_w, self.h_in_tiles * self.tile_h))
+        # collision types
+        self.type = spyg.Sprite.get_type("default")  # collide normally (behave like a wall)
+        self.collision_mask = 0  # do not do any collisions itself
 
-    def __init__(self, x, y, frequency=1 / 3):
-        # fixed static image (a tile inside the png image)
-        super().__init__(x, y, image_file="images/egpt.png", image_section=(20 * 16, 3 * 16, 16, 16))
-
-        self.frequency = frequency  # shooting frequency (in 1/s)
+        # set some spitter specific things
+        self.frequency = kwargs.get("frequency", 0.3)  # shooting frequency (in 1/s)
+        self.direction = kwargs.get("direction", "right")  # right or left (the direction of the shooting)
         self.last_shot_fired = 0.0  # keep track of last shot fired
-        self.type = spyg.Sprite.get_type("default")
-        self.collision_mask = 0
 
     def tick(self, game_loop):
         dt = game_loop.dt
@@ -938,7 +955,7 @@ class FireSpitter(spyg.Sprite):
             self.fire()
 
     def fire(self):
-        self.stage.add_sprite(Fireball(self), "fireballs")
+        self.stage.add_sprite(Fireball(self, self.direction), "fireballs")
 
 
 class Scorpion(spyg.AnimatedSprite):

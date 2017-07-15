@@ -170,6 +170,64 @@ Playing the tutorial.py game should now make Erik die when touching the surface 
 The game should end here printing out "Game Over" on the console.
 
 
+Adding a Repeater for even more of a 3D Effect
+----------------------------------------------
+
+The next item we are going to add will be very simple but quite effective. We will use a so-called repeater object. A Repeater in spygame is a kind of
+super-background. It will be rendered with a render_order of 0 (remember the background layer had a value of 10 here). Also, if the level is a little larger
+and you specify a width and height parameter in the constructor of the spygame.Game object, you will be able to see that there is a viewport that follows
+the active character around in the level. During the scrolling of that viewport, the repeater scrolls along, but at a slightly different speed (should be
+slower) so that a pseudo-3D effect arises out of this. Let's try it out:
+
+1. We will change the call to the Game constructor in tutorial.py to add the two parameters width=200 and height=200:
+
+.. code-block:: python
+    :linenos:
+    :lineno-start: 4
+
+    # create a spyg.Game object
+    game = spyg.Game(screens_and_levels=[
+        # the only level
+        {
+            "class": vik.VikingLevel, "name": "TUTORIAL", "id": 1,
+        },
+
+        # add more of your levels here
+        # { ... },
+
+    ], width=200, height=200, title="Erik's Trip to Egypt")
+
+
+2. We need to insert the repeater object into the level:
+   The following will make clear that the inserted object tiles (the ones that go into the tiled object layer in the level-tmx file), have nothing
+   to do with the images actually being rendered in the spygame level. We use these particular images in the Tiled editor only to get a better picture of
+   what the level will look like in the end. So choose any tile you like from any tileset you like and place this tile once into the object layer as a
+   new object
+   (I chose the fully filled red square from the generic tileset). Place it all the way in the top left corner of the level:
+
+.. image:: tutorial/advanced/023_placing_the_repeater_as_arbitrary_tile_in_the_level.png
+    :alt: Placing a spygame.Repeater object (represented by an arbitrary tile) into the level
+
+3. ... and assign the following properties to the new object:
+
+.. image:: tutorial/advanced/024_repeater_properties.png
+    :alt: The repeater's properties
+
+Now, let's try the level again. You should see that when Erik jumps for example, the repeater super-background scrolls a little slower than the rest of the
+level (the background and foreground tiled layers). You can play around with the vx and vy parameters in the Repeater's constructor (use values between
+0.25 and 1.0 in the custom properties of the repeater object).
+1.0 here means scroll just like the regular layers (no extra pseudo 3D effect). Values larger than 1.0 will look physically
+counter intuitive as the super-background (which is supposed to be further away then the tiled layers) will scroll faster than the tiled layers.
+
+.. figure:: tutorial/advanced/025_the_repeater_in_action_in_the_game.png
+    :alt: The repeater in action
+
+    What a ready spygame.Repeater object will look like.
+
+When you are done testing, please set the width and height of the Game back to "auto" (meaning: remove the parameters from the function call).
+For the following, we would like to see the entire level again, not just a section of it.
+
+
 Adding an Additional Viking to the Level
 ----------------------------------------
 
@@ -178,7 +236,7 @@ than Erik, who are not able to jump (but have other qualities) can enter the sce
 bow.
 
 We have to add a new tileset first, the one for Baleog. Click on *Map->New Tileset*, then pick the baleog.png file and make sure the width and height are 32px
-each. Click the little "Export Tileset As" button at the bottom of the Tilesets panel and save the Baloeg tileset as "baleog.tsx" in the data/ directory
+each. Click the little "Export Tileset As" button at the bottom of the Tilesets panel and save the Baleog tileset as "baleog.tsx" in the data/ directory
 of your project. Select the object layer and - with the Insert Tile (T) tool - insert one Baleog object into the level.
 Switch to the Select Tool (S) and click on the newly inserted Baleog, then set his Type property to "spygame.examples.vikings.Baleog".
 
@@ -252,19 +310,61 @@ elevators and moving platforms.
 Adding an Elevator
 ------------------
 
-Spygame also comes with moving platforms (or elevators). At this stage of spygame development, these can either go up and down or left and right.
+Spygame also comes with moving platforms (or elevators). At this stage of spygame development, these can either move in up/down (y) or left/right direction (x).
 The two extreme points, where the elevator will revert its speed and start moving into the other direction, have to be specified at
 construction time.
 
+We create yet another tileset for the elevator image in our level-tmx file. Click on *Map-> New Tileset* and browse for the elevator.png image in the images/
+folder of the project. **Important:** Set the width to 32px and the height to 15px (not 16!). These are the dimensions of the image and the image will thus
+only yield a single tile. We use that single tile and the Insert Tile (T) tool (remember to click on the objects layer first), as well as the Select Objects (S)
+tool to place an elevator into the level and set its Type property to "spygame.Elevator" (you can also give it a descriptive Name property , like "elevator"):
 
-Adding a Repeater for even more of a 3D Effect
-----------------------------------------------
+.. image:: tutorial/advanced/019_placing_an_elevator.png
+    :alt: Placing a new elevator into the scene
+
+Also, create the following custom properties on the elevator object:
+
+.. image:: tutorial/advanced/020_the_elevators_properties.png
+    :alt: The elevator's built-in properties and custom properties
+
+This specifies that the elevator will move in up/down direction with a speed of 10 and will turn around at the extreme points y=33 and y=232.
+Let's try it out. Erik can jump on top of the elevator from the palm tree or from the hill, Baleog should be able to "jump" onto the elevator from the top
+of the palm tree, but only if you make that tree a little higher:
+
+.. image:: tutorial/advanced/021_baleog_jumping_onto_the_elevator.png
+    :alt: Baleog jumping onto the elevator from the top of the palm
+
+.. image:: tutorial/advanced/022_erik_and_baleog_standing_on_the_elevator.png
+    :alt: Erik and Baleog standing together on the elevator
 
 
 
 Adding a Fire Spitter
 ---------------------
 
+Let's do something mean again and this time add a fire spitter to the level. After all, we are in a pharaoh temple in old egypt and thus expect to see
+many traps and pitfalls. The FireSpitter class comes with the examples.vikings package of spygame and is yet another autobuild object (just like Ladder
+and LiquidBody), which means it gets created automatically via a) the background layer being set to autobuild_objects=true and b) some tiles (in the
+background layer) having an autobuild_class defined (in this case, "spygame.examples.vikings.FireSpitter").
+However, what's new to learn here is that besides the
+autobuild_class specification, we can always set further parameters that we would like to send to the FireSpitter (or any other Autobuild)
+constructor. The FireSpitter constructor takes an optional "direction" parameter (shooting left or right)
+and a "frequency" parameter (shooting frequency in 1/sec). To specify these in
+the level-tmx file, we have to create them as custom properties of the tile.
+
+Look for the two tiles that look like fire spitters in the egpt tileset. They are marked with a blue X in the image below:
+
+.. image:: tutorial/advanced/026_the_two_firespitter_tiles.png
+    :alt:
+
+Now select both of them and set their autobuild_class to "spygame.examples.vikings.FireSpitter". Also give both of them another new custom property
+called "P_frequency" (float) and set the value to 0.3. Then select only the left one and create the new custom property "P_direction" (string) = "left" and
+do the same for the right fire spitter ("P_direction" (string) = "right"). You can see that additional parameters to the autobuild constructors
+have to have a preceding "P\_" so that spygame recognizes these as autobuild c'tor parameters:
+
+
+TODO: make egpt a tsx spritesheet (so the fireball can be animated!)
+TODO: explain setting constructor parameters with P\_ prefix in level-tmx file (autobuild tile props)
 
 
 

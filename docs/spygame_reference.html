@@ -2634,6 +2634,12 @@ spygame.Ladder -&gt; &lt;type spygame.Ladder&gt; (a python class object; can be 
 </table>
 </dd></dl>
 
+<dl class="function">
+<dt id="spygame.get_kwargs_from_obj_props">
+<code class="descclassname">spygame.</code><code class="descname">get_kwargs_from_obj_props</code><span class="sig-paren">(</span><em>obj_props</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#get_kwargs_from_obj_props"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.get_kwargs_from_obj_props" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a kwargs dict retrieved from a single object’s properties in a level-tmx TiledObjectGroup</p>
+</dd></dl>
+
 </div>
 <div class="section" id="example-classes">
 <h2>Example Classes:<a class="headerlink" href="#example-classes" title="Permalink to this headline">¶</a></h2>
@@ -2800,8 +2806,8 @@ spygame.Ladder -&gt; &lt;type spygame.Ladder&gt; (a python class object; can be 
 
 <dl class="class">
 <dt id="spygame.examples.vikings.FireSpitter">
-<em class="property">class </em><code class="descclassname">spygame.examples.vikings.</code><code class="descname">FireSpitter</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>frequency=0.3333333333333333</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#FireSpitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.FireSpitter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#spygame.Sprite" title="spygame.Sprite"><code class="xref py py-class docutils literal"><span class="pre">spygame.Sprite</span></code></a></p>
+<em class="property">class </em><code class="descclassname">spygame.examples.vikings.</code><code class="descname">FireSpitter</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>w</em>, <em>h</em>, <em>tile_w</em>, <em>tile_h</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#FireSpitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.FireSpitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#spygame.Sprite" title="spygame.Sprite"><code class="xref py py-class docutils literal"><span class="pre">spygame.Sprite</span></code></a>, <a class="reference internal" href="#spygame.Autobuild" title="spygame.Autobuild"><code class="xref py py-class docutils literal"><span class="pre">spygame.Autobuild</span></code></a></p>
 <p>a FireSpitter can spit fireballs that kill the Vikings</p>
 <dl class="method">
 <dt id="spygame.examples.vikings.FireSpitter.fire">
@@ -2817,7 +2823,7 @@ spygame.Ladder -&gt; &lt;type spygame.Ladder&gt; (a python class object; can be 
 
 <dl class="class">
 <dt id="spygame.examples.vikings.Fireball">
-<em class="property">class </em><code class="descclassname">spygame.examples.vikings.</code><code class="descname">Fireball</code><span class="sig-paren">(</span><em>shooter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#Fireball"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.Fireball" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">spygame.examples.vikings.</code><code class="descname">Fireball</code><span class="sig-paren">(</span><em>shooter</em>, <em>direction=’right’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#Fireball"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.Fireball" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#spygame.examples.vikings.Shot" title="spygame.examples.vikings.Shot"><code class="xref py py-class docutils literal"><span class="pre">spygame.examples.vikings.Shot</span></code></a></p>
 <p>fireball class</p>
 <dl class="attribute">
