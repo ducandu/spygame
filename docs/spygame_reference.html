@@ -894,14 +894,18 @@ Tick method does keyboard_inputs.tick, then calls the given callback with self a
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#any" title="(in Python v2.7)"><em>any</em></a>) – force_loop (bool): whether to play regardless of whether we still have some active loop running
-callback (callable): the GameLoop’s callback loop function
-keyboard_inputs (KeyboardInputs): the GameLoop’s KeyboardInputs object
-display (Display): the Display object to render everything on
-max_fps (int): the max frames per second to loop through
-screen_obj (Screen): alternatively, a Screen can be given, from which we will extract <cite>display</cite>, <cite>max_fps</cite> and <cite>keyboard_inputs</cite>
-game_loop (Union[str,GameLoop]): the GameLoop to use (instead of creating a new one); “new” or [empty] for new one
-dont_play (bool): whether - after creating the GameLoop - it should be <cite>play`ed. Can be used for openAI gym purposes, where we just `step</cite>, not <cite>tick</cite></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#any" title="(in Python v2.7)"><em>any</em></a>) – <ul class="simple">
+<li>force_loop (bool): whether to play regardless of whether we still have some active loop running</li>
+<li>callback (callable): the GameLoop’s callback loop function</li>
+<li>keyboard_inputs (KeyboardInputs): the GameLoop’s KeyboardInputs object</li>
+<li>display (Display): the Display object to render everything on</li>
+<li>max_fps (int): the max frames per second to loop through</li>
+<li>screen_obj (Screen): alternatively, a Screen can be given, from which we will extract <cite>display</cite>, <cite>max_fps</cite> and <cite>keyboard_inputs</cite></li>
+<li>game_loop (Union[str,GameLoop]): the GameLoop to use (instead of creating a new one); “new” or [empty] for new one</li>
+<li>dont_play (bool): whether - after creating the GameLoop - it should be played. Can be used for openAI gym purposes, where we just step,
+not tick</li>
+</ul>
+</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the created/played GameLoop object or None</td>
 </tr>

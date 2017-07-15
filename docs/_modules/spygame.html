@@ -1012,14 +1012,15 @@
 <span class="sd">        Factory: plays a given GameLoop object or creates a new one using the given \*\*kwargs options.</span>
 
 <span class="sd">        :param any kwargs:</span>
-<span class="sd">                force_loop (bool): whether to play regardless of whether we still have some active loop running</span>
-<span class="sd">                callback (callable): the GameLoop&#39;s callback loop function</span>
-<span class="sd">                keyboard_inputs (KeyboardInputs): the GameLoop&#39;s KeyboardInputs object</span>
-<span class="sd">                display (Display): the Display object to render everything on</span>
-<span class="sd">                max_fps (int): the max frames per second to loop through</span>
-<span class="sd">                screen_obj (Screen): alternatively, a Screen can be given, from which we will extract `display`, `max_fps` and `keyboard_inputs`</span>
-<span class="sd">                game_loop (Union[str,GameLoop]): the GameLoop to use (instead of creating a new one); &quot;new&quot; or [empty] for new one</span>
-<span class="sd">                dont_play (bool): whether - after creating the GameLoop - it should be `play`ed. Can be used for openAI gym purposes, where we just `step`, not `tick`</span>
+<span class="sd">                - force_loop (bool): whether to play regardless of whether we still have some active loop running</span>
+<span class="sd">                - callback (callable): the GameLoop&#39;s callback loop function</span>
+<span class="sd">                - keyboard_inputs (KeyboardInputs): the GameLoop&#39;s KeyboardInputs object</span>
+<span class="sd">                - display (Display): the Display object to render everything on</span>
+<span class="sd">                - max_fps (int): the max frames per second to loop through</span>
+<span class="sd">                - screen_obj (Screen): alternatively, a Screen can be given, from which we will extract `display`, `max_fps` and `keyboard_inputs`</span>
+<span class="sd">                - game_loop (Union[str,GameLoop]): the GameLoop to use (instead of creating a new one); &quot;new&quot; or [empty] for new one</span>
+<span class="sd">                - dont_play (bool): whether - after creating the GameLoop - it should be played. Can be used for openAI gym purposes, where we just step,</span>
+<span class="sd">                  not tick</span>
 <span class="sd">        :return: the created/played GameLoop object or None</span>
 <span class="sd">        :rtype: Union[GameLoop,None]</span>
 <span class="sd">        &quot;&quot;&quot;</span>

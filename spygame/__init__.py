@@ -947,14 +947,15 @@ class GameLoop(object):
         Factory: plays a given GameLoop object or creates a new one using the given \*\*kwargs options.
 
         :param any kwargs:
-                force_loop (bool): whether to play regardless of whether we still have some active loop running
-                callback (callable): the GameLoop's callback loop function
-                keyboard_inputs (KeyboardInputs): the GameLoop's KeyboardInputs object
-                display (Display): the Display object to render everything on
-                max_fps (int): the max frames per second to loop through
-                screen_obj (Screen): alternatively, a Screen can be given, from which we will extract `display`, `max_fps` and `keyboard_inputs`
-                game_loop (Union[str,GameLoop]): the GameLoop to use (instead of creating a new one); "new" or [empty] for new one
-                dont_play (bool): whether - after creating the GameLoop - it should be `play`ed. Can be used for openAI gym purposes, where we just `step`, not `tick`
+                - force_loop (bool): whether to play regardless of whether we still have some active loop running
+                - callback (callable): the GameLoop's callback loop function
+                - keyboard_inputs (KeyboardInputs): the GameLoop's KeyboardInputs object
+                - display (Display): the Display object to render everything on
+                - max_fps (int): the max frames per second to loop through
+                - screen_obj (Screen): alternatively, a Screen can be given, from which we will extract `display`, `max_fps` and `keyboard_inputs`
+                - game_loop (Union[str,GameLoop]): the GameLoop to use (instead of creating a new one); "new" or [empty] for new one
+                - dont_play (bool): whether - after creating the GameLoop - it should be played. Can be used for openAI gym purposes, where we just step,
+                  not tick
         :return: the created/played GameLoop object or None
         :rtype: Union[GameLoop,None]
         """

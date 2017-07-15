@@ -4,7 +4,7 @@ Adding more Things to our Platformer
 .. include:: blizzard_copyright_disclaimer.rst
 
 Welcome back to the advanced spygame level-tmx tutorial, in which we will improve our level from the previous tutorial by adding more exciting things to
-it. At the end of this process, our level will look like this:
+it. At the end of this process, our level should look somewhat like this:
 
 .. image:: tutorial/advanced/001_final_spygame_game.png
     :alt: The final spygame game we will be building in this tutorial
@@ -13,13 +13,16 @@ All you need to follow along with the different steps in this tutorial is to cop
 (with all its subdirectories and contents) and name the copy of the folder "tutorial_advanced". Alternatively, you can just keep working with the
 already existing project and build all new things on top of it (you will lose some of the pieces of the previous tutorial, but what the heck).
 
-Other than that, the same tools as for the first part are needed (Tiled editor, spygame lib, etc..).
+Other than that, the same tools as for the first part are needed (`Tiled editor <http://mapeditor.org>`_ and the
+`spygame <https://github.com/sven1977/spygame>`_ lib).
 
 
 Converting our Stairs into Slopes
 ---------------------------------
 
 The first thing we would like to improve in our level is to get rid of the stairs-like structure and instead replace it with a smooth, sloped hill.
+This way, one will be able to get to the entrance of the temple on top of the hill even without having to jump.
+
 We open the tutorial.tmx file in our Tiled editor and go to the Layers panel.
 
 **Note:** Make sure you have the
@@ -168,7 +171,7 @@ Playing the tutorial.py game should now make Erik die when touching the surface 
 The game should end here printing out "Game Over" on the console.
 
 
-Adding a Repeater for even more of a 3D Effect
+Adding a Repeater for an even better 3D Effect
 ----------------------------------------------
 
 The next item we are going to add will be very simple but quite effective. We will use a so-called repeater object. A Repeater in spygame is a kind of
@@ -214,7 +217,7 @@ slower) so that a pseudo-3D effect arises out of this. Let's try it out:
 Now, let's try the level again. You should see that when Erik jumps for example, the repeater super-background scrolls a little slower than the rest of the
 level (the background and foreground tiled layers). You can play around with the vx and vy parameters in the Repeater's constructor (use values between
 0.25 and 1.0 in the custom properties of the repeater object).
-1.0 here means scroll just like the regular layers (no extra pseudo 3D effect). Values larger than 1.0 will look physically
+1.0 here means to scroll just like the regular layers (no extra pseudo 3D effect). Values larger than 1.0 will look physically
 counter intuitive as the super-background (which is supposed to be further away) will scroll faster than the tiled layers.
 
 .. figure:: tutorial/advanced/025_the_repeater_in_action_in_the_game.png
@@ -245,8 +248,10 @@ what these classes look like and go through their code. However, to simply make 
 keyboard_inputs list in the tmx file's properties. Click on *Map->Map Properties* and change the value of the keyboard_inputs variable to be
 "up,down,left,right,space,rctrl,lctrl,d". Lctrl and rctrl stand for the left control key and the right control key, respectively.
 
-.. image:: tutorial/advanced/012_baleog_and_erik_together.png
+.. figure:: tutorial/advanced/012_baleog_and_erik_together.png
     :alt: Baleog and Erik are two temple-trapped vikings
+
+    Baleog can shoot arrows with the D key and swing his sword via the space bar. However, he cannot jump.
 
 **Exercise:** Can you find out about the third viking (Olaf) and try to add him to the level as well? Try to use the exact same steps as for Baleog.
 Olaf does not need any more keyboard_inputs settings. He can only use the space bar, which will cause him to switch between his shield being up (above
@@ -260,9 +265,9 @@ Adding a Movable Rock
 
 Movable rocks are spygame objects that obey similar physics laws than our Vikings. In fact, internally they use the exact same physics component as our heroes.
 In this physics component, the settings is_heavy and is_pushable are set to True and thus they have the characteristic to a) be pushable (also up and down
-slopes) and b) squeeze things beneath them (for example our vikings).
+slopes) and b) squeeze things that are underneath them (for example our vikings).
 
-Let's add the graphics to our tmx file (a new sprite sheet) and then place one movable rock into our level.
+Let's first add the necessary graphics to our tmx file (a new sprite sheet) and then place one movable rock into our level.
 
 Click on *Map->New Tileset* and choose the "movable_rock.png" file, then setup the tileset with a tile width and height of 32px each:
 
@@ -372,10 +377,10 @@ so that's good). Paint a fire spitter nicely above the quicksand pool like this:
 .. image:: tutorial/advanced/028_painting_a_firespitter_into_the_level.png
     :alt: placing a fire spitter autobuild object via the background layer into the level
 
-Note that all tiles other than the one in the center of the spitter are meaningless background tiles. Only the glowing in the center of the mouth
+Note that all tiles other than the one in the center of the spitter are meaningless background tiles. Only the glowing one in the center of the mouth
 is the one that triggers the autobuild with the correct constructor parameters (frequency and direction).
 
-Try it out. If a viking gets shot now by a fire ball, it will be in pain and move a little away from the collision from the impact:
+Try it out: If a viking gets shot now by a fire ball, it will be in pain and move a little away from the collision:
 
 .. image:: tutorial/advanced/029_erik_in_pain.png
     :alt: Erik getting hit by a fire ball

@@ -13,13 +13,16 @@ All you need to follow along with the different steps in this tutorial is to cop
 (with all its subdirectories and contents) and name the copy of the folder "tutorial_advanced". Alternatively, you can just keep working with the
 already existing project and build all new things on top of it (you will lose some of the pieces of the previous tutorial, but what the heck).
 
-Other than that, the same tools as for the first part are needed (Tiled editor, spygame lib, etc..).
+Other than that, the same tools as for the first part are needed (`Tiled editor <http://mapeditor.org>`_ and the
+`spygame <https://github.com/sven1977/spygame>`_ lib).
 
 
 Converting our Stairs into Slopes
 ---------------------------------
 
 The first thing we would like to improve in our level is to get rid of the stairs-like structure and instead replace it with a smooth, sloped hill.
+This way, one will be able to get to the entrance of the temple on top of the hill even without having to jump.
+
 We open the tutorial.tmx file in our Tiled editor and go to the Layers panel.
 
 **Note:** Make sure you have the

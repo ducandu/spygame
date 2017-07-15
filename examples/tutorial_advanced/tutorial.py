@@ -12,7 +12,7 @@ if __name__ == "__main__":
         # add more of your levels here
         # { ... },
 
-    ], title="Erik's Trip to Egypt")  # , debug_flags=spyg.DEBUG_DONT_RENDER_TILED_TILE_LAYERS| spyg.DEBUG_RENDER_COLLISION_TILES | spyg.DEBUG_RENDER_SPRITES_RECTS)
+    ], title="Erik's and Baleog's Trip to Egypt")  # , debug_flags=spyg.DEBUG_DONT_RENDER_TILED_TILE_LAYERS| spyg.DEBUG_RENDER_COLLISION_TILES | spyg.DEBUG_RENDER_SPRITES_RECTS)
 
     game.levels_by_name["TUTORIAL"].play()
 
