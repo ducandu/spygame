@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="24" height="24" tilewidth="16" tileheight="16" nextobjectid="9">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="24" height="24" tilewidth="16" tileheight="16" nextobjectid="10">
  <properties>
   <property name="keyboard_inputs" value="up,down,left,right,space,rctrl,lctrl,d"/>
  </properties>
@@ -111,12 +111,14 @@
   <tile id="139">
    <properties>
     <property name="P_direction" value="left"/>
+    <property name="P_frequency" type="float" value="0.3"/>
     <property name="autobuild_class" value="spygame.examples.vikings.FireSpitter"/>
    </properties>
   </tile>
   <tile id="140">
    <properties>
     <property name="P_direction" value="right"/>
+    <property name="P_frequency" type="float" value="0.3"/>
     <property name="autobuild_class" value="spygame.examples.vikings.FireSpitter"/>
    </properties>
   </tile>
@@ -384,6 +386,7 @@
  <tileset firstgid="3535" name="elevator" tilewidth="32" tileheight="15" tilecount="1" columns="1">
   <image source="../images/elevator.png" width="32" height="15"/>
  </tileset>
+ <tileset firstgid="3536" source="enemies.tsx"/>
  <layer name="collision" width="24" height="24">
   <properties>
    <property name="do_render" type="bool" value="false"/>
@@ -439,9 +442,9 @@
 1785,0,0,0,2370,2371,2372,2373,0,0,0,0,0,0,0,0,2060,2061,1848,1848,1849,1699,1700,1784,
 1785,0,0,0,0,2451,2452,0,0,0,0,0,0,0,0,0,1842,1843,1844,1841,1842,1739,1740,1784,
 1725,0,0,0,0,2451,2452,0,0,0,0,0,0,0,0,1848,1882,1883,1884,1881,1882,1779,1780,1784,
-1765,1701,1702,0,2410,2411,2412,2413,0,0,0,0,0,0,1848,1843,1844,1849,1725,1725,1848,1848,1849,1725,
-1785,1741,1742,0,2450,2451,2452,2453,0,0,0,0,0,0,1843,1883,1884,1844,1765,1725,1848,1849,1849,1765,
-1684,1781,1782,0,2490,2491,2492,2493,0,0,0,0,0,0,1883,1884,1883,1884,1765,1725,1848,1848,1849,1784,
+1765,0,0,0,2410,2411,2412,2413,0,0,0,0,0,0,1848,1843,1844,1849,1725,1725,1848,1848,1849,1725,
+1785,0,0,0,2450,2451,2452,2453,0,0,0,0,0,0,1843,1883,1884,1844,1765,1725,1848,1849,1849,1765,
+1684,0,0,0,2490,2491,2492,2493,0,0,0,0,0,0,1883,1884,1883,1884,1765,1725,1848,1848,1849,1784,
 1724,2485,2486,2487,2488,2489,2401,2402,2403,2404,1811,1811,1812,1784,1785,1785,1785,1785,1765,1765,1784,1785,1785,1785,
 1686,2525,2526,2527,2528,2529,2441,2442,2443,2444,1732,1733,1734,1735,1733,1734,1735,1811,1812,1778,1732,1733,1734,1735,
 1766,1767,1692,1693,1694,1695,1696,1697,1698,1811,1812,1773,1774,1775,1773,1774,1775,1696,1697,1732,1772,1773,1774,1775,
@@ -449,7 +452,7 @@
 </data>
  </layer>
  <objectgroup name="objects">
-  <object id="1" name="erik" type="spygame.examples.vikings.Erik" gid="3201" x="286" y="270" width="32" height="32"/>
+  <object id="1" name="erik" type="spygame.examples.vikings.Erik" gid="3201" x="153" y="270" width="32" height="32"/>
   <object id="2" name="baleog" type="spygame.examples.vikings.Baleog" gid="3363" x="198" y="248" width="32" height="32"/>
   <object id="5" name="rock" type="spygame.MovableRock" gid="3534" x="250" y="221" width="32" height="32"/>
   <object id="6" name="elevator" type="spygame.Elevator" gid="3535" x="128" y="192" width="32" height="15">
@@ -467,6 +470,7 @@
     <property name="vy" type="float" value="0.7"/>
    </properties>
   </object>
+  <object id="9" name="scorpion" type="spygame.examples.vikings.Scorpion" gid="3608" x="40" y="316" width="32" height="32"/>
  </objectgroup>
  <layer name="foreground" width="24" height="24">
   <properties>

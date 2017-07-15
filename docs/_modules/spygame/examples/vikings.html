@@ -892,8 +892,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;collision&quot;</span><span class="p">,</span> <span class="n">register</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;collision_done&quot;</span><span class="p">,</span> <span class="n">register</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="c1"># simple tick function with ax and ay, speed- and pos-recalc, and collision detection</span>
 <div class="viewcode-block" id="Shot.tick"><a class="viewcode-back" href="../../../spygame_reference.html#spygame.examples.vikings.Shot.tick">[docs]</a>    <span class="k">def</span> <span class="nf">tick</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">game_loop</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        simple tick function with ax and ay, speed- and pos-recalc, and collision detection</span>
+
+<span class="sd">        :param spyg.GameLoop game_loop: the spyg.GameLoop object currently playing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dt</span> <span class="o">=</span> <span class="n">game_loop</span><span class="o">.</span><span class="n">dt</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flip</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rect</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vx</span> <span class="o">*</span> <span class="n">dt</span>
@@ -903,11 +907,19 @@
         <span class="c1"># tick the animation component</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cmp_animation</span><span class="o">.</span><span class="n">tick</span><span class="p">(</span><span class="n">game_loop</span><span class="p">)</span></div>
 
-    <span class="c1"># we hit something</span>
 <div class="viewcode-block" id="Shot.collision"><a class="viewcode-back" href="../../../spygame_reference.html#spygame.examples.vikings.Shot.collision">[docs]</a>    <span class="k">def</span> <span class="nf">collision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        we hit something -&gt; solves a collision with another object</span>
+
+<span class="sd">        :param spyg.Collision col: the spyg.Collision object to solve</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># we hit our own shooter -&gt; ignore</span>
         <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">sprite2</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">shooter</span><span class="p">:</span>
             <span class="k">return</span>
+
+        <span class="c1"># solve the collision</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">separate</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">col</span><span class="o">.</span><span class="n">separate</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">col</span><span class="o">.</span><span class="n">separate</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">col</span><span class="o">.</span><span class="n">separate</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># we already solved this collision -&gt; set everything to 0.0</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">hit_something</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="c1"># stop abruptly</span>
@@ -921,8 +933,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">collision_done</span><span class="p">()</span></div>
 
-    <span class="c1"># we are done hitting something</span>
 <div class="viewcode-block" id="Shot.collision_done"><a class="viewcode-back" href="../../../spygame_reference.html#spygame.examples.vikings.Shot.collision_done">[docs]</a>    <span class="k">def</span> <span class="nf">collision_done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        we are done hitting something -&gt; destroys this object (e.g. shot hits the wall -&gt; disappears)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span></div></div>
 
 
@@ -972,7 +986,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sprite_sheet</span><span class="p">,</span> <span class="p">{</span>
             <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;fly&quot;</span><span class="p">,</span>  <span class="c1"># the default animation to play</span>
             <span class="s2">&quot;fly&quot;</span><span class="p">:</span>     <span class="p">{</span><span class="s2">&quot;frames&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;rate&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">5</span><span class="p">},</span>
-            <span class="s2">&quot;hit&quot;</span><span class="p">:</span>     <span class="p">{</span><span class="s2">&quot;frames&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;rate&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;loop&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;trigger&quot;</span><span class="p">:</span> <span class="s2">&quot;collision_done&quot;</span><span class="p">}</span>
+            <span class="s2">&quot;hit&quot;</span><span class="p">:</span>     <span class="p">{</span><span class="s2">&quot;frames&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">40</span><span class="p">,</span> <span class="mi">41</span><span class="p">],</span> <span class="s2">&quot;rate&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;loop&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;trigger&quot;</span><span class="p">:</span> <span class="s2">&quot;collision_done&quot;</span><span class="p">}</span>
         <span class="p">},</span> <span class="n">shooter</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">flip</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">(</span><span class="kc">True</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;left&quot;</span> <span class="k">else</span> <span class="kc">False</span><span class="p">),</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
@@ -1008,7 +1022,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">collision_mask</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># do not do any collisions itself</span>
 
         <span class="c1"># set some spitter specific things</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frequency&quot;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>  <span class="c1"># shooting frequency (in 1/s)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frequency&quot;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">))</span>  <span class="c1"># shooting frequency (in 1/s) (0.0 means never shoot)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">direction</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;direction&quot;</span><span class="p">,</span> <span class="s2">&quot;right&quot;</span><span class="p">)</span>  <span class="c1"># right or left (the direction of the shooting)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">last_shot_fired</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># keep track of last shot fired</span>
 
@@ -1016,7 +1030,7 @@
         <span class="n">dt</span> <span class="o">=</span> <span class="n">game_loop</span><span class="o">.</span><span class="n">dt</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">last_shot_fired</span> <span class="o">+=</span> <span class="n">dt</span>
         <span class="c1"># time&#39;s up -&gt; fire shot</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_shot_fired</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_shot_fired</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">last_shot_fired</span> <span class="o">=</span> <span class="mf">0.0</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fire</span><span class="p">()</span></div>
 

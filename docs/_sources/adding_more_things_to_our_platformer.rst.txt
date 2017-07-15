@@ -217,7 +217,7 @@ Now, let's try the level again. You should see that when Erik jumps for example,
 level (the background and foreground tiled layers). You can play around with the vx and vy parameters in the Repeater's constructor (use values between
 0.25 and 1.0 in the custom properties of the repeater object).
 1.0 here means scroll just like the regular layers (no extra pseudo 3D effect). Values larger than 1.0 will look physically
-counter intuitive as the super-background (which is supposed to be further away then the tiled layers) will scroll faster than the tiled layers.
+counter intuitive as the super-background (which is supposed to be further away) will scroll faster than the tiled layers.
 
 .. figure:: tutorial/advanced/025_the_repeater_in_action_in_the_game.png
     :alt: The repeater in action
@@ -360,12 +360,33 @@ Look for the two tiles that look like fire spitters in the egpt tileset. They ar
 Now select both of them and set their autobuild_class to "spygame.examples.vikings.FireSpitter". Also give both of them another new custom property
 called "P_frequency" (float) and set the value to 0.3. Then select only the left one and create the new custom property "P_direction" (string) = "left" and
 do the same for the right fire spitter ("P_direction" (string) = "right"). You can see that additional parameters to the autobuild constructors
-have to have a preceding "P\_" so that spygame recognizes these as autobuild c'tor parameters:
+must have a preceding "P\_" so that spygame recognizes these as autobuild c'tor parameters:
 
+.. image:: tutorial/advanced/027_the_custom_property_of_the_left_firespitter.png
+    :alt: The custom properties of the left firing fire spitter
 
-TODO: make egpt a tsx spritesheet (so the fireball can be animated!)
-TODO: explain setting constructor parameters with P\_ prefix in level-tmx file (autobuild tile props)
+We also have to separate the egpt tileset from the tmx file by exporting it as tsx (to have the tsx available for the fire ball sprite animation).
+Therefore, we save the egpt tileset as "egpt.tsx" in the data/ directory.
 
+The last thing we have to do is to place a fire spitter into the level-tmx. We will place it into the background layer (it's already setup to autobuild,
+so that's good). Paint a fire spitter nicely above the quicksand pool like this:
+
+.. image:: tutorial/advanced/028_painting_a_firespitter_into_the_level.png
+    :alt: placing a fire spitter autobuild object via the background layer into the level
+
+Note that all tiles other than the one in the center of the spitter are meaningless background tiles. Only the glowing in the center of the mouth
+is the one that triggers the autobuild with the correct constructor parameters (frequency and direction).
+
+Try it out. If a viking gets shot now by a fire ball, it will be in pain and move a little away from the collision from the impact:
+
+.. image:: tutorial/advanced/029_erik_in_pain.png
+    :alt: Erik getting hit by a fire ball
+
+**Note:** There is no damage handler implemented yet on the viking characters, so they can currently fall, get bitten by a monster or get or hit
+by a fire ball without any consequences. The only thing they can die from is by jumping into the quicksand pool. This is all still work in progress.
+
+The last thing in this tutorial will be adding a monster to the level. We will let you decide whether it's going to be a poison shooting scorpion or a
+mean, biting dinosaur.
 
 
 Adding Monsters

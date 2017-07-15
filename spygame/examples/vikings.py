@@ -826,8 +826,12 @@ class Shot(spyg.AnimatedSprite):
         self.on_event("collision", register=True)
         self.on_event("collision_done", register=True)
 
-    # simple tick function with ax and ay, speed- and pos-recalc, and collision detection
     def tick(self, game_loop):
+        """
+        simple tick function with ax and ay, speed- and pos-recalc, and collision detection
+
+        :param spyg.GameLoop game_loop: the spyg.GameLoop object currently playing
+        """
         dt = game_loop.dt
         self.vx += self.ax * dt * (-1 if self.flip == "x" else 1)
         self.rect.x += self.vx * dt
@@ -837,11 +841,19 @@ class Shot(spyg.AnimatedSprite):
         # tick the animation component
         self.cmp_animation.tick(game_loop)
 
-    # we hit something
     def collision(self, col):
+        """
+        we hit something -> solves a collision with another object
+
+        :param spyg.Collision col: the spyg.Collision object to solve
+        """
         # we hit our own shooter -> ignore
         if col.sprite2 is self.shooter:
             return
+
+        # solve the collision
+        self.move(col.separate[0], col.separate[1])
+        col.separate[0] = col.separate[1] = 0.0  # we already solved this collision -> set everything to 0.0
 
         self.hit_something = True
         # stop abruptly
@@ -855,8 +867,10 @@ class Shot(spyg.AnimatedSprite):
         else:
             self.collision_done()
 
-    # we are done hitting something
     def collision_done(self):
+        """
+        we are done hitting something -> destroys this object (e.g. shot hits the wall -> disappears)
+        """
         self.destroy()
 
 
@@ -906,7 +920,7 @@ class Fireball(Shot):
         super().__init__(0, 0, self.sprite_sheet, {
             "default": "fly",  # the default animation to play
             "fly":     {"frames": [0, 1], "rate": 1 / 5},
-            "hit":     {"frames": [2, 3], "rate": 1 / 3, "loop": False, "trigger": "collision_done"}
+            "hit":     {"frames": [40, 41], "rate": 1 / 3, "loop": False, "trigger": "collision_done"}
         }, shooter)
 
         self.flip = {"x": (True if direction == "left" else False), "y": False}
@@ -942,7 +956,7 @@ class FireSpitter(spyg.Sprite, spyg.Autobuild):
         self.collision_mask = 0  # do not do any collisions itself
 
         # set some spitter specific things
-        self.frequency = kwargs.get("frequency", 0.3)  # shooting frequency (in 1/s)
+        self.frequency = abs(kwargs.get("frequency", 0.3))  # shooting frequency (in 1/s) (0.0 means never shoot)
         self.direction = kwargs.get("direction", "right")  # right or left (the direction of the shooting)
         self.last_shot_fired = 0.0  # keep track of last shot fired
 
@@ -950,7 +964,7 @@ class FireSpitter(spyg.Sprite, spyg.Autobuild):
         dt = game_loop.dt
         self.last_shot_fired += dt
         # time's up -> fire shot
-        if self.last_shot_fired > (1 / self.frequency):
+        if self.frequency > 0.0 and self.last_shot_fired > (1 / self.frequency):
             self.last_shot_fired = 0.0
             self.fire()
 

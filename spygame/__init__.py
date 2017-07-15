@@ -22,7 +22,7 @@ import numpy as np
 import functools
 
 VERSION_ = '0.1'
-RELEASE_ = '0.1a8'
+RELEASE_ = '0.1a9'
 
 # some debug flags that we can set to switch on debug rendering, collision handling, etc..
 DEBUG_NONE = 0x0  # no debugging
@@ -1595,11 +1595,45 @@ class Stage(GameObject):
             if sprite.ignore_after_n_ticks > 0 and not sprite.handles_own_collisions and sprite.collision_mask > 0:
                 for sprite2 in self.sprites:
                     if sprite is not sprite2 and sprite2.collision_mask > 0 and sprite.collision_mask & sprite2.type and sprite2.collision_mask & sprite.type:
-                        col = self.options["physics_collision_detector"](sprite, sprite2)
+                        direction, v = self.estimate_sprite_direction(sprite)
+                        col = self.options["physics_collision_detector"](sprite, sprite2, direction=direction, direction_veloc=v)
                         if col:
-                            # trigger "collision" for both Sprites
+                            # trigger "collision" for sprite1
                             sprite.trigger_event("collision", col)
+                            ## but only for sprite2 if it does NOT handle its own collisions
+                            #if not sprite2.handles_own_collisions:
                             sprite2.trigger_event("collision", col.invert())
+
+    @staticmethod
+    def estimate_sprite_direction(sprite):
+        """
+        tries to return an accurate tuple of direction (x/y) and direction_veloc
+        - if sprite directly has vx and vy, use these
+        - if sprite has a physics component: use vx and vy from that Component
+        - else: pretend vx and vy are 0.0
+        then return the direction whose veloc component is highest plus that highest veloc
+
+        :param Sprite sprite: the Sprite to estimate
+        :return: tuple of direction (x/y) and direction_veloc
+        :rtype: Tuple[str,float]
+        """
+        phys = sprite.components.get("physics", None)
+        # sprite has a physics component with vx/vy
+        if phys and hasattr(phys, "vx") and hasattr(phys, "vy"):
+            vx = phys.vx
+            vy = phys.vy
+        # sprite has a vx/vy (meaning handles its own physics)
+        elif hasattr(sprite, "vx") and hasattr(sprite, "vy"):
+            vx = sprite.vx
+            vy = sprite.vy
+        else:
+            vx = 0.0
+            vy = 0.0
+
+        if abs(vx) > abs(vy):
+            return "x", vx
+        else:
+            return "y", vy
 
     def hide(self):
         """
@@ -1818,18 +1852,7 @@ class TiledTileLayer(TmxLayer):
         """
         tile_start_x, tile_end_x, tile_start_y, tile_end_y = self.get_overlapping_tiles(sprite)
 
-        # require the Sprite to have a vx/vy (meaning handle its own physics)
-        if hasattr(sprite, "vx") and hasattr(sprite, "vy"):
-            if sprite.vx > sprite.vy:
-                xy = "x"
-                v = sprite.vx
-            else:
-                xy = "y"
-                v = sprite.vy
-        # if not, we assume 0.0 velocity
-        else:
-            xy = "y"
-            v = 0.0
+        xy, v = Stage.estimate_sprite_direction(sprite)
 
         # very simple algo: look through tile list (in no particular order) and return first tile that collides
         # None if no colliding tile found
@@ -3257,8 +3280,13 @@ class PlatformerPhysics(ControlledPhysicsComponent):
     def lock_ladder(self):
         """
         Locks the GameObject into a ladder.
+        Makes sure that there is nothing in the x-way (to move to the center of the ladder if standing a little bit aside). Otherwise, will not lock.
         """
         obj = self.game_object
+
+        # test x-direction after corrective x-move to center of ladder (if there is something, don't lock)
+        #obj.stage.locate()
+
         self.on_ladder = self.touched_ladder
         # switch off gravity
         self.gravity = False
@@ -3273,7 +3301,7 @@ class PlatformerPhysics(ControlledPhysicsComponent):
 
     def unlock_ladder(self):
         """
-        Frees the GameObject from a ladder.
+        Frees the GameObject from a ladder - if it is currently on a ladder.
         """
         if self.on_ladder:
             self.on_ladder = None
@@ -3597,8 +3625,8 @@ class PlatformerPhysics(ControlledPhysicsComponent):
 
         # getting hit by a particle (Arrow, ScorpionShot, Fireball, etc..)
         if other_obj.type & Sprite.get_type("particle"):
-            # shooter (this) is colliding with own shot -> ignore
-            if obj is not other_obj.shooter:
+            # obj is not heavy -> push back from getting hit by that particle
+            if not self.is_heavy:
                 obj.trigger_event("hit.particle", col)
                 push_direction = col.normal_x if col.normal_x != 0 else math.copysign(1.0, getattr(other_obj, "vx", 0.0))
                 if push_direction != 0.0:
@@ -4250,10 +4278,16 @@ class AABBCollision(CollisionAlgorithm):
     """
 
     @staticmethod
-    def collide(sprite1, sprite2, collision_objects=None, direction='x', direction_veloc=1.0, original_pos=None):
+    def collide(sprite1, sprite2, collision_objects=None, direction='x', direction_veloc=0.0, original_pos=None):
         # TODO: actually, we only need one collision object as we should always only resolve one object at a time
 
         # TODO: utilize direction veloc information to only return the smallest separation collision
+
+        # direction must be given AND direction_veloc must not be 0.0
+        #assert direction == "x" or direction == "y", "ERROR: in AABB collision between {} and {}: direction needs to be either 'x' or 'y'!". \
+        #    format(type(sprite1).__name__, type(sprite2).__name__)
+        #assert direction_veloc != 0.0, "ERROR in AABB collision between {} and {}: direction_veloc must not be 0.0!".\
+        #    format(type(sprite1).__name__, type(sprite2).__name__)
 
         # use default CollisionObjects?
         if not collision_objects:
@@ -4288,8 +4322,6 @@ class AABBCollision(CollisionAlgorithm):
         :return: the populated Collision object
         :rtype: Collision
         """
-        assert direction == "x" or direction == "y", "ERROR: parameter direction needs to be either 'x' or 'y'!"
-
         # reset the recycled collision object
         collision_obj.is_collided = False
         collision_obj.normal_x = 0.0

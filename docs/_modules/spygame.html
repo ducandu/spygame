@@ -1660,11 +1660,45 @@
             <span class="k">if</span> <span class="n">sprite</span><span class="o">.</span><span class="n">ignore_after_n_ticks</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">sprite</span><span class="o">.</span><span class="n">handles_own_collisions</span> <span class="ow">and</span> <span class="n">sprite</span><span class="o">.</span><span class="n">collision_mask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">sprite2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sprites</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">sprite</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">sprite2</span> <span class="ow">and</span> <span class="n">sprite2</span><span class="o">.</span><span class="n">collision_mask</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">sprite</span><span class="o">.</span><span class="n">collision_mask</span> <span class="o">&amp;</span> <span class="n">sprite2</span><span class="o">.</span><span class="n">type</span> <span class="ow">and</span> <span class="n">sprite2</span><span class="o">.</span><span class="n">collision_mask</span> <span class="o">&amp;</span> <span class="n">sprite</span><span class="o">.</span><span class="n">type</span><span class="p">:</span>
-                        <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;physics_collision_detector&quot;</span><span class="p">](</span><span class="n">sprite</span><span class="p">,</span> <span class="n">sprite2</span><span class="p">)</span>
+                        <span class="n">direction</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_sprite_direction</span><span class="p">(</span><span class="n">sprite</span><span class="p">)</span>
+                        <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;physics_collision_detector&quot;</span><span class="p">](</span><span class="n">sprite</span><span class="p">,</span> <span class="n">sprite2</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span> <span class="n">direction_veloc</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">col</span><span class="p">:</span>
-                            <span class="c1"># trigger &quot;collision&quot; for both Sprites</span>
+                            <span class="c1"># trigger &quot;collision&quot; for sprite1</span>
                             <span class="n">sprite</span><span class="o">.</span><span class="n">trigger_event</span><span class="p">(</span><span class="s2">&quot;collision&quot;</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+                            <span class="c1">## but only for sprite2 if it does NOT handle its own collisions</span>
+                            <span class="c1">#if not sprite2.handles_own_collisions:</span>
                             <span class="n">sprite2</span><span class="o">.</span><span class="n">trigger_event</span><span class="p">(</span><span class="s2">&quot;collision&quot;</span><span class="p">,</span> <span class="n">col</span><span class="o">.</span><span class="n">invert</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Stage.estimate_sprite_direction"><a class="viewcode-back" href="../spygame_reference.html#spygame.Stage.estimate_sprite_direction">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">estimate_sprite_direction</span><span class="p">(</span><span class="n">sprite</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        tries to return an accurate tuple of direction (x/y) and direction_veloc</span>
+<span class="sd">        - if sprite directly has vx and vy, use these</span>
+<span class="sd">        - if sprite has a physics component: use vx and vy from that Component</span>
+<span class="sd">        - else: pretend vx and vy are 0.0</span>
+<span class="sd">        then return the direction whose veloc component is highest plus that highest veloc</span>
+
+<span class="sd">        :param Sprite sprite: the Sprite to estimate</span>
+<span class="sd">        :return: tuple of direction (x/y) and direction_veloc</span>
+<span class="sd">        :rtype: Tuple[str,float]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">phys</span> <span class="o">=</span> <span class="n">sprite</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;physics&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># sprite has a physics component with vx/vy</span>
+        <span class="k">if</span> <span class="n">phys</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">phys</span><span class="p">,</span> <span class="s2">&quot;vx&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">phys</span><span class="p">,</span> <span class="s2">&quot;vy&quot;</span><span class="p">):</span>
+            <span class="n">vx</span> <span class="o">=</span> <span class="n">phys</span><span class="o">.</span><span class="n">vx</span>
+            <span class="n">vy</span> <span class="o">=</span> <span class="n">phys</span><span class="o">.</span><span class="n">vy</span>
+        <span class="c1"># sprite has a vx/vy (meaning handles its own physics)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sprite</span><span class="p">,</span> <span class="s2">&quot;vx&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sprite</span><span class="p">,</span> <span class="s2">&quot;vy&quot;</span><span class="p">):</span>
+            <span class="n">vx</span> <span class="o">=</span> <span class="n">sprite</span><span class="o">.</span><span class="n">vx</span>
+            <span class="n">vy</span> <span class="o">=</span> <span class="n">sprite</span><span class="o">.</span><span class="n">vy</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vx</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">vy</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">vx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">vy</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">vx</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">vy</span></div>
 
 <div class="viewcode-block" id="Stage.hide"><a class="viewcode-back" href="../spygame_reference.html#spygame.Stage.hide">[docs]</a>    <span class="k">def</span> <span class="nf">hide</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1883,18 +1917,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">tile_start_x</span><span class="p">,</span> <span class="n">tile_end_x</span><span class="p">,</span> <span class="n">tile_start_y</span><span class="p">,</span> <span class="n">tile_end_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_overlapping_tiles</span><span class="p">(</span><span class="n">sprite</span><span class="p">)</span>
 
-        <span class="c1"># require the Sprite to have a vx/vy (meaning handle its own physics)</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sprite</span><span class="p">,</span> <span class="s2">&quot;vx&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sprite</span><span class="p">,</span> <span class="s2">&quot;vy&quot;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">sprite</span><span class="o">.</span><span class="n">vx</span> <span class="o">&gt;</span> <span class="n">sprite</span><span class="o">.</span><span class="n">vy</span><span class="p">:</span>
-                <span class="n">xy</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span>
-                <span class="n">v</span> <span class="o">=</span> <span class="n">sprite</span><span class="o">.</span><span class="n">vx</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">xy</span> <span class="o">=</span> <span class="s2">&quot;y&quot;</span>
-                <span class="n">v</span> <span class="o">=</span> <span class="n">sprite</span><span class="o">.</span><span class="n">vy</span>
-        <span class="c1"># if not, we assume 0.0 velocity</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">xy</span> <span class="o">=</span> <span class="s2">&quot;y&quot;</span>
-            <span class="n">v</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">xy</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">Stage</span><span class="o">.</span><span class="n">estimate_sprite_direction</span><span class="p">(</span><span class="n">sprite</span><span class="p">)</span>
 
         <span class="c1"># very simple algo: look through tile list (in no particular order) and return first tile that collides</span>
         <span class="c1"># None if no colliding tile found</span>
@@ -3322,8 +3345,13 @@
 <div class="viewcode-block" id="PlatformerPhysics.lock_ladder"><a class="viewcode-back" href="../spygame_reference.html#spygame.PlatformerPhysics.lock_ladder">[docs]</a>    <span class="k">def</span> <span class="nf">lock_ladder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Locks the GameObject into a ladder.</span>
+<span class="sd">        Makes sure that there is nothing in the x-way (to move to the center of the ladder if standing a little bit aside). Otherwise, will not lock.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">game_object</span>
+
+        <span class="c1"># test x-direction after corrective x-move to center of ladder (if there is something, don&#39;t lock)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">stage</span><span class="o">.</span><span class="n">locate</span><span class="p">()</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">on_ladder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">touched_ladder</span>
         <span class="c1"># switch off gravity</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gravity</span> <span class="o">=</span> <span class="kc">False</span>
@@ -3338,7 +3366,7 @@
 
 <div class="viewcode-block" id="PlatformerPhysics.unlock_ladder"><a class="viewcode-back" href="../spygame_reference.html#spygame.PlatformerPhysics.unlock_ladder">[docs]</a>    <span class="k">def</span> <span class="nf">unlock_ladder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Frees the GameObject from a ladder.</span>
+<span class="sd">        Frees the GameObject from a ladder - if it is currently on a ladder.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_ladder</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">on_ladder</span> <span class="o">=</span> <span class="kc">None</span>
@@ -3662,8 +3690,8 @@
 
         <span class="c1"># getting hit by a particle (Arrow, ScorpionShot, Fireball, etc..)</span>
         <span class="k">if</span> <span class="n">other_obj</span><span class="o">.</span><span class="n">type</span> <span class="o">&amp;</span> <span class="n">Sprite</span><span class="o">.</span><span class="n">get_type</span><span class="p">(</span><span class="s2">&quot;particle&quot;</span><span class="p">):</span>
-            <span class="c1"># shooter (this) is colliding with own shot -&gt; ignore</span>
-            <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">other_obj</span><span class="o">.</span><span class="n">shooter</span><span class="p">:</span>
+            <span class="c1"># obj is not heavy -&gt; push back from getting hit by that particle</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_heavy</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">trigger_event</span><span class="p">(</span><span class="s2">&quot;hit.particle&quot;</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
                 <span class="n">push_direction</span> <span class="o">=</span> <span class="n">col</span><span class="o">.</span><span class="n">normal_x</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">normal_x</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">copysign</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other_obj</span><span class="p">,</span> <span class="s2">&quot;vx&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
                 <span class="k">if</span> <span class="n">push_direction</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
@@ -4315,10 +4343,16 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="AABBCollision.collide"><a class="viewcode-back" href="../spygame_reference.html#spygame.AABBCollision.collide">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">collide</span><span class="p">(</span><span class="n">sprite1</span><span class="p">,</span> <span class="n">sprite2</span><span class="p">,</span> <span class="n">collision_objects</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">direction_veloc</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">original_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">collide</span><span class="p">(</span><span class="n">sprite1</span><span class="p">,</span> <span class="n">sprite2</span><span class="p">,</span> <span class="n">collision_objects</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">direction_veloc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">original_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># TODO: actually, we only need one collision object as we should always only resolve one object at a time</span>
 
         <span class="c1"># TODO: utilize direction veloc information to only return the smallest separation collision</span>
+
+        <span class="c1"># direction must be given AND direction_veloc must not be 0.0</span>
+        <span class="c1">#assert direction == &quot;x&quot; or direction == &quot;y&quot;, &quot;ERROR: in AABB collision between {} and {}: direction needs to be either &#39;x&#39; or &#39;y&#39;!&quot;. \</span>
+        <span class="c1">#    format(type(sprite1).__name__, type(sprite2).__name__)</span>
+        <span class="c1">#assert direction_veloc != 0.0, &quot;ERROR in AABB collision between {} and {}: direction_veloc must not be 0.0!&quot;.\</span>
+        <span class="c1">#    format(type(sprite1).__name__, type(sprite2).__name__)</span>
 
         <span class="c1"># use default CollisionObjects?</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">collision_objects</span><span class="p">:</span>
@@ -4353,8 +4387,6 @@
 <span class="sd">        :return: the populated Collision object</span>
 <span class="sd">        :rtype: Collision</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span> <span class="ow">or</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR: parameter direction needs to be either &#39;x&#39; or &#39;y&#39;!&quot;</span>
-
         <span class="c1"># reset the recycled collision object</span>
         <span class="n">collision_obj</span><span class="o">.</span><span class="n">is_collided</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">collision_obj</span><span class="o">.</span><span class="n">normal_x</span> <span class="o">=</span> <span class="mf">0.0</span>

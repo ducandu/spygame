@@ -98,7 +98,7 @@
 <p>A simple axis-aligned bounding-box collision mechanism which only works on Pygame rects.</p>
 <dl class="staticmethod">
 <dt id="spygame.AABBCollision.collide">
-<em class="property">static </em><code class="descname">collide</code><span class="sig-paren">(</span><em>sprite1</em>, <em>sprite2</em>, <em>collision_objects=None</em>, <em>direction=’x’</em>, <em>direction_veloc=1.0</em>, <em>original_pos=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#AABBCollision.collide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.AABBCollision.collide" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">collide</code><span class="sig-paren">(</span><em>sprite1</em>, <em>sprite2</em>, <em>collision_objects=None</em>, <em>direction=’x’</em>, <em>direction_veloc=0.0</em>, <em>original_pos=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#AABBCollision.collide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.AABBCollision.collide" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="staticmethod">
@@ -1405,7 +1405,8 @@ Certain restrictions apply for the tiled landscape for this algorithm to work:
 <dl class="method">
 <dt id="spygame.PlatformerPhysics.lock_ladder">
 <code class="descname">lock_ladder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#PlatformerPhysics.lock_ladder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.PlatformerPhysics.lock_ladder" title="Permalink to this definition">¶</a></dt>
-<dd><p>Locks the GameObject into a ladder.</p>
+<dd><p>Locks the GameObject into a ladder.
+Makes sure that there is nothing in the x-way (to move to the center of the ladder if standing a little bit aside). Otherwise, will not lock.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1461,7 +1462,7 @@ Determines x/y-speeds and moves the GameObject.</p>
 <dl class="method">
 <dt id="spygame.PlatformerPhysics.unlock_ladder">
 <code class="descname">unlock_ladder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#PlatformerPhysics.unlock_ladder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.PlatformerPhysics.unlock_ladder" title="Permalink to this definition">¶</a></dt>
-<dd><p>Frees the GameObject from a ladder.</p>
+<dd><p>Frees the GameObject from a ladder - if it is currently on a ladder.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1862,6 +1863,28 @@ Puts it in the ordered to_render list, in the tiled_layers list.</p>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Union[<a class="reference internal" href="#spygame.Sprite" title="spygame.Sprite">Sprite</a>,<a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)">None</a>]</p>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="spygame.Stage.estimate_sprite_direction">
+<em class="property">static </em><code class="descname">estimate_sprite_direction</code><span class="sig-paren">(</span><em>sprite</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame.html#Stage.estimate_sprite_direction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.Stage.estimate_sprite_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>tries to return an accurate tuple of direction (x/y) and direction_veloc
+- if sprite directly has vx and vy, use these
+- if sprite has a physics component: use vx and vy from that Component
+- else: pretend vx and vy are 0.0
+then return the direction whose veloc component is highest plus that highest veloc</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sprite</strong> (<a class="reference internal" href="#spygame.Sprite" title="spygame.Sprite"><em>Sprite</em></a>) – the Sprite to estimate</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple of direction (x/y) and direction_veloc</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Tuple[<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)">str</a>,<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a>]</td>
 </tr>
 </tbody>
 </table>
@@ -2926,17 +2949,36 @@ spygame.Ladder -&gt; &lt;type spygame.Ladder&gt; (a python class object; can be 
 <dl class="method">
 <dt id="spygame.examples.vikings.Shot.collision">
 <code class="descname">collision</code><span class="sig-paren">(</span><em>col</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#Shot.collision"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.Shot.collision" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>we hit something -&gt; solves a collision with another object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>col</strong> (<em>spyg.Collision</em>) – the spyg.Collision object to solve</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="spygame.examples.vikings.Shot.collision_done">
 <code class="descname">collision_done</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#Shot.collision_done"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.Shot.collision_done" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>we are done hitting something -&gt; destroys this object (e.g. shot hits the wall -&gt; disappears)</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="spygame.examples.vikings.Shot.tick">
 <code class="descname">tick</code><span class="sig-paren">(</span><em>game_loop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spygame/examples/vikings.html#Shot.tick"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spygame.examples.vikings.Shot.tick" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>simple tick function with ax and ay, speed- and pos-recalc, and collision detection</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>game_loop</strong> (<em>spyg.GameLoop</em>) – the spyg.GameLoop object currently playing</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
