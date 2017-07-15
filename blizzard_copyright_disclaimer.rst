@@ -1,1 +1,0 @@
-.. include:: docs/blizzard_copyright_disclaimer.rst
