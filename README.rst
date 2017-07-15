@@ -6,10 +6,7 @@ spygame - Quick Setup Instructions
 
     The Lost Vikings - Sample spygame Level - *All graphics are (c) Blizzard Entertainment Inc (The Lost Vikings)*
 
-
 .. include:: blizzard_copyright_disclaimer.rst
-.. include:: docs/blizzard_copyright_disclaimer.rst
-
 
 Get the code
 ------------

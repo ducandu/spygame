@@ -58,7 +58,7 @@
 <li><a class="reference internal" href="#fixing-the-foreground-layer-and-preparing-for-ladders">Fixing the Foreground Layer and Preparing for Ladders</a></li>
 <li><a class="reference internal" href="#adding-ladders-to-the-levels">Adding Ladders to the Levels</a></li>
 <li><a class="reference internal" href="#adding-dangerous-quicksand-to-the-level">Adding Dangerous Quicksand to the Level</a></li>
-<li><a class="reference internal" href="#adding-a-repeater-for-even-more-of-a-3d-effect">Adding a Repeater for even more of a 3D Effect</a></li>
+<li><a class="reference internal" href="#adding-a-repeater-for-an-even-better-3d-effect">Adding a Repeater for an even better 3D Effect</a></li>
 <li><a class="reference internal" href="#adding-an-additional-viking-to-the-level">Adding an Additional Viking to the Level</a></li>
 <li><a class="reference internal" href="#adding-a-movable-rock">Adding a Movable Rock</a></li>
 <li><a class="reference internal" href="#adding-an-elevator">Adding an Elevator</a></li>
@@ -105,7 +105,7 @@
 “The Lost Vikings” (c) 1992 by Blizzard Entertainment Inc. (formerly known as Silicon and Synapse). Please use these images (in your own projects and repos)
 for demonstration purposes only and then also mention this copyright statement!</em></p>
 <p>Welcome back to the advanced spygame level-tmx tutorial, in which we will improve our level from the previous tutorial by adding more exciting things to
-it. At the end of this process, our level will look like this:</p>
+it. At the end of this process, our level should look somewhat like this:</p>
 <img alt="The final spygame game we will be building in this tutorial" src="_images/001_final_spygame_game1.png" />
 <p>All you need to follow along with the different steps in this tutorial is to copy your project directory from the previous tutorial
 (with all its subdirectories and contents) and name the copy of the folder “tutorial_advanced”. Alternatively, you can just keep working with the
@@ -280,8 +280,8 @@ We then paint (into the foreground layer) the following structure:</p>
 <img alt="Poor Erik sinking into the quicksand trap" src="_images/011_erik_sinking_into_the_trap.png" />
 <p>The game should end here printing out “Game Over” on the console.</p>
 </div>
-<div class="section" id="adding-a-repeater-for-even-more-of-a-3d-effect">
-<h2>Adding a Repeater for even more of a 3D Effect<a class="headerlink" href="#adding-a-repeater-for-even-more-of-a-3d-effect" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="adding-a-repeater-for-an-even-better-3d-effect">
+<h2>Adding a Repeater for an even better 3D Effect<a class="headerlink" href="#adding-a-repeater-for-an-even-better-3d-effect" title="Permalink to this headline">¶</a></h2>
 <p>The next item we are going to add will be very simple but quite effective. We will use a so-called repeater object. A Repeater in spygame is a kind of
 super-background. It will be rendered with a render_order of 0 (remember the background layer had a value of 10 here). Also, if the level is a little larger
 and you specify a width and height parameter in the constructor of the spygame.Game object, you will be able to see that there is a viewport that follows
@@ -329,7 +329,7 @@ new object
 <p>Now, let’s try the level again. You should see that when Erik jumps for example, the repeater super-background scrolls a little slower than the rest of the
 level (the background and foreground tiled layers). You can play around with the vx and vy parameters in the Repeater’s constructor (use values between
 0.25 and 1.0 in the custom properties of the repeater object).
-1.0 here means scroll just like the regular layers (no extra pseudo 3D effect). Values larger than 1.0 will look physically
+1.0 here means to scroll just like the regular layers (no extra pseudo 3D effect). Values larger than 1.0 will look physically
 counter intuitive as the super-background (which is supposed to be further away) will scroll faster than the tiled layers.</p>
 <div class="figure" id="id1">
 <img alt="The repeater in action" src="_images/025_the_repeater_in_action_in_the_game.png" />
@@ -353,7 +353,10 @@ the game, we will use CTRL. These keys are defined inside the spygame.examples.v
 what these classes look like and go through their code. However, to simply make spygame listen to these keys for now, we need to add them to our
 keyboard_inputs list in the tmx file’s properties. Click on <em>Map-&gt;Map Properties</em> and change the value of the keyboard_inputs variable to be
 “up,down,left,right,space,rctrl,lctrl,d”. Lctrl and rctrl stand for the left control key and the right control key, respectively.</p>
+<div class="figure" id="id2">
 <img alt="Baleog and Erik are two temple-trapped vikings" src="_images/012_baleog_and_erik_together.png" />
+<p class="caption"><span class="caption-text">Baleog can shoot arrows with the D key and swing his sword via the space bar. However, he cannot jump.</span></p>
+</div>
 <p><strong>Exercise:</strong> Can you find out about the third viking (Olaf) and try to add him to the level as well? Try to use the exact same steps as for Baleog.
 Olaf does not need any more keyboard_inputs settings. He can only use the space bar, which will cause him to switch between his shield being up (above
 head) or down (in front of him).</p>
@@ -364,31 +367,31 @@ careful not to push above some viking’s head (that would be really bad!).</p>
 <h2>Adding a Movable Rock<a class="headerlink" href="#adding-a-movable-rock" title="Permalink to this headline">¶</a></h2>
 <p>Movable rocks are spygame objects that obey similar physics laws than our Vikings. In fact, internally they use the exact same physics component as our heroes.
 In this physics component, the settings is_heavy and is_pushable are set to True and thus they have the characteristic to a) be pushable (also up and down
-slopes) and b) squeeze things beneath them (for example our vikings).</p>
-<p>Let’s add the graphics to our tmx file (a new sprite sheet) and then place one movable rock into our level.</p>
+slopes) and b) squeeze things that are underneath them (for example our vikings).</p>
+<p>Let’s first add the necessary graphics to our tmx file (a new sprite sheet) and then place one movable rock into our level.</p>
 <p>Click on <em>Map-&gt;New Tileset</em> and choose the “movable_rock.png” file, then setup the tileset with a tile width and height of 32px each:</p>
 <img alt="The tileset for a movable rock" src="_images/013_tileset_for_a_movable_rock.png" />
 <p>Click on the object layer in the Layers panel, then select the only tile in the movable_rock tileset and press T to activate the “Insert Tile” tool.
 Click somewhere in the level to place one rock object, then press S for “Select Object” and set the rock’s Type to “spygame.MovableRock”.</p>
 <p>When you play the level, you should now be able to push the rock with either Erik or Baleog, uphill and downhill, only being blocked by another viking or
 a wall on the other side of the rock:</p>
-<div class="figure" id="id2">
+<div class="figure" id="id3">
 <img alt="Baleog pushing the movable rock object" src="_images/014_baleog_pushing_the_rock.png" />
 <p class="caption"><span class="caption-text">Baleog pushing the movable rock object</span></p>
 </div>
-<div class="figure" id="id3">
+<div class="figure" id="id4">
 <img alt="Erik blocking Baleog from pushing the movable rock object" src="_images/015_erik_blocking_baleog_from_pushing_the_rock.png" />
 <p class="caption"><span class="caption-text">Erik blocking Baleog from pushing the movable rock object</span></p>
 </div>
-<div class="figure" id="id4">
+<div class="figure" id="id5">
 <img alt="Baleog pushing the movable rock object with Erik standing on top" src="_images/016_baleog_pushing_the_rock_with_erik_on_top.png" />
 <p class="caption"><span class="caption-text">Baleog pushing the movable rock object with Erik standing on top (and moving along with the rock)</span></p>
 </div>
-<div class="figure" id="id5">
+<div class="figure" id="id6">
 <img alt="Erik pushing the Rock uphill" src="_images/017_erik_pushing_the_rock_uphill.png" />
 <p class="caption"><span class="caption-text">Erik pushing the Rock uphill</span></p>
 </div>
-<div class="figure" id="id6">
+<div class="figure" id="id7">
 <img alt="Poor Baleog getting squeezed by the rock" src="_images/018_poor_baleog_getting_squeezed_by_the_rock.png" />
 <p class="caption"><span class="caption-text">Poor Baleog getting squeezed by the rock</span></p>
 </div>
@@ -436,9 +439,9 @@ Therefore, we save the egpt tileset as “egpt.tsx” in the data/ directory.</p
 <p>The last thing we have to do is to place a fire spitter into the level-tmx. We will place it into the background layer (it’s already setup to autobuild,
 so that’s good). Paint a fire spitter nicely above the quicksand pool like this:</p>
 <img alt="placing a fire spitter autobuild object via the background layer into the level" src="_images/028_painting_a_firespitter_into_the_level.png" />
-<p>Note that all tiles other than the one in the center of the spitter are meaningless background tiles. Only the glowing in the center of the mouth
+<p>Note that all tiles other than the one in the center of the spitter are meaningless background tiles. Only the glowing one in the center of the mouth
 is the one that triggers the autobuild with the correct constructor parameters (frequency and direction).</p>
-<p>Try it out. If a viking gets shot now by a fire ball, it will be in pain and move a little away from the collision from the impact:</p>
+<p>Try it out: If a viking gets shot now by a fire ball, it will be in pain and move a little away from the collision:</p>
 <img alt="Erik getting hit by a fire ball" src="_images/029_erik_in_pain.png" />
 <p><strong>Note:</strong> There is no damage handler implemented yet on the viking characters, so they can currently fall, get bitten by a monster or get hit
 by a fire ball without any consequences. The only thing they can die from is by jumping into the quicksand pool. This is all still work in progress.</p>
