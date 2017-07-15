@@ -20,7 +20,8 @@ You will need the following simple prerequisites to follow along with the differ
 - The "Tiled" editor to create spygame's level-tmx files. A level-tmx file contains all necessary information for spygame to build a complete level, i.e.
   background and foreground graphics, objects that the level will start with (e.g. player, enemies, traps, elevators, ladders, etc..).
   You can `download Tiled from here <http://www.mapeditor.org>`_.
-- The spygame library: See our `Quick Setup Instructions <readme_link.html#get-the-code>`_ for all necessary details on how to get and install spygame.
+- The spygame library (currently this tutorial requires version 0.1a9 or later):
+  See our `Quick Setup Instructions <readme_link.html#get-the-code>`_ for all necessary details on how to get and install spygame.
 - Some asset files: Download the following two folders into the directory, in which you would like to develop the game. This will be the directory, in
   which we will write the tutorial.py file (the only python file we are going to create and write to in this tutorial).
 

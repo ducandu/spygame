@@ -1002,6 +1002,7 @@ class Scorpion(spyg.AnimatedSprite):
         phys = spyg.PlatformerPhysics("physics")
         phys.run_acceleration = 0  # don't accelerate (always move at max-speed)
         self.cmp_physics = self.add_component(phys)  # type: spyg.PlatformerPhysics
+        self.cmp_physics.vx_max = 100
 
         # register and setup our events
         self.on_event("hit.particle", self, "hit_particle")
@@ -1046,8 +1047,6 @@ class Scorpion(spyg.AnimatedSprite):
 
     # hit a flying particle (shot, arrow, etc..)
     def hit_particle(self, col):
-        # sliding away from particle
-        self.cmp_physics.vx = math.copysign(100, col.normal_x)
         self.play_animation("get_hurt", 1)
         self.get_mad()
 

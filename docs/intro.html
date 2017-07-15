@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Introduction to spygame &#8212; spygame 0.1a8 documentation</title>
+    <title>Introduction to spygame &#8212; spygame 0.1a9 documentation</title>
     
     <link rel="stylesheet" href="_static/spygame_sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1a8',
+        VERSION:     '0.1a9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -46,7 +46,7 @@
         <li class="right" >
           <a href="readme_link.html" title="Quick Setup Instructions"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">spygame 0.1a8 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">spygame 0.1a9 documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -55,7 +55,13 @@
   <ul>
 <li><a class="reference internal" href="#">Introduction to spygame</a><ul>
 <li><a class="reference internal" href="#what-is-spygame">What is spygame?</a></li>
-<li><a class="reference internal" href="#main-features">Main Features</a></li>
+<li><a class="reference internal" href="#main-features">Main Features</a><ul>
+<li><a class="reference internal" href="#simple-yet-powerful">Simple, yet Powerful</a></li>
+<li><a class="reference internal" href="#built-in-complex-physics">Built-In Complex Physics</a></li>
+<li><a class="reference internal" href="#example-levels-from-the-lost-vikings-universe">Example Levels from “The Lost Vikings” Universe</a></li>
+<li><a class="reference internal" href="#support-for-academic-ai-and-reinforcement-learning">Support for Academic AI and Reinforcement Learning</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -106,11 +112,17 @@ allow researchers to test their reinforcement learning algorithms on complex and
 </div>
 <div class="section" id="main-features">
 <h2>Main Features<a class="headerlink" href="#main-features" title="Permalink to this headline">¶</a></h2>
-<p>Spygame’s is very lightweight. It comes as a single python module that can be installed on your machine
+<div class="section" id="simple-yet-powerful">
+<h3>Simple, yet Powerful<a class="headerlink" href="#simple-yet-powerful" title="Permalink to this headline">¶</a></h3>
+<p>Spygame is very lightweight. It comes as a single python module that can be installed on your machine
 via a simple <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">spygame</span></code>.</p>
 <p>Spygame uses so called level-tmx files to allow developers to create complex game worlds using the open-source
 <a class="reference external" href="http://www.mapeditor.org">Tiled Editor</a>. You can build a rather complex level from scratch only needing a few
-background images and sprite-sheets as prerequisites.</p>
+background images and sprite-sheets as prerequisites:</p>
+<a class="reference internal image-reference" href="_images/intro_001_level_tmx_file.png"><img alt="a level-tmx file opened in the Tiled editor" src="_images/intro_001_level_tmx_file.png" style="width: 708.0px; height: 333.0px;" /></a>
+</div>
+<div class="section" id="built-in-complex-physics">
+<h3>Built-In Complex Physics<a class="headerlink" href="#built-in-complex-physics" title="Permalink to this headline">¶</a></h3>
 <p>Spygame offers built-in complex platformer physics supporting the following features:
 - tiles with arbitrary slopes (including stairs options)
 - jumping
@@ -118,9 +130,22 @@ background images and sprite-sheets as prerequisites.</p>
 - pushable heavy objects
 - elevators and moving platforms that one can stand on
 - built-in game AIs (cliff- and character-detection mechanisms)</p>
+<img alt="spygame's physics component offers a rich set of physics rules" src="_images/intro_002_spygame_physics_component.png" />
+</div>
+<div class="section" id="example-levels-from-the-lost-vikings-universe">
+<h3>Example Levels from “The Lost Vikings” Universe<a class="headerlink" href="#example-levels-from-the-lost-vikings-universe" title="Permalink to this headline">¶</a></h3>
 <p>Spygame comes with lots of fully playable example levels, mostly reverse-engineered from “The Lost Vikings” Game (c) 1992 Blizzard Entertainment Inc.</p>
-<p>WIP: Spygame will be fully integrated into the openAI gym and rllab toolsets. One of the core purposes of spygame is to run allow running
-reinforcement learning (AI) algorithms on different computer games in order to help the AI community to test and improve their algorithms.</p>
+<img alt="an example Lost Vikings reverse-engineered spygame level" src="_images/intro_003_example_spygame_level.png" />
+</div>
+<div class="section" id="support-for-academic-ai-and-reinforcement-learning">
+<h3>Support for Academic AI and Reinforcement Learning<a class="headerlink" href="#support-for-academic-ai-and-reinforcement-learning" title="Permalink to this headline">¶</a></h3>
+<p>This is still work in progress: Spygame will be fully integrated into the openAI gym and rllab tool sets. One of the core purposes of spygame is
+to allow running reinforcement learning (AI) algorithms on different computer games in order to help the AI community to
+test and improve their algorithms.</p>
+<a class="reference internal image-reference" href="_images/intro_004_openailogo.png"><img alt="_images/intro_004_openailogo.png" src="_images/intro_004_openailogo.png" style="width: 256.0px; height: 89.60000000000001px;" /></a>
+<a class="reference internal image-reference" href="_images/intro_004_tensorlogo.png"><img alt="_images/intro_004_tensorlogo.png" src="_images/intro_004_tensorlogo.png" style="width: 259.2px; height: 46.8px;" /></a>
+<a class="reference internal image-reference" href="_images/intro_004_pytorchlogo.png"><img alt="_images/intro_004_pytorchlogo.png" src="_images/intro_004_pytorchlogo.png" style="width: 307.2px; height: 64.2px;" /></a>
+</div>
 </div>
 </div>
 
@@ -145,7 +170,7 @@ reinforcement learning (AI) algorithms on different computer games in order to h
         <li class="right" >
           <a href="readme_link.html" title="Quick Setup Instructions"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">spygame 0.1a8 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">spygame 0.1a9 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

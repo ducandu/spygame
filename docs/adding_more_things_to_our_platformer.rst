@@ -382,7 +382,7 @@ Try it out. If a viking gets shot now by a fire ball, it will be in pain and mov
 .. image:: tutorial/advanced/029_erik_in_pain.png
     :alt: Erik getting hit by a fire ball
 
-**Note:** There is no damage handler implemented yet on the viking characters, so they can currently fall, get bitten by a monster or get or hit
+**Note:** There is no damage handler implemented yet on the viking characters, so they can currently fall, get bitten by a monster or get hit
 by a fire ball without any consequences. The only thing they can die from is by jumping into the quicksand pool. This is all still work in progress.
 
 The last thing in this tutorial will be adding a monster to the level. We will let you decide whether it's going to be a poison shooting scorpion or a
@@ -392,5 +392,6 @@ mean, biting dinosaur.
 Adding Monsters
 ---------------
 
+In this last part of our tutorial, we will finally add some enemies to our level. Thereby you can choose between a dinosaur and a scorpion.
 
 

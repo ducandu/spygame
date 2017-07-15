@@ -31,9 +31,16 @@
   <tile id="133" terrain="0,0,,"/>
   <tile id="139">
    <properties>
-    <property name="(sprite)" value="Firespitter"/>
-    <property name="flip" value="x"/>
-    <property name="style" value="egypt"/>
+    <property name="autobuild_class" value="spygame.examples.vikings.FireSpitter"/>
+    <property name="direction" value="left"/>
+    <property name="frequency" type="float" value="0.3"/>
+   </properties>
+  </tile>
+  <tile id="140">
+   <properties>
+    <property name="autobuild_class" value="spygame.examples.vikings.FireSpitter"/>
+    <property name="direction" value="right"/>
+    <property name="frequency" type="float" value="0.3"/>
    </properties>
   </tile>
   <tile id="320">
@@ -261,32 +268,12 @@
     <property name="autobuild_class" value="spygame.Ladder"/>
    </properties>
   </tile>
-  <tile id="793">
-   <properties>
-    <property name="autobuild_class" value="spygame.Ladder"/>
-   </properties>
-  </tile>
-  <tile id="794">
-   <properties>
-    <property name="autobuild_class" value="spygame.Ladder"/>
-   </properties>
-  </tile>
   <tile id="810">
    <properties>
     <property name="autobuild_class" value="spygame.Ladder"/>
    </properties>
   </tile>
   <tile id="811">
-   <properties>
-    <property name="autobuild_class" value="spygame.Ladder"/>
-   </properties>
-  </tile>
-  <tile id="850">
-   <properties>
-    <property name="autobuild_class" value="spygame.Ladder"/>
-   </properties>
-  </tile>
-  <tile id="851">
    <properties>
     <property name="autobuild_class" value="spygame.Ladder"/>
    </properties>
@@ -406,7 +393,7 @@
  <tileset firstgid="4054" name="erik" tilewidth="32" tileheight="32" tilecount="162" columns="9">
   <image source="../images/erik.png" width="294" height="599"/>
  </tileset>
- <layer name="background" width="106" height="24">
+ <layer name="background" width="106" height="24" visible="0">
   <properties>
    <property name="autobuild_objects" type="bool" value="true"/>
    <property name="do_render" type="bool" value="true"/>
@@ -1714,8 +1701,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="770"/>
-   <tile gid="771"/>
-   <tile gid="772"/>
+   <tile gid="682"/>
+   <tile gid="683"/>
    <tile gid="773"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -1820,8 +1807,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="810"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="722"/>
+   <tile gid="723"/>
    <tile gid="813"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -1876,7 +1863,7 @@
    <tile gid="90"/>
    <tile gid="163"/>
    <tile gid="164"/>
-   <tile gid="0"/>
+   <tile gid="141"/>
    <tile gid="142"/>
    <tile gid="282"/>
    <tile gid="281"/>
@@ -1926,8 +1913,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="850"/>
-   <tile gid="851"/>
-   <tile gid="852"/>
+   <tile gid="722"/>
+   <tile gid="723"/>
    <tile gid="853"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -2032,8 +2019,8 @@
    <tile gid="0"/>
    <tile gid="528"/>
    <tile gid="890"/>
-   <tile gid="891"/>
-   <tile gid="892"/>
+   <tile gid="762"/>
+   <tile gid="763"/>
    <tile gid="532"/>
    <tile gid="533"/>
    <tile gid="0"/>
@@ -2470,8 +2457,8 @@
    <tile gid="659"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="420"/>
-   <tile gid="421"/>
+   <tile gid="762"/>
+   <tile gid="763"/>
    <tile gid="422"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -2484,8 +2471,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="534"/>
-   <tile gid="535"/>
+   <tile gid="762"/>
+   <tile gid="763"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -2650,8 +2637,8 @@
    <tile gid="791"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="420"/>
-   <tile gid="421"/>
+   <tile gid="762"/>
+   <tile gid="763"/>
    <tile gid="489"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -3605,8 +3592,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="770"/>
-   <tile gid="771"/>
-   <tile gid="772"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="773"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -3711,8 +3698,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="810"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="813"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -3923,8 +3910,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="810"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -3980,8 +3967,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="770"/>
-   <tile gid="771"/>
-   <tile gid="772"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="773"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4029,8 +4016,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="810"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4086,8 +4073,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4135,8 +4122,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="810"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4192,8 +4179,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4241,8 +4228,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="810"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4298,8 +4285,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4347,8 +4334,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="810"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4404,8 +4391,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4453,8 +4440,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="810"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4471,8 +4458,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="770"/>
-   <tile gid="771"/>
-   <tile gid="772"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="773"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4510,8 +4497,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4559,8 +4546,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="810"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4577,8 +4564,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="810"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="813"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4589,8 +4576,8 @@
    <tile gid="0"/>
    <tile gid="532"/>
    <tile gid="533"/>
-   <tile gid="493"/>
-   <tile gid="494"/>
+   <tile gid="794"/>
+   <tile gid="795"/>
    <tile gid="536"/>
    <tile gid="537"/>
    <tile gid="538"/>
@@ -4616,8 +4603,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4665,8 +4652,8 @@
    <tile gid="533"/>
    <tile gid="532"/>
    <tile gid="533"/>
-   <tile gid="534"/>
-   <tile gid="535"/>
+   <tile gid="794"/>
+   <tile gid="795"/>
    <tile gid="588"/>
    <tile gid="589"/>
    <tile gid="0"/>
@@ -4722,8 +4709,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4818,8 +4805,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="681"/>
-   <tile gid="682"/>
-   <tile gid="683"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="684"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -4828,8 +4815,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="811"/>
-   <tile gid="812"/>
+   <tile gid="851"/>
+   <tile gid="852"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -5030,8 +5017,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="487"/>
-   <tile gid="488"/>
+   <tile gid="794"/>
+   <tile gid="795"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -5040,8 +5027,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="491"/>
-   <tile gid="492"/>
+   <tile gid="794"/>
+   <tile gid="795"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -5213,8 +5200,8 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="891"/>
-   <tile gid="892"/>
+   <tile gid="794"/>
+   <tile gid="795"/>
    <tile gid="764"/>
    <tile gid="765"/>
    <tile gid="0"/>
@@ -5512,7 +5499,7 @@
    <tile gid="0"/>
   </data>
  </layer>
- <objectgroup name="objects">
+ <objectgroup name="objects" visible="0">
   <object id="2" name="erik" type="spygame.examples.vikings.Erik" gid="3217" x="508" y="247" width="32" height="32"/>
   <object id="3" name="scorpion" type="spygame.examples.vikings.Scorpion" gid="3201" x="1099" y="284" width="32" height="32"/>
   <object id="4" name="baleog" type="spygame.examples.vikings.Baleog" gid="3379" x="8" y="262" width="32" height="32"/>
@@ -5537,7 +5524,6 @@
     <property name="min_pos" type="int" value="50"/>
    </properties>
   </object>
-  <object id="18" name="firespitter" type="spygame.examples.vikings.FireSpitter" gid="141" x="1360" y="224" width="16" height="16"/>
   <object id="19" name="keylock" type="spygame.examples.vikings.KeyLock" gid="1643" x="1050" y="261" width="16" height="16">
    <properties>
     <property name="color" value="red"/>
@@ -5556,7 +5542,7 @@
   <object id="28" name="coco1" gid="4050" x="290" y="294" width="16" height="16"/>
   <object id="29" name="coco2" gid="4050" x="282" y="293" width="16" height="16"/>
  </objectgroup>
- <layer name="collision" width="106" height="24">
+ <layer name="collision" width="106" height="24" visible="0">
   <properties>
    <property name="type" value="default"/>
   </properties>
@@ -7344,12 +7330,12 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="1602"/>
-   <tile gid="2"/>
+   <tile gid="0"/>
    <tile gid="1602"/>
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="1602"/>
-   <tile gid="2"/>
+   <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="1602"/>
    <tile gid="0"/>
@@ -7455,7 +7441,7 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="1602"/>
-   <tile gid="2"/>
+   <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="1602"/>
    <tile gid="0"/>

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>spygame.examples.vikings &#8212; spygame 0.1a8 documentation</title>
+    <title>spygame.examples.vikings &#8212; spygame 0.1a9 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/spygame_sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.1a8',
+        VERSION:     '0.1a9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">spygame 0.1a8 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">spygame 0.1a9 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="../../spygame.html" accesskey="U">spygame</a> &#187;</li> 
       </ul>
@@ -1068,6 +1068,7 @@
         <span class="n">phys</span> <span class="o">=</span> <span class="n">spyg</span><span class="o">.</span><span class="n">PlatformerPhysics</span><span class="p">(</span><span class="s2">&quot;physics&quot;</span><span class="p">)</span>
         <span class="n">phys</span><span class="o">.</span><span class="n">run_acceleration</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># don&#39;t accelerate (always move at max-speed)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cmp_physics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="n">phys</span><span class="p">)</span>  <span class="c1"># type: spyg.PlatformerPhysics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmp_physics</span><span class="o">.</span><span class="n">vx_max</span> <span class="o">=</span> <span class="mi">100</span>
 
         <span class="c1"># register and setup our events</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;hit.particle&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;hit_particle&quot;</span><span class="p">)</span>
@@ -1112,8 +1113,6 @@
 
     <span class="c1"># hit a flying particle (shot, arrow, etc..)</span>
 <div class="viewcode-block" id="Scorpion.hit_particle"><a class="viewcode-back" href="../../../spygame_reference.html#spygame.examples.vikings.Scorpion.hit_particle">[docs]</a>    <span class="k">def</span> <span class="nf">hit_particle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
-        <span class="c1"># sliding away from particle</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cmp_physics</span><span class="o">.</span><span class="n">vx</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">copysign</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">col</span><span class="o">.</span><span class="n">normal_x</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play_animation</span><span class="p">(</span><span class="s2">&quot;get_hurt&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">get_mad</span><span class="p">()</span></div>
 
@@ -1313,7 +1312,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">spygame 0.1a8 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">spygame 0.1a9 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="../../spygame.html" >spygame</a> &#187;</li> 
       </ul>
