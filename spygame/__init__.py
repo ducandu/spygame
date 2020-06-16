@@ -293,7 +293,7 @@ class KeyboardInputs(EventObject):
         events = pygame.event.get([pygame.KEYDOWN, pygame.KEYUP])
         for e in events:
             # a key was pressed that we are interested in -> set to True or False
-            if e.key in self.keyboard_registry:
+            if getattr(e, 'key', None) in self.keyboard_registry:
                 if e.type == pygame.KEYDOWN:
                     self.keyboard_registry[e.key] = True
                     self.trigger_event("key_down." + self.descriptions[e.key])
